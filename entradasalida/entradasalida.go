@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/sisoputnfrba/tp-golang/entradasalida/globals"
+	"github.com/sisoputnfrba/tp-golang/entradasalida/handlers"
 	"github.com/sisoputnfrba/tp-golang/utils/configs"
 	"github.com/sisoputnfrba/tp-golang/utils/logs"
 	"log"
@@ -25,8 +26,7 @@ func main() {
 	// Interfaz
 	// ========
 	mux := http.NewServeMux()
-	// mux.HandleFunc("/process", handlers.IniciarProceso)
-	// ... demás mensajes
+	mux.HandleFunc("/mensaje", handlers.RecibirMensaje)
 
 	// ======
 	// Inicio
