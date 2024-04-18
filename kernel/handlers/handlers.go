@@ -1,70 +1,109 @@
 package handlers
 
-import "net/http"
-		"encoding/json"
-    	"fmt"
-    	"net/http"
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+)
 
-func IniciarProceso(writer http.ResponseWriter, request *http.Request) {
-	// lógica para crear un nuevo proceso y retornar su PID
-	pid :=  
-	nuevoPID := nuevoProceso()
-    fmt.Fprintf(w, "Proceso iniciado con PID: %d\n", pid)
+type IniciarProcesoRequest struct {
+	Path string `json:"path"`
 }
 
-func crearNuevoProceso() int {
-   //generar un nuevo PID y realizar cualquier inicialización necesaria
-    nuevoPID := generarNuevoPID() // Función ficticia para generar un nuevo PID
-    // Lógica para iniciar el proceso
-    return nuevoPID
+type IniciarProcesoResponse struct {
+	Pid int `json:"pid"`
 }
 
-func generarNuevoPID() int {
-    // lógica para generar un nuevo PID
-    return nuevoPID
+type EstadoProcesoResponse struct {
+	State string `json:"state"`
 }
 
-func FinalizarProceso(writer http.ResponseWriter, request *http.Request) {
-	err := finalizarProceso(pid) // Función ficticia para finalizar un proceso
-    if err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-        return
-    }
-    fmt.Fprintf(w, "Proceso con PID %d finalizado correctamente\n", pid)
+type ListarProcesosResponse struct {
+	Procesos []Proceso `json:"procesos"`
 }
 
-func finalizarProceso(pid int) error {
-    // Lógica de finalización del proceso
-    return nil
+type Proceso struct {
+	Pid   int    `json:"pid"`
+	State string `json:"state"`
 }
 
-func EstadoProceso(writer http.ResponseWriter, request *http.Request) {
-	pid := obtenerPIDDesdeURL(r)
-    estado, err := obtenerEstadoProceso(pid) // estado de un proceso
-    if err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-        return
-    }
-    fmt.Fprintf(w, "Estado del proceso con PID %d: %s\n", pid, estado)
+func IniciarProceso(w http.ResponseWriter, r *http.Request) {
+	var iniciarProcesoRequest IniciarProcesoRequest
+	err := json.NewDecoder(r.Body).Decode(&iniciarProcesoRequest)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var iniciarProcesoResponse = IniciarProcesoResponse{
+		Pid: 0, // crear proceso usando iniciarProcesoRequest.Path y retornar pid
+	}
+
+	response, err := json.Marshal(iniciarProcesoResponse)
+	if err != nil {
+		http.Error(w, "Error al codificar los datos como JSON", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(response)
 }
 
-func obtenerEstadoProceso(pid int) (string, error) {
-    // lógica para consultar y obtener el estado del proceso devolver ese estado 
-    return "procesando", nil 
+func FinalizarProceso(w http.ResponseWriter, r *http.Request) {
+	queryParams := r.URL.Query()
+	pid := queryParams.Get("pid")
+	fmt.Println(pid)
+
+	// finalizar proceso con pid
+
+	w.WriteHeader(http.StatusOK)
 }
 
+func EstadoProceso(w http.ResponseWriter, r *http.Request) {
+	queryParams := r.URL.Query()
+	pid := queryParams.Get("pid")
+	fmt.Println(pid)
 
-func IniciarPlanificacion(writer http.ResponseWriter, request *http.Request) {
-	
+	var estadoProcesoResponse = EstadoProcesoResponse{
+		State: "READY", // retornar el estado del proceso con pid
+	}
+
+	response, err := json.Marshal(estadoProcesoResponse)
+	if err != nil {
+		http.Error(w, "Error al codificar los datos como JSON", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(response)
 }
 
-
-func DetenerPlanificacion(writer http.ResponseWriter, request *http.Request) {
-	
+func IniciarPlanificacion(w http.ResponseWriter, r *http.Request) {
+	// resumir planificacion de corto y largo plazo en caso de que se encuentre pausada
+	w.WriteHeader(http.StatusOK)
 }
 
-func ListarProcesos(writer http.ResponseWriter, request *http.Request) {
-	// lógica para listar todos los procesos y devlover la lista de procesos como respuesta
-    procesos := []string{""} 
-    json.NewEncoder(w).Encode(procesos)
+func DetenerPlanificacion(w http.ResponseWriter, r *http.Request) {
+	// pausar la planificación de corto y largo plazo
+	w.WriteHeader(http.StatusOK)
+}
+
+func ListarProcesos(w http.ResponseWriter, r *http.Request) {
+	var listarProcesosResponse = ListarProcesosResponse{
+		Procesos: []Proceso{
+			{Pid: 0, State: "READY"},
+			{Pid: 1, State: "EXEC"},
+			{Pid: 2, State: "BLOCK"},
+			{Pid: 3, State: "FIN"},
+		},
+	}
+
+	respuesta, err := json.Marshal(listarProcesosResponse)
+	if err != nil {
+		http.Error(w, "Error al codificar los datos como JSON", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(respuesta)
 }
