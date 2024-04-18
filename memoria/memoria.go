@@ -37,7 +37,7 @@ func main() {
 	// ========
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/mensaje", handlers.RecibirMensaje)
+	mux.HandleFunc("POST /mensaje", handlers.RecibirMensaje)
 
 	// ======
 	// Inicio
@@ -49,5 +49,4 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
 }

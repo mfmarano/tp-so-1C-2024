@@ -13,9 +13,11 @@ import (
 )
 
 func main() {
+
 	// =============
 	// Configuración
 	// =============
+
 	path, err := os.Getwd()
 	if err != nil {
 		panic(err)
@@ -31,12 +33,14 @@ func main() {
 	// ========
 	// Interfaz
 	// ========
+
 	mux := http.NewServeMux()
-	mux.HandleFunc("/mensaje", handlers.RecibirMensaje)
+	mux.HandleFunc("POST /mensaje", handlers.RecibirMensaje)
 
 	// ======
 	// Inicio
 	// ======
+
 	log.Printf("El módulo cpu está a la escucha en el puerto %d", globals.Config.Port)
 
 	err = http.ListenAndServe(fmt.Sprintf(":%d", globals.Config.Port), mux)
