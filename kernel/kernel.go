@@ -45,9 +45,11 @@ func main() {
 	// Inicio
 	// ======
 	port := fmt.Sprintf(":%d", globals.Config.Port)
+
+	log.Printf("El módulo kernel está a la escucha en el puerto %s", port)
+
 	err = http.ListenAndServe(port, mux)
 	if err != nil {
 		panic(err)
 	}
-	log.Printf("El módulo kernel está a la escucha en el puerto %s", port)
 }
