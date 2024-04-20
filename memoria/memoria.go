@@ -2,15 +2,14 @@ package main
 
 import (
 	"fmt"
+	"github.com/sisoputnfrba/tp-golang/memoria/globals"
+	"github.com/sisoputnfrba/tp-golang/utils/commons"
+	"github.com/sisoputnfrba/tp-golang/utils/configs"
+	"github.com/sisoputnfrba/tp-golang/utils/logs"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
-
-	"github.com/sisoputnfrba/tp-golang/memoria/globals"
-	"github.com/sisoputnfrba/tp-golang/memoria/handlers"
-	"github.com/sisoputnfrba/tp-golang/utils/configs"
-	"github.com/sisoputnfrba/tp-golang/utils/logs"
 )
 
 func main() {
@@ -27,9 +26,8 @@ func main() {
 	logs.ConfigurarLogger(filepath.Join(path, "memoria.log"))
 
 	globals.Config = configs.IniciarConfiguracion(filepath.Join(path, "config.json"), &globals.ModuleConfig{}).(*globals.ModuleConfig)
-
 	if globals.Config == nil {
-		log.Fatalf("No se pudo cargar la configuración")
+		log.Fatalln("Error al cargar la configuración")
 	}
 
 	// ========
@@ -37,15 +35,16 @@ func main() {
 	// ========
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("POST /mensaje", handlers.RecibirMensaje)
+	mux.HandleFunc("POST /mensaje", commons.RecibirMensaje)
 
 	// ======
 	// Inicio
 	// ======
+	port := fmt.Sprintf(":%d", globals.Config.Port)
 
-	log.Printf("El módulo memoria está a la escucha en el puerto %d", globals.Config.Port)
+	log.Printf("El módulo memoria está a la escucha en el puerto %s", port)
 
-	err = http.ListenAndServe(fmt.Sprintf(":%d", globals.Config.Port), mux)
+	err = http.ListenAndServe(port, mux)
 	if err != nil {
 		panic(err)
 	}

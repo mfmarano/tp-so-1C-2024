@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/sisoputnfrba/tp-golang/kernel/globals"
 	"github.com/sisoputnfrba/tp-golang/kernel/handlers"
+	"github.com/sisoputnfrba/tp-golang/utils/commons"
 	"github.com/sisoputnfrba/tp-golang/utils/configs"
 	"github.com/sisoputnfrba/tp-golang/utils/logs"
 	"log"
@@ -34,6 +35,7 @@ func main() {
 	// Interfaz
 	// ========
 	mux := http.NewServeMux()
+	mux.HandleFunc("POST /mensaje", commons.RecibirMensaje)
 	mux.HandleFunc("PUT /process", handlers.IniciarProceso)
 	mux.HandleFunc("DELETE /process/{pid}", handlers.FinalizarProceso)
 	mux.HandleFunc("GET /process/{pid}", handlers.EstadoProceso)

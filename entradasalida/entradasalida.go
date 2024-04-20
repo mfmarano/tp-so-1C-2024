@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/sisoputnfrba/tp-golang/entradasalida/globals"
-	"github.com/sisoputnfrba/tp-golang/entradasalida/handlers"
+	"github.com/sisoputnfrba/tp-golang/utils/commons"
 	"github.com/sisoputnfrba/tp-golang/utils/configs"
 	"github.com/sisoputnfrba/tp-golang/utils/logs"
 	"log"
@@ -35,15 +35,16 @@ func main() {
 	// ========
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("POST /mensaje", handlers.RecibirMensaje)
+	mux.HandleFunc("POST /mensaje", commons.RecibirMensaje)
 
 	// ======
 	// Inicio
 	// ======
+	port := fmt.Sprintf(":%d", globals.Config.Port)
 
-	log.Printf("El módulo entradasalida está a la escucha en el puerto %d", globals.Config.Port)
+	log.Printf("El módulo entradasalida está a la escucha en el puerto %s", port)
 
-	err = http.ListenAndServe(fmt.Sprintf(":%d", globals.Config.Port), mux)
+	err = http.ListenAndServe(port, mux)
 	if err != nil {
 		panic(err)
 	}
