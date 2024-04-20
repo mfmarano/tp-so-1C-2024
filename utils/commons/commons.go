@@ -27,8 +27,16 @@ func DecodificarJSON(w http.ResponseWriter, r *http.Request, requestStruct inter
 	err := json.NewDecoder(r.Body).Decode(requestStruct)
 	if err != nil {
 		log.Printf("Error al decodificar JSON: %s\n", err.Error())
-		w.WriteHeader(http.StatusBadRequest)
-		_, _ = w.Write([]byte("Error al decodificar JSON"))
+		http.Error(w, "Error al decodificar JSON", http.StatusBadRequest)
 	}
 	return err
+}
+
+func CodificarJSON(w http.ResponseWriter, r *http.Request, responseStruct interface{}) ([]byte, error) {
+	response, err := json.Marshal(responseStruct)
+	if err != nil {
+		log.Printf("Error al codificar la respuesta como JSON: %s\n", err.Error())
+		http.Error(w, "Error al codificar la respuesta como JSON", http.StatusInternalServerError)
+	}
+	return response, err
 }

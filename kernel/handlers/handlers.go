@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/sisoputnfrba/tp-golang/utils/commons"
 	"net/http"
 )
 
@@ -29,19 +29,20 @@ type Proceso struct {
 
 func IniciarProceso(w http.ResponseWriter, r *http.Request) {
 	var iniciarProcesoRequest IniciarProcesoRequest
-	err := json.NewDecoder(r.Body).Decode(&iniciarProcesoRequest)
+
+	err := commons.DecodificarJSON(w, r, &iniciarProcesoRequest)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	// crear proceso usando iniciarProcesoRequest.Path y retornar pid
+
 	var iniciarProcesoResponse = IniciarProcesoResponse{
-		Pid: 0, // crear proceso usando iniciarProcesoRequest.Path y retornar pid
+		Pid: 0,
 	}
 
-	response, err := json.Marshal(iniciarProcesoResponse)
+	response, err := commons.CodificarJSON(w, r, iniciarProcesoResponse)
 	if err != nil {
-		http.Error(w, "Error al codificar los datos como JSON", http.StatusInternalServerError)
 		return
 	}
 
@@ -68,9 +69,8 @@ func EstadoProceso(w http.ResponseWriter, r *http.Request) {
 		State: "READY", // retornar el estado del proceso con pid
 	}
 
-	response, err := json.Marshal(estadoProcesoResponse)
+	response, err := commons.CodificarJSON(w, r, estadoProcesoResponse)
 	if err != nil {
-		http.Error(w, "Error al codificar los datos como JSON", http.StatusInternalServerError)
 		return
 	}
 
@@ -98,12 +98,11 @@ func ListarProcesos(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	respuesta, err := json.Marshal(listarProcesosResponse)
+	response, err := commons.CodificarJSON(w, r, listarProcesosResponse)
 	if err != nil {
-		http.Error(w, "Error al codificar los datos como JSON", http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(respuesta)
+	_, _ = w.Write(response)
 }
