@@ -1,5 +1,7 @@
 package globals
 
+import "sync"
+
 type ModuleConfig struct {
 	Port               int      `json:"port"`
 	IpMemory           string   `json:"ip_memory"`
@@ -14,3 +16,17 @@ type ModuleConfig struct {
 }
 
 var Config *ModuleConfig
+
+type Counter struct {
+	mutex sync.Mutex
+	Value int
+}
+
+var PidCounter *Counter
+
+func (c *Counter) Increment() int {
+	c.mutex.Lock()
+	c.Value++
+	c.mutex.Unlock()
+	return c.Value
+}
