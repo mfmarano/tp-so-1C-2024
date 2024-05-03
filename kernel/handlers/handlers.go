@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"github.com/sisoputnfrba/tp-golang/kernel/globals"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 	"net/http"
 )
@@ -35,10 +36,13 @@ func IniciarProceso(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// crear proceso usando iniciarProcesoRequest.Path y retornar pid
+	pid := globals.PidCounter.Increment()
+
+	// crear PCB y dejarlo en NEW
+	// informarle a la memoria que debe crear un proceso con instrucciones en iniciarProcesoRequest.Path.
 
 	var iniciarProcesoResponse = IniciarProcesoResponse{
-		Pid: 0,
+		Pid: pid,
 	}
 
 	response, err := commons.CodificarJSON(w, r, iniciarProcesoResponse)
