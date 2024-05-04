@@ -17,25 +17,26 @@ func IniciarProceso(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// informarle a la memoria que debe crear un proceso con instrucciones en iniciarProcesoRequest.Path.
-
-	memoryResponseStatus := 200
-	if memoryResponseStatus != 200 {
-		http.Error(w, "Error de memoria", memoryResponseStatus)
-		return
-	}
-
-	pid := globals.PidCounter.Increment()
 	pcb := commons.PCB{
-		Pid:     pid,
+		Pid:     globals.PidCounter.Increment(),
 		State:   "NEW",
 		Quantum: globals.Config.Quantum,
 	}
 
 	globals.NewProcesses.AddProcess(pcb)
 
+	// wait multiprogramming with globals.Config.Multiprogramming
+	responseMemoria := requests.IniciarProcesoMemoria(w, r, iniciarProcesoRequest.Path)
+	if responseMemoria == nil {
+		return
+	}
+
+	// quitar de globals.NewProcesses
+	pcb.State = "READY"
+	globals.ReadyProcesses.AddProcess(pcb)
+
 	var iniciarProcesoResponse = responses.IniciarProcesoResponse{
-		Pid: pid,
+		Pid: pcb.Pid,
 	}
 
 	response, err := commons.CodificarJSON(w, r, iniciarProcesoResponse)
