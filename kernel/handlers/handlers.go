@@ -17,11 +17,8 @@ func IniciarProceso(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// informarle a la memoria que debe crear un proceso con instrucciones en iniciarProcesoRequest.Path.
-
-	memoryResponseStatus := 200
-	if memoryResponseStatus != 200 {
-		http.Error(w, "Error de memoria", memoryResponseStatus)
+	responseMemoria := requests.IniciarProcesoMemoria(w, r, iniciarProcesoRequest.Path)
+	if responseMemoria == nil {
 		return
 	}
 
