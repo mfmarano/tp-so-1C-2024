@@ -34,6 +34,8 @@ var PidCounter *Counter
 
 var NewProcesses *ProcessQueue
 
+var ReadyProcesses *ProcessQueue
+
 func (c *Counter) Increment() int {
 	c.mutex.Lock()
 	c.Value++
