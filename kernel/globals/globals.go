@@ -1,6 +1,9 @@
 package globals
 
-import "sync"
+import (
+	"github.com/sisoputnfrba/tp-golang/utils/commons"
+	"sync"
+)
 
 type ModuleConfig struct {
 	Port               int      `json:"port"`
@@ -15,18 +18,31 @@ type ModuleConfig struct {
 	Multiprogramming   int      `json:"multiprogramming"`
 }
 
-var Config *ModuleConfig
-
 type Counter struct {
 	mutex sync.Mutex
 	Value int
 }
 
+type ProcessQueue struct {
+	mutex     sync.Mutex
+	Processes []commons.PCB
+}
+
+var Config *ModuleConfig
+
 var PidCounter *Counter
+
+var NewProcesses *ProcessQueue
 
 func (c *Counter) Increment() int {
 	c.mutex.Lock()
 	c.Value++
 	c.mutex.Unlock()
 	return c.Value
+}
+
+func (c *ProcessQueue) AddProcess(pcb commons.PCB) {
+	c.mutex.Lock()
+	c.Processes = append(c.Processes, pcb)
+	c.mutex.Unlock()
 }

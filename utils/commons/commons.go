@@ -12,6 +12,7 @@ type Mensaje struct {
 
 type PCB struct {
 	Pid            int       `json:"pid"`
+	State          string    `json:"state"`
 	ProgramCounter int       `json:"program_counter"`
 	Quantum        int       `json:"quantum"`
 	Registros      Registros `json:"registros"`

@@ -17,10 +17,22 @@ func IniciarProceso(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pid := globals.PidCounter.Increment()
-
-	// crear PCB y dejarlo en NEW
 	// informarle a la memoria que debe crear un proceso con instrucciones en iniciarProcesoRequest.Path.
+
+	memoryResponseStatus := 200
+	if memoryResponseStatus != 200 {
+		http.Error(w, "Error de memoria", memoryResponseStatus)
+		return
+	}
+
+	pid := globals.PidCounter.Increment()
+	pcb := commons.PCB{
+		Pid:     pid,
+		State:   "NEW",
+		Quantum: globals.Config.Quantum,
+	}
+
+	globals.NewProcesses.AddProcess(pcb)
 
 	var iniciarProcesoResponse = responses.IniciarProcesoResponse{
 		Pid: pid,
