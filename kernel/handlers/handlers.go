@@ -2,43 +2,40 @@ package handlers
 
 import (
 	"fmt"
+	"github.com/sisoputnfrba/tp-golang/kernel/globals"
+	"github.com/sisoputnfrba/tp-golang/kernel/requests"
+	"github.com/sisoputnfrba/tp-golang/kernel/responses"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 	"net/http"
 )
 
-type IniciarProcesoRequest struct {
-	Path string `json:"path"`
-}
-
-type IniciarProcesoResponse struct {
-	Pid int `json:"pid"`
-}
-
-type EstadoProcesoResponse struct {
-	State string `json:"state"`
-}
-
-type ListarProcesosResponse struct {
-	Procesos []Proceso `json:"procesos"`
-}
-
-type Proceso struct {
-	Pid   int    `json:"pid"`
-	State string `json:"state"`
-}
-
 func IniciarProceso(w http.ResponseWriter, r *http.Request) {
-	var iniciarProcesoRequest IniciarProcesoRequest
+	var iniciarProcesoRequest requests.IniciarProcesoRequest
 
 	err := commons.DecodificarJSON(w, r, &iniciarProcesoRequest)
 	if err != nil {
 		return
 	}
 
-	// crear proceso usando iniciarProcesoRequest.Path y retornar pid
+	// informarle a la memoria que debe crear un proceso con instrucciones en iniciarProcesoRequest.Path.
 
-	var iniciarProcesoResponse = IniciarProcesoResponse{
-		Pid: 0,
+	memoryResponseStatus := 200
+	if memoryResponseStatus != 200 {
+		http.Error(w, "Error de memoria", memoryResponseStatus)
+		return
+	}
+
+	pid := globals.PidCounter.Increment()
+	pcb := commons.PCB{
+		Pid:     pid,
+		State:   "NEW",
+		Quantum: globals.Config.Quantum,
+	}
+
+	globals.NewProcesses.AddProcess(pcb)
+
+	var iniciarProcesoResponse = responses.IniciarProcesoResponse{
+		Pid: pid,
 	}
 
 	response, err := commons.CodificarJSON(w, r, iniciarProcesoResponse)
@@ -65,7 +62,7 @@ func EstadoProceso(w http.ResponseWriter, r *http.Request) {
 	pid := queryParams.Get("pid")
 	fmt.Println(pid)
 
-	var estadoProcesoResponse = EstadoProcesoResponse{
+	var estadoProcesoResponse = responses.EstadoProcesoResponse{
 		State: "READY", // retornar el estado del proceso con pid
 	}
 
@@ -89,13 +86,11 @@ func DetenerPlanificacion(w http.ResponseWriter, r *http.Request) {
 }
 
 func ListarProcesos(w http.ResponseWriter, r *http.Request) {
-	var listarProcesosResponse = ListarProcesosResponse{
-		Procesos: []Proceso{
-			{Pid: 0, State: "READY"},
-			{Pid: 1, State: "EXEC"},
-			{Pid: 2, State: "BLOCK"},
-			{Pid: 3, State: "FIN"},
-		},
+	var listarProcesosResponse = []responses.ProcesoResponse{
+		{Pid: 0, State: "READY"},
+		{Pid: 1, State: "EXEC"},
+		{Pid: 2, State: "BLOCK"},
+		{Pid: 3, State: "FIN"},
 	}
 
 	response, err := commons.CodificarJSON(w, r, listarProcesosResponse)

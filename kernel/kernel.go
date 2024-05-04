@@ -17,6 +17,9 @@ func main() {
 	// =============
 	// Configuración
 	// =============
+	globals.PidCounter = &globals.Counter{Value: 0}
+	globals.NewProcesses = &globals.ProcessQueue{Processes: make([]commons.PCB, 0)}
+
 	path, err := os.Getwd()
 	if err != nil {
 		panic(err)
