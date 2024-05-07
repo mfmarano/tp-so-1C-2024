@@ -17,22 +17,23 @@ func main() {
 	// =============
 	// Configuración
 	// =============
-	globals.PidCounter = &globals.Counter{Value: 0}
-	globals.NewProcesses = &globals.ProcessQueue{Processes: make([]commons.PCB, 0)}
-
 	path, err := os.Getwd()
 	if err != nil {
 		panic(err)
 	}
 
-	lofFilePath := filepath.Join(path, "kernel.log")
-	logs.ConfigurarLogger(lofFilePath)
+	logFilePath := filepath.Join(path, "kernel.log")
+	logs.ConfigurarLogger(logFilePath)
 
 	configFilePath := filepath.Join(path, "config.json")
 	globals.Config = configs.IniciarConfiguracion(configFilePath, &globals.ModuleConfig{}).(*globals.ModuleConfig)
 	if globals.Config == nil {
 		log.Fatalln("Error al cargar la configuración de kernel")
 	}
+
+	globals.PidCounter = &globals.Counter{Value: 0}
+	globals.NewProcesses = &globals.ProcessQueue{Processes: make([]commons.PCB, 0)}
+	globals.ReadyProcesses = &globals.ProcessQueue{Processes: make([]commons.PCB, 0)}
 
 	// ========
 	// Interfaz
