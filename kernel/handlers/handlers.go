@@ -3,10 +3,12 @@ package handlers
 import (
 	"fmt"
 	"github.com/sisoputnfrba/tp-golang/kernel/globals"
-	"github.com/sisoputnfrba/tp-golang/kernel/requests"
-	"github.com/sisoputnfrba/tp-golang/kernel/responses"
+	"github.com/sisoputnfrba/tp-golang/kernel/globals/processes"
+	"github.com/sisoputnfrba/tp-golang/kernel/handlers/requests"
+	"github.com/sisoputnfrba/tp-golang/kernel/handlers/responses"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 	"net/http"
+	"strconv"
 )
 
 func IniciarProceso(w http.ResponseWriter, r *http.Request) {
@@ -17,13 +19,7 @@ func IniciarProceso(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pcb := commons.PCB{
-		Pid:     globals.PidCounter.Increment(),
-		State:   "NEW",
-		Quantum: globals.Config.Quantum,
-	}
-
-	globals.NewProcesses.AddProcess(pcb)
+	pcb := processes.CreateProcess()
 
 	// wait multiprogramming with globals.Config.Multiprogramming
 	responseMemoria := requests.IniciarProcesoMemoria(w, r, iniciarProcesoRequest.Path)
@@ -31,9 +27,7 @@ func IniciarProceso(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// quitar de globals.NewProcesses
-	pcb.State = "READY"
-	globals.ReadyProcesses.AddProcess(pcb)
+	processes.SetProcessToReady(pcb)
 
 	var iniciarProcesoResponse = responses.IniciarProcesoResponse{
 		Pid: pcb.Pid,
@@ -44,8 +38,7 @@ func IniciarProceso(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(response)
+	responses.WriteResponse(w, http.StatusOK, response)
 }
 
 func FinalizarProceso(w http.ResponseWriter, r *http.Request) {
@@ -55,43 +48,60 @@ func FinalizarProceso(w http.ResponseWriter, r *http.Request) {
 
 	// finalizar proceso con pid
 
-	w.WriteHeader(http.StatusOK)
+	responses.WriteResponse(w, http.StatusOK, nil)
 }
 
 func EstadoProceso(w http.ResponseWriter, r *http.Request) {
 	queryParams := r.URL.Query()
-	pid := queryParams.Get("pid")
-	fmt.Println(pid)
-
-	var estadoProcesoResponse = responses.EstadoProcesoResponse{
-		State: "READY", // retornar el estado del proceso con pid
-	}
-
-	response, err := commons.CodificarJSON(w, r, estadoProcesoResponse)
+	pid, err := strconv.Atoi(queryParams.Get("pid"))
 	if err != nil {
+		responses.WriteResponse(w, http.StatusBadRequest, []byte("El parámetro pid debe ser un número"))
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(response)
+	allProcesses := append(globals.NewProcesses.Processes, globals.ReadyProcesses.Processes...)
+
+	for _, process := range allProcesses {
+		if process.Pid == pid {
+			var estadoProcesoResponse = responses.EstadoProcesoResponse{
+				State: process.State, // retornar el estado del proceso con pid
+			}
+
+			response, err := commons.CodificarJSON(w, r, estadoProcesoResponse)
+			if err != nil {
+				return
+			}
+
+			responses.WriteResponse(w, http.StatusOK, response)
+			break
+		}
+	}
+
+	responses.WriteResponse(
+		w,
+		http.StatusNotFound,
+		[]byte(fmt.Sprintf("El proceso %d no ha sido encontrado", pid)))
 }
 
 func IniciarPlanificacion(w http.ResponseWriter, r *http.Request) {
 	// resumir planificacion de corto y largo plazo en caso de que se encuentre pausada
-	w.WriteHeader(http.StatusOK)
+	responses.WriteResponse(w, http.StatusOK, nil)
 }
 
 func DetenerPlanificacion(w http.ResponseWriter, r *http.Request) {
 	// pausar la planificación de corto y largo plazo
-	w.WriteHeader(http.StatusOK)
+	responses.WriteResponse(w, http.StatusOK, nil)
 }
 
 func ListarProcesos(w http.ResponseWriter, r *http.Request) {
-	var listarProcesosResponse = []responses.ProcesoResponse{
-		{Pid: 0, State: "READY"},
-		{Pid: 1, State: "EXEC"},
-		{Pid: 2, State: "BLOCK"},
-		{Pid: 3, State: "FIN"},
+	allProcesses := append(globals.NewProcesses.Processes, globals.ReadyProcesses.Processes...)
+
+	listarProcesosResponse := make([]responses.ProcesoResponse, len(allProcesses))
+	for i, process := range allProcesses {
+		listarProcesosResponse[i] = responses.ProcesoResponse{
+			Pid:   process.Pid,
+			State: process.State,
+		}
 	}
 
 	response, err := commons.CodificarJSON(w, r, listarProcesosResponse)
@@ -99,6 +109,5 @@ func ListarProcesos(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(response)
+	responses.WriteResponse(w, http.StatusOK, response)
 }

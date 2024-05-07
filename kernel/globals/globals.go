@@ -29,11 +29,8 @@ type ProcessQueue struct {
 }
 
 var Config *ModuleConfig
-
 var PidCounter *Counter
-
 var NewProcesses *ProcessQueue
-
 var ReadyProcesses *ProcessQueue
 
 func (c *Counter) Increment() int {
@@ -47,4 +44,15 @@ func (c *ProcessQueue) AddProcess(pcb commons.PCB) {
 	c.mutex.Lock()
 	c.Processes = append(c.Processes, pcb)
 	c.mutex.Unlock()
+}
+
+func (c *ProcessQueue) RemoveProcess(pcb commons.PCB) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	for i, process := range c.Processes {
+		if process.Pid == pcb.Pid {
+			c.Processes = append(c.Processes[:i], c.Processes[i+1:]...)
+			break
+		}
+	}
 }
