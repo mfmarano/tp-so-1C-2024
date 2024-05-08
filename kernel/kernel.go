@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/sisoputnfrba/tp-golang/kernel/globals"
+	"github.com/sisoputnfrba/tp-golang/kernel/globals/processes"
 	"github.com/sisoputnfrba/tp-golang/kernel/handlers"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 	"github.com/sisoputnfrba/tp-golang/utils/configs"
@@ -49,6 +50,11 @@ func main() {
 	mux.HandleFunc("PUT /plani", handlers.IniciarPlanificacion)
 	mux.HandleFunc("DELETE /plani", handlers.DetenerPlanificacion)
 	mux.HandleFunc("GET /process", handlers.ListarProcesos)
+
+	// =======
+	// Rutinas
+	// =======
+	go processes.SetProcessToReady()
 
 	// ======
 	// Inicio

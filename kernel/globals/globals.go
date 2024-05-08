@@ -43,19 +43,26 @@ func (c *Counter) Increment() int {
 	return c.Value
 }
 
-func (c *ProcessQueue) AddProcess(pcb commons.PCB) {
-	c.mutex.Lock()
-	c.Processes = append(c.Processes, pcb)
-	c.mutex.Unlock()
+func (q *ProcessQueue) AddProcess(pcb commons.PCB) {
+	q.mutex.Lock()
+	q.Processes = append(q.Processes, pcb)
+	q.mutex.Unlock()
 }
 
-func (c *ProcessQueue) RemoveProcess(pcb commons.PCB) {
-	c.mutex.Lock()
-	defer c.mutex.Unlock()
-	for i, process := range c.Processes {
-		if process.Pid == pcb.Pid {
-			c.Processes = append(c.Processes[:i], c.Processes[i+1:]...)
-			break
-		}
+func (q *ProcessQueue) PopProcess() commons.PCB {
+	q.mutex.Lock()
+	firstProcess := q.Processes[0]
+	q.Processes = q.Processes[1:]
+	q.mutex.Unlock()
+	return firstProcess
+}
+
+func (q *ProcessQueue) GetPids() []int {
+	q.mutex.Lock()
+	var pids []int
+	for _, process := range q.Processes {
+		pids = append(pids, process.Pid)
 	}
+	q.mutex.Unlock()
+	return pids
 }

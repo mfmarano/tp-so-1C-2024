@@ -13,24 +13,18 @@ import (
 
 func IniciarProceso(w http.ResponseWriter, r *http.Request) {
 	var iniciarProcesoRequest requests.IniciarProcesoRequest
-
 	err := commons.DecodificarJSON(w, r, &iniciarProcesoRequest)
 	if err != nil {
 		return
 	}
 
-	pcb := processes.CreateProcess()
-
-	// wait multiprogramming with globals.Config.Multiprogramming
 	responseMemoria := requests.IniciarProcesoMemoria(w, r, iniciarProcesoRequest.Path)
 	if responseMemoria == nil {
 		return
 	}
 
-	processes.SetProcessToReady(pcb)
-
 	var iniciarProcesoResponse = responses.IniciarProcesoResponse{
-		Pid: pcb.Pid,
+		Pid: processes.CreateProcess().Pid,
 	}
 
 	response, err := commons.CodificarJSON(w, r, iniciarProcesoResponse)

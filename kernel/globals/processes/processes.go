@@ -3,14 +3,12 @@ package processes
 import (
 	"github.com/sisoputnfrba/tp-golang/kernel/globals"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
+	"github.com/sisoputnfrba/tp-golang/utils/logs"
 	"log"
-	"strconv"
-	"strings"
 )
 
-func ChangeState(pcb commons.PCB, previousStateProcesses *globals.ProcessQueue, newStateProcesses *globals.ProcessQueue, state string) {
+func ChangeState(pcb commons.PCB, newStateProcesses *globals.ProcessQueue, state string) {
 	previousState := pcb.State
-	previousStateProcesses.RemoveProcess(pcb)
 	pcb.State = state
 	newStateProcesses.AddProcess(pcb)
 	log.Printf("PID: %d - Estado Anterior: %s - Estado Actual: %s", pcb.Pid, previousState, state)
@@ -24,14 +22,21 @@ func CreateProcess() commons.PCB {
 	}
 	globals.NewProcesses.AddProcess(pcb)
 	log.Printf("Se crea el proceso %d en NEW", pcb.Pid)
+	<-globals.New
 	return pcb
 }
 
-func SetProcessToReady(pcb commons.PCB) {
-	ChangeState(pcb, globals.NewProcesses, globals.ReadyProcesses, "READY")
-	var pids []string
-	for _, process := range globals.ReadyProcesses.Processes {
-		pids = append(pids, strconv.Itoa(process.Pid))
+func SetProcessToReady() {
+	for {
+		globals.New <- 0
+		globals.Multiprogramming <- 0
+
+		pcb := globals.NewProcesses.PopProcess()
+		ChangeState(pcb, globals.ReadyProcesses, "READY")
+
+		log.Printf("Cola Ready: [%s]",
+			logs.IntArrayToString(globals.ReadyProcesses.GetPids(), ", "))
+
+		<-globals.Ready
 	}
-	log.Printf("Cola Ready: [%s]", strings.Join(pids, ","))
 }
