@@ -23,3 +23,11 @@ var Config *ModuleConfig
 var Registros *commons.Registros
 
 var TLB *[]TLBEntry
+
+var Interrupcion *commons.Interrupcion
+
+var Instruccion *string
+
+var TamanioPagina *int
+
+var Pid *int

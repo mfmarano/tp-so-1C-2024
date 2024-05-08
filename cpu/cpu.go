@@ -20,8 +20,11 @@ func main() {
 	// Configuración
 	// =============
 
-	globals.Registros = &commons.Registros{}
-	globals.TLB = &[]globals.TLBEntry{}
+	globals.Registros = new(commons.Registros)
+	globals.TLB = new([]globals.TLBEntry)
+	globals.Interrupcion = new(commons.Interrupcion)
+	globals.Instruccion = new(string)
+	globals.Pid = new(int)
 
 	path, err := os.Getwd()
 	if err != nil {
@@ -41,7 +44,8 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /mensaje", commons.RecibirMensaje)
-	mux.HandleFunc("POST /process", handlers.EjecutarProceso)
+	mux.HandleFunc("POST /dispatch", handlers.EjecutarProceso)
+	mux.HandleFunc("POST /interrupt", handlers.RecibirInterrupcion)
 
 	// ======
 	// Inicio
