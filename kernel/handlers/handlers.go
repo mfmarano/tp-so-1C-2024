@@ -32,7 +32,7 @@ func IniciarProceso(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	responses.WriteResponse(w, http.StatusOK, response)
+	commons.EscribirRespuesta(w, http.StatusOK, response)
 }
 
 func FinalizarProceso(w http.ResponseWriter, r *http.Request) {
@@ -42,14 +42,14 @@ func FinalizarProceso(w http.ResponseWriter, r *http.Request) {
 
 	// finalizar proceso con pid
 
-	responses.WriteResponse(w, http.StatusOK, nil)
+	commons.EscribirRespuesta(w, http.StatusOK, nil)
 }
 
 func EstadoProceso(w http.ResponseWriter, r *http.Request) {
 	queryParams := r.URL.Query()
 	pid, err := strconv.Atoi(queryParams.Get("pid"))
 	if err != nil {
-		responses.WriteResponse(w, http.StatusBadRequest, []byte("El parámetro pid debe ser un número"))
+		commons.EscribirRespuesta(w, http.StatusBadRequest, []byte("El parámetro pid debe ser un número"))
 		return
 	}
 
@@ -66,12 +66,12 @@ func EstadoProceso(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			responses.WriteResponse(w, http.StatusOK, response)
+			commons.EscribirRespuesta(w, http.StatusOK, response)
 			break
 		}
 	}
 
-	responses.WriteResponse(
+	commons.EscribirRespuesta(
 		w,
 		http.StatusNotFound,
 		[]byte(fmt.Sprintf("El proceso %d no ha sido encontrado", pid)))
@@ -79,12 +79,12 @@ func EstadoProceso(w http.ResponseWriter, r *http.Request) {
 
 func IniciarPlanificacion(w http.ResponseWriter, r *http.Request) {
 	// resumir planificacion de corto y largo plazo en caso de que se encuentre pausada
-	responses.WriteResponse(w, http.StatusOK, nil)
+	commons.EscribirRespuesta(w, http.StatusOK, nil)
 }
 
 func DetenerPlanificacion(w http.ResponseWriter, r *http.Request) {
 	// pausar la planificación de corto y largo plazo
-	responses.WriteResponse(w, http.StatusOK, nil)
+	commons.EscribirRespuesta(w, http.StatusOK, nil)
 }
 
 func ListarProcesos(w http.ResponseWriter, r *http.Request) {
@@ -103,5 +103,5 @@ func ListarProcesos(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	responses.WriteResponse(w, http.StatusOK, response)
+	commons.EscribirRespuesta(w, http.StatusOK, response)
 }
