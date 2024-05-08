@@ -31,6 +31,9 @@ func main() {
 		log.Fatalln("Error al cargar la configuración de kernel")
 	}
 
+	globals.Multiprogramming = make(chan int, globals.Config.Multiprogramming)
+	globals.New = make(chan int)
+	globals.Ready = make(chan int)
 	globals.PidCounter = &globals.Counter{Value: 0}
 	globals.NewProcesses = &globals.ProcessQueue{Processes: make([]commons.PCB, 0)}
 	globals.ReadyProcesses = &globals.ProcessQueue{Processes: make([]commons.PCB, 0)}

@@ -32,6 +32,9 @@ var Config *ModuleConfig
 var PidCounter *Counter
 var NewProcesses *ProcessQueue
 var ReadyProcesses *ProcessQueue
+var Multiprogramming chan int
+var New chan int
+var Ready chan int
 
 func (c *Counter) Increment() int {
 	c.mutex.Lock()
