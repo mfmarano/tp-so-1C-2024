@@ -41,3 +41,7 @@ func SetProcessToReady() {
 		<-globals.Ready
 	}
 }
+
+func GetAllProcesses() []commons.PCB {
+	return append(queues.NewProcesses.Processes, queues.ReadyProcesses.Processes...)
+}
