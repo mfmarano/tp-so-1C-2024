@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/sisoputnfrba/tp-golang/kernel/globals"
 	"github.com/sisoputnfrba/tp-golang/kernel/globals/processes"
+	"github.com/sisoputnfrba/tp-golang/kernel/globals/queues"
 	"github.com/sisoputnfrba/tp-golang/kernel/handlers"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 	"github.com/sisoputnfrba/tp-golang/utils/configs"
@@ -36,8 +37,8 @@ func main() {
 	globals.New = make(chan int)
 	globals.Ready = make(chan int)
 	globals.PidCounter = &globals.Counter{Value: 0}
-	globals.NewProcesses = &globals.ProcessQueue{Processes: make([]commons.PCB, 0)}
-	globals.ReadyProcesses = &globals.ProcessQueue{Processes: make([]commons.PCB, 0)}
+	queues.NewProcesses = &queues.ProcessQueue{Processes: make([]commons.PCB, 0)}
+	queues.ReadyProcesses = &queues.ProcessQueue{Processes: make([]commons.PCB, 0)}
 
 	// ========
 	// Interfaz

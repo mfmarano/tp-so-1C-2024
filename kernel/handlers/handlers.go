@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"fmt"
-	"github.com/sisoputnfrba/tp-golang/kernel/globals"
 	"github.com/sisoputnfrba/tp-golang/kernel/globals/processes"
+	"github.com/sisoputnfrba/tp-golang/kernel/globals/queues"
 	"github.com/sisoputnfrba/tp-golang/kernel/handlers/requests"
 	"github.com/sisoputnfrba/tp-golang/kernel/handlers/responses"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
@@ -53,7 +53,7 @@ func EstadoProceso(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	allProcesses := append(globals.NewProcesses.Processes, globals.ReadyProcesses.Processes...)
+	allProcesses := append(queues.NewProcesses.Processes, queues.ReadyProcesses.Processes...)
 
 	for _, process := range allProcesses {
 		if process.Pid == pid {
@@ -88,7 +88,7 @@ func DetenerPlanificacion(w http.ResponseWriter, r *http.Request) {
 }
 
 func ListarProcesos(w http.ResponseWriter, r *http.Request) {
-	allProcesses := append(globals.NewProcesses.Processes, globals.ReadyProcesses.Processes...)
+	allProcesses := append(queues.NewProcesses.Processes, queues.ReadyProcesses.Processes...)
 
 	listarProcesosResponse := make([]responses.ProcesoResponse, len(allProcesses))
 	for i, process := range allProcesses {

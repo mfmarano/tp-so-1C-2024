@@ -2,12 +2,13 @@ package processes
 
 import (
 	"github.com/sisoputnfrba/tp-golang/kernel/globals"
+	"github.com/sisoputnfrba/tp-golang/kernel/globals/queues"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 	"github.com/sisoputnfrba/tp-golang/utils/logs"
 	"log"
 )
 
-func ChangeState(pcb commons.PCB, newStateProcesses *globals.ProcessQueue, state string) {
+func ChangeState(pcb commons.PCB, newStateProcesses *queues.ProcessQueue, state string) {
 	previousState := pcb.State
 	pcb.State = state
 	newStateProcesses.AddProcess(pcb)
@@ -20,7 +21,7 @@ func CreateProcess() commons.PCB {
 		State:   "NEW",
 		Quantum: globals.Config.Quantum,
 	}
-	globals.NewProcesses.AddProcess(pcb)
+	queues.NewProcesses.AddProcess(pcb)
 	log.Printf("Se crea el proceso %d en NEW", pcb.Pid)
 	<-globals.New
 	return pcb
@@ -31,11 +32,11 @@ func SetProcessToReady() {
 		globals.New <- 0
 		globals.Multiprogramming <- 0
 
-		pcb := globals.NewProcesses.PopProcess()
-		ChangeState(pcb, globals.ReadyProcesses, "READY")
+		pcb := queues.NewProcesses.PopProcess()
+		ChangeState(pcb, queues.ReadyProcesses, "READY")
 
 		log.Printf("Cola Ready: [%s]",
-			logs.IntArrayToString(globals.ReadyProcesses.GetPids(), ", "))
+			logs.IntArrayToString(queues.ReadyProcesses.GetPids(), ", "))
 
 		<-globals.Ready
 	}
