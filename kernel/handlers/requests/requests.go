@@ -17,5 +17,5 @@ func IniciarProcesoMemoria(w http.ResponseWriter, r *http.Request, filePath stri
 		return nil
 	}
 
-	return client.Post(w, globals.Config.IpMemory, globals.Config.PortMemory, "process", requestBody)
+	return client.Post(globals.Config.IpMemory, globals.Config.PortMemory, "process", requestBody)
 }
