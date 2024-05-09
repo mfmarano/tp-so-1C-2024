@@ -62,3 +62,10 @@ func CodificarJSON(w http.ResponseWriter, r *http.Request, responseStruct interf
 	}
 	return response, err
 }
+
+func EscribirRespuesta(w http.ResponseWriter, statusCode int, response []byte) {
+	w.WriteHeader(statusCode)
+	if response != nil {
+		_, _ = w.Write(response)
+	}
+}

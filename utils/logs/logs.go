@@ -1,9 +1,11 @@
 package logs
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
+	"strings"
 )
 
 func ConfigurarLogger(path string) {
@@ -13,4 +15,11 @@ func ConfigurarLogger(path string) {
 	}
 	mw := io.MultiWriter(os.Stdout, logFile)
 	log.SetOutput(mw)
+}
+
+func IntArrayToString(array []int, delimiter string) string {
+	return strings.Trim(
+		strings.Join(
+			strings.Fields(
+				fmt.Sprint(array)), delimiter), "[]")
 }

@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"fmt"
-	"github.com/sisoputnfrba/tp-golang/kernel/globals"
 	"github.com/sisoputnfrba/tp-golang/kernel/globals/processes"
 	"github.com/sisoputnfrba/tp-golang/kernel/handlers/requests"
 	"github.com/sisoputnfrba/tp-golang/kernel/handlers/responses"
@@ -13,24 +12,18 @@ import (
 
 func IniciarProceso(w http.ResponseWriter, r *http.Request) {
 	var iniciarProcesoRequest requests.IniciarProcesoRequest
-
 	err := commons.DecodificarJSON(w, r, &iniciarProcesoRequest)
 	if err != nil {
 		return
 	}
 
-	pcb := processes.CreateProcess()
-
-	// wait multiprogramming with globals.Config.Multiprogramming
 	responseMemoria := requests.IniciarProcesoMemoria(w, r, iniciarProcesoRequest.Path)
 	if responseMemoria == nil {
 		return
 	}
 
-	processes.SetProcessToReady(pcb)
-
 	var iniciarProcesoResponse = responses.IniciarProcesoResponse{
-		Pid: pcb.Pid,
+		Pid: processes.CreateProcess().Pid,
 	}
 
 	response, err := commons.CodificarJSON(w, r, iniciarProcesoResponse)
@@ -38,7 +31,7 @@ func IniciarProceso(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	responses.WriteResponse(w, http.StatusOK, response)
+	commons.EscribirRespuesta(w, http.StatusOK, response)
 }
 
 func FinalizarProceso(w http.ResponseWriter, r *http.Request) {
@@ -48,20 +41,18 @@ func FinalizarProceso(w http.ResponseWriter, r *http.Request) {
 
 	// finalizar proceso con pid
 
-	responses.WriteResponse(w, http.StatusOK, nil)
+	commons.EscribirRespuesta(w, http.StatusOK, nil)
 }
 
 func EstadoProceso(w http.ResponseWriter, r *http.Request) {
 	queryParams := r.URL.Query()
 	pid, err := strconv.Atoi(queryParams.Get("pid"))
 	if err != nil {
-		responses.WriteResponse(w, http.StatusBadRequest, []byte("El parámetro pid debe ser un número"))
+		commons.EscribirRespuesta(w, http.StatusBadRequest, []byte("El parámetro pid debe ser un número"))
 		return
 	}
 
-	allProcesses := append(globals.NewProcesses.Processes, globals.ReadyProcesses.Processes...)
-
-	for _, process := range allProcesses {
+	for _, process := range processes.GetAllProcesses() {
 		if process.Pid == pid {
 			var estadoProcesoResponse = responses.EstadoProcesoResponse{
 				State: process.State, // retornar el estado del proceso con pid
@@ -72,12 +63,12 @@ func EstadoProceso(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			responses.WriteResponse(w, http.StatusOK, response)
+			commons.EscribirRespuesta(w, http.StatusOK, response)
 			break
 		}
 	}
 
-	responses.WriteResponse(
+	commons.EscribirRespuesta(
 		w,
 		http.StatusNotFound,
 		[]byte(fmt.Sprintf("El proceso %d no ha sido encontrado", pid)))
@@ -85,16 +76,16 @@ func EstadoProceso(w http.ResponseWriter, r *http.Request) {
 
 func IniciarPlanificacion(w http.ResponseWriter, r *http.Request) {
 	// resumir planificacion de corto y largo plazo en caso de que se encuentre pausada
-	responses.WriteResponse(w, http.StatusOK, nil)
+	commons.EscribirRespuesta(w, http.StatusOK, nil)
 }
 
 func DetenerPlanificacion(w http.ResponseWriter, r *http.Request) {
 	// pausar la planificación de corto y largo plazo
-	responses.WriteResponse(w, http.StatusOK, nil)
+	commons.EscribirRespuesta(w, http.StatusOK, nil)
 }
 
 func ListarProcesos(w http.ResponseWriter, r *http.Request) {
-	allProcesses := append(globals.NewProcesses.Processes, globals.ReadyProcesses.Processes...)
+	allProcesses := processes.GetAllProcesses()
 
 	listarProcesosResponse := make([]responses.ProcesoResponse, len(allProcesses))
 	for i, process := range allProcesses {
@@ -109,5 +100,5 @@ func ListarProcesos(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	responses.WriteResponse(w, http.StatusOK, response)
+	commons.EscribirRespuesta(w, http.StatusOK, response)
 }
