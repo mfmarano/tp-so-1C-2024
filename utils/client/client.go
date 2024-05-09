@@ -7,19 +7,19 @@ import (
 	"net/http"
 )
 
-func Post(w http.ResponseWriter, ipMemory string, portMemory int, queryString string, requestBody []byte) *http.Response {
-	url := fmt.Sprintf("http://%s:%d/%s", ipMemory, portMemory, queryString)
+func Post(w http.ResponseWriter, ip string, port int, queryString string, requestBody []byte) *http.Response {
+	url := fmt.Sprintf("http://%s:%d/%s", ip, port, queryString)
 	response, err := http.Post(url, "application/json", bytes.NewBuffer(requestBody))
 
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Error enviando mensaje a ip:%s puerto:%d.", ipMemory, portMemory), http.StatusInternalServerError)
-		log.Printf("Error enviando mensaje a ip:%s puerto:%d. Error: %s\n", ipMemory, portMemory, err.Error())
+		http.Error(w, fmt.Sprintf("Error enviando mensaje a ip:%s puerto:%d.", ip, port), http.StatusInternalServerError)
+		log.Printf("Error enviando mensaje a ip:%s puerto:%d. Error: %s\n", ip, port, err.Error())
 		return nil
 	}
 
 	if response != nil && response.StatusCode != 200 {
-		http.Error(w, fmt.Sprintf("Error enviando mensaje a ip:%s puerto:%d.", ipMemory, portMemory), response.StatusCode)
-		log.Printf("Error enviando mensaje a ip:%s puerto:%d. Response: %s\n", ipMemory, portMemory, response)
+		http.Error(w, fmt.Sprintf("Error enviando mensaje a ip:%s puerto:%d.", ip, port), response.StatusCode)
+		log.Printf("Error enviando mensaje a ip:%s puerto:%d. Response: %s\n", ip, port, response)
 		return nil
 	}
 
