@@ -39,6 +39,7 @@ func main() {
 	globals.PidCounter = &globals.Counter{Value: 0}
 	queues.NewProcesses = &queues.ProcessQueue{Processes: make([]commons.PCB, 0)}
 	queues.ReadyProcesses = &queues.ProcessQueue{Processes: make([]commons.PCB, 0)}
+	queues.RunningProcesses = &queues.ProcessQueue{Processes: make([]commons.PCB, 0)}
 
 	// ========
 	// Interfaz
@@ -56,6 +57,7 @@ func main() {
 	// Rutinas
 	// =======
 	go processes.SetProcessToReady()
+	go processes.SetProcessToRunning()
 
 	// ======
 	// Inicio
