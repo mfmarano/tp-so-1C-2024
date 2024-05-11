@@ -3,6 +3,7 @@ package processes
 import (
 	"github.com/sisoputnfrba/tp-golang/kernel/globals"
 	"github.com/sisoputnfrba/tp-golang/kernel/globals/queues"
+	"github.com/sisoputnfrba/tp-golang/kernel/handlers/requests"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 	"github.com/sisoputnfrba/tp-golang/utils/logs"
 	"log"
@@ -55,15 +56,44 @@ func SetProcessToRunning() {
 	for {
 		globals.Ready <- 0
 
-		// TODO: Implementar planificación con globals.Config.PlanningAlgorithm
-		// pcb := queues.ReadyProcesses.PopProcess()
-		// ChangeState(pcb, queues.RunningProcesses, "EXEC")
+		pcb := GetNextProcess()
+		ChangeState(pcb, queues.RunningProcesses, "EXEC")
 
-		// Enviar PCB al CPU a través del puerto de dispatch
-		// Quedando a la espera de dicho contexto actualizado después de la ejecución y un motivo de desalojo a manejar.
+		response, err := requests.Dispatch(pcb)
+		if err != nil || response == nil {
+			log.Printf("Error al enviar el PCB %d al CPU.", pcb.Pid)
+			// TODO: finalizar proceso
+			// ChangeState(pcb, queues.FinalizedProcesses, "EXIT")
+			// <-globals.Finished
+			continue
+		}
 
-		// En caso que el algoritmo requiera desalojar al proceso en ejecución, enviar interrupción a través de interrupt para forzar el desalojo.
-		// Al recibir el Contexto de Ejecución del proceso en ejecución, en caso de que el motivo de desalojo implique replanificar se seleccionará el siguiente proceso a ejecutar según indique el algoritmo.
-		// Durante este período la CPU se quedará esperando el nuevo contexto.
+		var updatedPcb commons.PCB
+		err = commons.DecodificarJSON(response.Body, &updatedPcb)
+		if err != nil {
+			log.Printf("Error al decodificar el PCB actualizado del CPU.")
+			// TODO: finalizar proceso
+			// ChangeState(pcb, queues.FinalizedProcesses, "EXIT")
+			// <-globals.Finished
+			continue
+		}
+
+		// TODO: tratar updatedPcb según su motivo de desalojo
+		// fin de quantum: ChangeState(pcb, queues.ReadyProcesses, "READY"); y <-globals.Ready
+		// bloqueo: ChangeState(pcb, queues.BlockedProcesses, "BLOCKED"); <-globals.Blocked
+		// finalización: ChangeState(pcb, queues.FinalizedProcesses, "EXIT"); <-globals.Finished
+	}
+}
+
+func GetNextProcess() commons.PCB {
+	switch globals.Config.PlanningAlgorithm {
+	case "FIFO":
+		return queues.ReadyProcesses.PopProcess()
+	case "RR":
+		// TODO: interrumpir proceso con "fin de quantum"
+		// go timer(globals.Config.Quantum) y enviar "fin de quantum" (por /interrupt) al CPU para desalojar
+		return queues.ReadyProcesses.PopProcess()
+	default:
+		return queues.ReadyProcesses.PopProcess()
 	}
 }
