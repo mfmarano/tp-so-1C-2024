@@ -3,25 +3,27 @@ package handlers
 import (
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/sisoputnfrba/tp-golang/cpu/globals"
+	"github.com/sisoputnfrba/tp-golang/cpu/instructions"
 	"github.com/sisoputnfrba/tp-golang/cpu/requests"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 )
 
-func RecibirInterrupcion(w http.ResponseWriter, r *http.Request) {
-	err := commons.DecodificarJSON(w, r, &globals.Interrupcion)
+func ReceiveInterruption(w http.ResponseWriter, r *http.Request) {
+	err := commons.DecodificarJSON(w, r, &globals.Interruption)
 	if err != nil {
 		return
 	}
 
-	log.Printf("PID: %d - Recibi interrupcion - %s", *globals.Pid, globals.Interrupcion.Motivo)
+	log.Printf("PID: %d - Interrupcion - %s", *globals.Pid, *globals.Interruption)
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("ok"))
 }
 
-func EjecutarProceso(w http.ResponseWriter, r *http.Request) {
+func RunProcess(w http.ResponseWriter, r *http.Request) {
 	var pcbRequest commons.PCB
 
 	err := commons.DecodificarJSON(w, r, &pcbRequest)
@@ -30,25 +32,25 @@ func EjecutarProceso(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	//Cargar contexto
-	*globals.Registros = pcbRequest.Registros
+	*globals.Registers = pcbRequest.Registros
 	*globals.Pid = pcbRequest.Pid
 
 	//Get tamaño de pagina de memoria, ver si debe hacerse una sola vez en el main
-	GetTamanioPagina(w)
+	GetPageSize(w)
 
 	for {
-		Fetch()
+		Fetch(w, r)
 
 		Decode()
 
 		Execute()
 
-		if (HayInterrupcion()) {
-			break;
+		if (Interruption()) {
+			break
 		}
 	}
 	
-	pcbRequest.Registros = *globals.Registros
+	pcbRequest.Registros = *globals.Registers
 
 	resp, err := commons.CodificarJSON(w, r, pcbRequest)
 
@@ -60,26 +62,44 @@ func EjecutarProceso(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp)
 }
 
-func Fetch() {
+func Fetch(w http.ResponseWriter, r *http.Request, ) {
+	resp := requests.GetInstruction(w, r)
+	var instruction string
+	commons.DecodificarJSON(w, resp, instruction)
+	*globals.InstructionParts = strings.Split(instruction, " ")
 
+	log.Printf("PID: %d - FETCH - Program Counter: %d", *globals.Pid, globals.Registers.PC)
 }
 
 func Decode() {
-
+	//SET, SUM, SUB, JNZ e IO_GEN_SLEEP no necesitan traduccion de direccion ni buscar operandos
 }
 
 func Execute() {
-
+	switch (*globals.InstructionParts)[0] {
+    case "SET":
+        instructions.Set()
+    case "SUM":
+        instructions.Sum()
+    case "SUB":
+        instructions.Sub()
+    case "JNZ":
+        instructions.Jnz()
+    case "IO_GEN_SLEEP":
+		instructions.IoGenSleep()
+    default:
+        break;
+    }
 }
 
-func HayInterrupcion() bool {
-	return globals.Interrupcion.Motivo != "";
+func Interruption() bool {
+	return *globals.Interruption != ""
 }
 
-func GetTamanioPagina(w http.ResponseWriter){
-	resp := requests.ObtenerConfigMemoria(w, "tamanioPagina")
+func GetPageSize(w http.ResponseWriter){
+	resp := requests.GetMemoryConfig()
 
-	commons.DecodificarJSON(w, resp, &globals.TamanioPagina)
+	commons.DecodificarJSON(w, resp, &globals.PageSize)
 
-	log.Printf("PID: %d - Obtener tamanio pagina - Tamanio: %d", *globals.Pid, *globals.TamanioPagina)
+	log.Printf("PID: %d - Tamaño página - Tamaño: %d", *globals.Pid, *globals.PageSize)
 }

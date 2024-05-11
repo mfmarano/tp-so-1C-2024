@@ -20,14 +20,14 @@ type TLBEntry struct {
 
 var Config *ModuleConfig
 
-var Registros *commons.Registros
+var Registers *commons.Registros
 
 var TLB *[]TLBEntry
 
-var Interrupcion *commons.Interrupcion
+var Interruption *string
 
-var Instruccion *string
+var InstructionParts *[]string
 
-var TamanioPagina *int
+var PageSize *uint32
 
 var Pid *int
