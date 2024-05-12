@@ -16,10 +16,10 @@ type PCB struct {
 	State          string    `json:"state"`
 	ProgramCounter int       `json:"program_counter"`
 	Quantum        int       `json:"quantum"`
-	Registros      Registros `json:"registros"`
+	Registros      Registers `json:"registros"`
 }
 
-type Registros struct {
+type Registers struct {
 	PC  uint32 `json:"pc"`
 	AX  uint8  `json:"ax"`
 	BX  uint8  `json:"bx"`
@@ -31,6 +31,11 @@ type Registros struct {
 	EDX uint32 `json:"edx"`
 	SI  uint32 `json:"si"`
 	DI  uint32 `json:"di"`
+}
+
+type DispatchResponse struct {
+	Pcb    PCB    `json:"pcb"`
+	Reason string `json:"reason"`
 }
 
 func RecibirMensaje(w http.ResponseWriter, r *http.Request) {

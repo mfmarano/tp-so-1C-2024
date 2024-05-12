@@ -68,8 +68,8 @@ func SetProcessToRunning() {
 			continue
 		}
 
-		var updatedPcb commons.PCB
-		err = commons.DecodificarJSON(response.Body, &updatedPcb)
+		var dispatchResponse commons.DispatchResponse
+		err = commons.DecodificarJSON(response.Body, &dispatchResponse)
 		if err != nil {
 			log.Printf("Error al decodificar el PCB actualizado del CPU.")
 			// TODO: finalizar proceso
@@ -78,10 +78,19 @@ func SetProcessToRunning() {
 			continue
 		}
 
-		// TODO: tratar updatedPcb según su motivo de desalojo
-		// fin de quantum: ChangeState(pcb, queues.ReadyProcesses, "READY"); y <-globals.Ready
-		// bloqueo: ChangeState(pcb, queues.BlockedProcesses, "BLOCKED"); <-globals.Blocked
-		// finalización: ChangeState(pcb, queues.FinalizedProcesses, "EXIT"); <-globals.Finished
+		switch dispatchResponse.Reason {
+		case "END_OF_QUANTUM":
+			ChangeState(dispatchResponse.Pcb, queues.ReadyProcesses, "READY")
+			<-globals.Ready
+		case "BLOCKED":
+			// ChangeState(dispatchResponse.Pcb, queues.BlockedProcesses, "BLOCKED")
+			// <-globals.Blocked
+		case "FINISHED":
+			// ChangeState(dispatchResponse.Pcb, queues.FinalizedProcesses, "EXIT")
+			// <-globals.Finished
+		default:
+			continue
+		}
 	}
 }
 
