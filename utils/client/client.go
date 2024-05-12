@@ -7,19 +7,17 @@ import (
 	"net/http"
 )
 
-func Post(ip string, port int, queryString string, requestBody []byte) *http.Response {
+func Post(ip string, port int, queryString string, requestBody []byte) (*http.Response, error) {
 	url := fmt.Sprintf("http://%s:%d/%s", ip, port, queryString)
 	response, err := http.Post(url, "application/json", bytes.NewBuffer(requestBody))
 
 	if err != nil {
 		log.Printf("Error enviando mensaje a ip:%s puerto:%d. Error: %s\n", ip, port, err.Error())
-		return nil
 	}
 
 	if response != nil && response.StatusCode != 200 {
 		log.Printf("Error enviando mensaje a ip:%s puerto:%d. Response: %s\n", ip, port, response)
-		return nil
 	}
 
-	return response
+	return response, err
 }

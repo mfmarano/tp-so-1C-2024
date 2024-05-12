@@ -2,6 +2,7 @@ package commons
 
 import (
 	"encoding/json"
+	"io"
 	"log"
 	"net/http"
 )
@@ -35,8 +36,9 @@ type Registros struct {
 func RecibirMensaje(w http.ResponseWriter, r *http.Request) {
 	var mensaje Mensaje
 
-	err := DecodificarJSON(w, r, &mensaje)
+	err := DecodificarJSON(r.Body, &mensaje)
 	if err != nil {
+		http.Error(w, "Error al decodificar JSON", http.StatusBadRequest)
 		return
 	}
 
@@ -45,20 +47,18 @@ func RecibirMensaje(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write([]byte("Mensaje recibido"))
 }
 
-func DecodificarJSON(w http.ResponseWriter, r *http.Request, requestStruct interface{}) error {
-	err := json.NewDecoder(r.Body).Decode(requestStruct)
+func DecodificarJSON(r io.Reader, requestStruct interface{}) error {
+	err := json.NewDecoder(r).Decode(requestStruct)
 	if err != nil {
 		log.Printf("Error al decodificar JSON: %s\n", err.Error())
-		http.Error(w, "Error al decodificar JSON", http.StatusBadRequest)
 	}
 	return err
 }
 
-func CodificarJSON(w http.ResponseWriter, r *http.Request, responseStruct interface{}) ([]byte, error) {
+func CodificarJSON(responseStruct interface{}) ([]byte, error) {
 	response, err := json.Marshal(responseStruct)
 	if err != nil {
-		log.Printf("Error al codificar la respuesta como JSON: %s\n", err.Error())
-		http.Error(w, "Error al codificar la respuesta como JSON", http.StatusInternalServerError)
+		log.Printf("Error al codificar JSON: %s\n", err.Error())
 	}
 	return response, err
 }

@@ -12,13 +12,15 @@ import (
 
 func IniciarProceso(w http.ResponseWriter, r *http.Request) {
 	var iniciarProcesoRequest requests.IniciarProcesoRequest
-	err := commons.DecodificarJSON(w, r, &iniciarProcesoRequest)
+	err := commons.DecodificarJSON(r.Body, &iniciarProcesoRequest)
 	if err != nil {
+		http.Error(w, "Error al decodificar JSON", http.StatusBadRequest)
 		return
 	}
 
-	responseMemoria := requests.IniciarProcesoMemoria(w, r, iniciarProcesoRequest.Path)
-	if responseMemoria == nil {
+	responseMemoria, err := requests.IniciarProcesoMemoria(iniciarProcesoRequest.Path)
+	if err != nil || responseMemoria == nil {
+		http.Error(w, "Error al iniciar proceso en memoria", http.StatusInternalServerError)
 		return
 	}
 
@@ -26,8 +28,9 @@ func IniciarProceso(w http.ResponseWriter, r *http.Request) {
 		Pid: processes.CreateProcess().Pid,
 	}
 
-	response, err := commons.CodificarJSON(w, r, iniciarProcesoResponse)
+	response, err := commons.CodificarJSON(iniciarProcesoResponse)
 	if err != nil {
+		http.Error(w, "Error al codificar la respuesta como JSON", http.StatusInternalServerError)
 		return
 	}
 
@@ -58,13 +61,14 @@ func EstadoProceso(w http.ResponseWriter, r *http.Request) {
 				State: process.State, // retornar el estado del proceso con pid
 			}
 
-			response, err := commons.CodificarJSON(w, r, estadoProcesoResponse)
+			response, err := commons.CodificarJSON(estadoProcesoResponse)
 			if err != nil {
+				http.Error(w, "Error al codificar la respuesta como JSON", http.StatusInternalServerError)
 				return
 			}
 
 			commons.EscribirRespuesta(w, http.StatusOK, response)
-			break
+			return
 		}
 	}
 
@@ -95,8 +99,9 @@ func ListarProcesos(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	response, err := commons.CodificarJSON(w, r, listarProcesosResponse)
+	response, err := commons.CodificarJSON(listarProcesosResponse)
 	if err != nil {
+		http.Error(w, "Error al codificar la respuesta como JSON", http.StatusInternalServerError)
 		return
 	}
 

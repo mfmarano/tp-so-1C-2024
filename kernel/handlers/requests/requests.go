@@ -11,11 +11,20 @@ type IniciarProcesoRequest struct {
 	Path string `json:"path"`
 }
 
-func IniciarProcesoMemoria(w http.ResponseWriter, r *http.Request, filePath string) *http.Response {
-	requestBody, err := commons.CodificarJSON(w, r, IniciarProcesoRequest{Path: filePath})
+func IniciarProcesoMemoria(filePath string) (*http.Response, error) {
+	requestBody, err := commons.CodificarJSON(IniciarProcesoRequest{Path: filePath})
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
 	return client.Post(globals.Config.IpMemory, globals.Config.PortMemory, "process", requestBody)
+}
+
+func Dispatch(pcb commons.PCB) (*http.Response, error) {
+	requestBody, err := commons.CodificarJSON(pcb)
+	if err != nil {
+		return nil, err
+	}
+
+	return client.Post(globals.Config.IpCpu, globals.Config.PortCpu, "dispatch", requestBody)
 }
