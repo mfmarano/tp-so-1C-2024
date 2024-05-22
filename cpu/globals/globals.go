@@ -1,6 +1,7 @@
 package globals
 
 import (
+	"github.com/sisoputnfrba/tp-golang/cpu/globals/interruption"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 )
 
@@ -20,11 +21,11 @@ type TLBEntry struct {
 
 var Config *ModuleConfig
 
-var Registers *commons.Registros
+var Registers *commons.Registers
+
+var Interruption *interruption.Interruption
 
 var TLB *[]TLBEntry
-
-var Interruption *string
 
 var InstructionParts *[]string
 

@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/sisoputnfrba/tp-golang/cpu/globals"
+	"github.com/sisoputnfrba/tp-golang/cpu/globals/interruption"
 	"github.com/sisoputnfrba/tp-golang/cpu/handlers"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 	"github.com/sisoputnfrba/tp-golang/utils/configs"
@@ -20,9 +21,9 @@ func main() {
 	// Configuración
 	// =============
 
-	globals.Registers = new(commons.Registros)
+	globals.Registers = new(commons.Registers)
 	globals.TLB = new([]globals.TLBEntry)
-	globals.Interruption = new(string)
+	globals.Interruption = new(interruption.Interruption)
 	globals.InstructionParts = new([]string)
 	globals.Pid = new(int)
 

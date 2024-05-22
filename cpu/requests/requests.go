@@ -9,6 +9,7 @@ import (
 )
 
 type GetInstructionRequest struct {
+	Pid int `json:"pid"`
 	PC uint32 `json:"pc"`
 }
 
@@ -16,10 +17,10 @@ func GetMemoryConfig() *http.Response {
 	return client.Get(globals.Config.IpMemory, globals.Config.PortMemory, "config")
 }
 
-func GetInstruction(w http.ResponseWriter, r *http.Request) *http.Response {
-	requestBody, err := commons.CodificarJSON(w, r, GetInstructionRequest{PC: globals.Registers.PC})
+func GetInstruction(w http.ResponseWriter, r *http.Request) (*http.Response, error) {
+	requestBody, err := commons.CodificarJSON(GetInstructionRequest{Pid: *globals.Pid, PC: globals.Registers.PC})
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
 	return client.Post(globals.Config.IpMemory, globals.Config.PortMemory, "instruction", requestBody)

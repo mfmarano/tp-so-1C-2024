@@ -36,6 +36,12 @@ type Registers struct {
 type DispatchResponse struct {
 	Pcb    PCB    `json:"pcb"`
 	Reason string `json:"reason"`
+	Io string `json:"io"`
+	WorkUnits int `json:"work_units"`
+}
+
+type InterruptionRequest struct {
+	Status bool   `json:"status"`
 }
 
 func RecibirMensaje(w http.ResponseWriter, r *http.Request) {

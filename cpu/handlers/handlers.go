@@ -12,12 +12,15 @@ import (
 )
 
 func ReceiveInterruption(w http.ResponseWriter, r *http.Request) {
-	err := commons.DecodificarJSON(w, r, &globals.Interruption)
+	req := new(commons.InterruptionRequest)
+	err := commons.DecodificarJSON(r.Body, &req)
 	if err != nil {
 		return
 	}
 
-	log.Printf("PID: %d - Interrupcion - %s", *globals.Pid, *globals.Interruption)
+	globals.Interruption.Set(req.Status)
+
+	log.Printf("PID: %d - Interrupcion Kernel", *globals.Pid)
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("ok"))
@@ -25,8 +28,9 @@ func ReceiveInterruption(w http.ResponseWriter, r *http.Request) {
 
 func RunProcess(w http.ResponseWriter, r *http.Request) {
 	var pcbRequest commons.PCB
+	var dispatchResponse commons.DispatchResponse
 
-	err := commons.DecodificarJSON(w, r, &pcbRequest)
+	err := commons.DecodificarJSON(r.Body, &pcbRequest)
 	if err != nil {
 		return
 	}
@@ -43,16 +47,19 @@ func RunProcess(w http.ResponseWriter, r *http.Request) {
 
 		Decode()
 
-		Execute()
+		keepRunning := Execute(&dispatchResponse)
 
-		if (Interruption()) {
+		globals.Registers.PC++
+
+		if (!keepRunning || Interruption(&dispatchResponse)) {
 			break
 		}
 	}
-	
-	pcbRequest.Registros = *globals.Registers
 
-	resp, err := commons.CodificarJSON(w, r, pcbRequest)
+	dispatchResponse.Pcb = pcbRequest
+	dispatchResponse.Pcb.Registros = *globals.Registers
+
+	resp, err := commons.CodificarJSON(dispatchResponse)
 
 	if err != nil {
 		return
@@ -63,9 +70,15 @@ func RunProcess(w http.ResponseWriter, r *http.Request) {
 }
 
 func Fetch(w http.ResponseWriter, r *http.Request, ) {
-	resp := requests.GetInstruction(w, r)
+	resp, err := requests.GetInstruction(w, r)
+
+	if err != nil || resp == nil {
+		http.Error(w, "Error al buscar instrucción en memoria", http.StatusInternalServerError)
+		return
+	}
+
 	var instruction string
-	commons.DecodificarJSON(w, resp, instruction)
+	commons.DecodificarJSON(resp.Body, instruction)
 	*globals.InstructionParts = strings.Split(instruction, " ")
 
 	log.Printf("PID: %d - FETCH - Program Counter: %d", *globals.Pid, globals.Registers.PC)
@@ -75,7 +88,11 @@ func Decode() {
 	//SET, SUM, SUB, JNZ e IO_GEN_SLEEP no necesitan traduccion de direccion ni buscar operandos
 }
 
-func Execute() {
+func Execute(response *commons.DispatchResponse) bool {
+	log.Printf("PID: %d - Ejecutando: %s - %s", *globals.Pid, (*globals.InstructionParts)[0], GetParams())
+
+	keepRunning := true
+
 	switch (*globals.InstructionParts)[0] {
     case "SET":
         instructions.Set()
@@ -86,20 +103,37 @@ func Execute() {
     case "JNZ":
         instructions.Jnz()
     case "IO_GEN_SLEEP":
-		instructions.IoGenSleep()
+		instructions.IoGenSleep(response)
+		keepRunning = false
     default:
         break;
     }
+
+	return keepRunning
 }
 
-func Interruption() bool {
-	return *globals.Interruption != ""
+func Interruption(response *commons.DispatchResponse) bool {
+	status := globals.Interruption.Get()
+
+	if (status) {
+		response.Reason = "KERNEL"
+	}
+
+	return status
 }
 
 func GetPageSize(w http.ResponseWriter){
 	resp := requests.GetMemoryConfig()
 
-	commons.DecodificarJSON(w, resp, &globals.PageSize)
+	commons.DecodificarJSON(resp.Body, &globals.PageSize)
 
 	log.Printf("PID: %d - Tamaño página - Tamaño: %d", *globals.Pid, *globals.PageSize)
+}
+
+func GetParams() string {
+	if len(*globals.InstructionParts) > 2 {
+		return strings.Join((*globals.InstructionParts)[1:], " ")
+	}
+	
+	return (*globals.InstructionParts)[1]
 }
