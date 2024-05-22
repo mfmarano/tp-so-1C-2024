@@ -90,22 +90,26 @@ func Fetch() {
 
 	var instResp commons.GetInstructionResponse
 	commons.DecodificarJSON(resp.Body, &instResp)
-	*globals.InstructionParts = strings.Split(instResp.Instruction, " ")
+	
+	globals.Instruction.Parts = strings.Split(instResp.Instruction, " ")
 
 	log.Printf("PID: %d - FETCH - Program Counter: %d", *globals.Pid, globals.Registers.PC)
 }
 
 func Decode() {
 	//SET, SUM, SUB, JNZ e IO_GEN_SLEEP no necesitan traduccion de direccion ni buscar operandos
+
+	globals.Instruction.OpCode = globals.Instruction.Parts[0]
+	globals.Instruction.Operands = globals.Instruction.Parts[1:]
 }
 
 func Execute(response *commons.DispatchResponse) (bool, bool) {
-	log.Printf("PID: %d - Ejecutando: %s - %s", *globals.Pid, (*globals.InstructionParts)[0], GetParams())
+	log.Printf("PID: %d - Ejecutando: %s - %s", *globals.Pid, globals.Instruction.OpCode, GetParams())
 
 	keepRunning := true
 	jump := false
 
-	switch (*globals.InstructionParts)[0] {
+	switch globals.Instruction.OpCode {
     case "SET":
         instructions.Set()
     case "SUM":
@@ -144,13 +148,5 @@ func GetPageSize(w http.ResponseWriter){
 }
 
 func GetParams() string {
-	if len(*globals.InstructionParts) > 2 {
-		return strings.Join((*globals.InstructionParts)[1:], " ")
-	}
-	
-	if len(*globals.InstructionParts) > 1 {
-		return (*globals.InstructionParts)[1]
-	}
-
-	return ""
+	return strings.Join(globals.Instruction.Operands, " ")
 }

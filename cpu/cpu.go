@@ -24,7 +24,7 @@ func main() {
 	globals.Registers = new(commons.Registers)	
 	globals.TLB = new([]globals.TLBEntry)
 	globals.Interruption = new(interruption.Interruption)
-	globals.InstructionParts = new([]string)
+	globals.Instruction = new(globals.InstructionStruct)
 	globals.Pid = new(int)
 
 	instructions.LoadRegistersMap()

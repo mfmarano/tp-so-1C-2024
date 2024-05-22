@@ -21,6 +21,12 @@ type TLBEntry struct {
 	Frame int
 }
 
+type InstructionStruct struct {
+	Parts []string
+	OpCode string
+	Operands []string
+}
+
 var Config *ModuleConfig
 
 var Registers *commons.Registers
@@ -29,7 +35,7 @@ var Interruption *interruption.Interruption
 
 var TLB *[]TLBEntry
 
-var InstructionParts *[]string
+var Instruction *InstructionStruct
 
 var PageSize *uint32
 

@@ -11,15 +11,15 @@ import (
 var RegMap map[string]interface{}
 
 func Set() {
-	reg := RegMap[(*globals.InstructionParts)[1]]
+	reg := RegMap[globals.Instruction.Operands[0]]
 
 	//Los valores los tomamos en base 10 o 16?
 
 	switch v := reg.(type) {
 	case *uint8:
-		*v = ConvertToUint8((*globals.InstructionParts)[2])
+		*v = ConvertToUint8(globals.Instruction.Operands[1])
 	case *uint32:
-		*v = ConvertToUint32((*globals.InstructionParts)[2])
+		*v = ConvertToUint32(globals.Instruction.Operands[1])
 	default:
 		log.Printf("Valor es de tipo incompatible")
 		return
@@ -27,34 +27,34 @@ func Set() {
 }
 
 func Sum() {
-	dest := RegMap[(*globals.InstructionParts)[1]]
-	origin := RegMap[(*globals.InstructionParts)[2]]
+	dest := RegMap[globals.Instruction.Operands[0]]
+	origin := RegMap[globals.Instruction.Operands[1]]
 
 	PerformOperation(dest, origin, Add)
 }
 
 func Sub() {
-	dest := RegMap[(*globals.InstructionParts)[1]]
-	origin := RegMap[(*globals.InstructionParts)[2]]
+	dest := RegMap[globals.Instruction.Operands[0]]
+	origin := RegMap[globals.Instruction.Operands[1]]
 
 	PerformOperation(dest, origin, Subtract)
 }
 
 func Jnz() bool {
-	pc := RegMap["PC"].(*uint32)
-	reg := RegMap[(*globals.InstructionParts)[1]]
+	pc := &globals.Registers.PC
+	reg := RegMap[globals.Instruction.Operands[0]]
 
 	jump := false
 
 	switch v := reg.(type) {
 	case *uint8:
 		if (*v != 0) {
-			*pc = ConvertToUint32((*globals.InstructionParts)[2])
+			*pc = ConvertToUint32(globals.Instruction.Operands[1])
 			jump = true
 		}
 	case *uint32:
 		if (*v != 0) {
-			*pc = ConvertToUint32((*globals.InstructionParts)[2])
+			*pc = ConvertToUint32(globals.Instruction.Operands[1])
 			jump = true
 		}
 	default:
@@ -66,8 +66,8 @@ func Jnz() bool {
 
 func IoGenSleep(response *commons.DispatchResponse) {
 	response.Reason = "BLOCK"
-	response.Io = (*globals.InstructionParts)[1]
-	value, _ := strconv.ParseInt((*globals.InstructionParts)[2], 10, 32)
+	response.Io = globals.Instruction.Operands[0]
+	value, _ := strconv.ParseInt(globals.Instruction.Operands[1], 10, 32)
 	response.WorkUnits = int(value)
 }
 
@@ -110,7 +110,6 @@ func Subtract(x, y uint32) uint32 {
 
 func LoadRegistersMap() {
 	RegMap = map[string]interface{}{
-		"PC":  &globals.Registers.PC,
 		"AX":  &globals.Registers.AX,
 		"BX":  &globals.Registers.BX,
 		"CX":  &globals.Registers.CX,
