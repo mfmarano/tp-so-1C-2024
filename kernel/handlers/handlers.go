@@ -2,10 +2,13 @@ package handlers
 
 import (
 	"fmt"
+	"github.com/sisoputnfrba/tp-golang/kernel/globals"
 	"github.com/sisoputnfrba/tp-golang/kernel/globals/processes"
+	"github.com/sisoputnfrba/tp-golang/kernel/globals/queues"
 	"github.com/sisoputnfrba/tp-golang/kernel/handlers/requests"
 	"github.com/sisoputnfrba/tp-golang/kernel/handlers/responses"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -106,4 +109,35 @@ func ListarProcesos(w http.ResponseWriter, r *http.Request) {
 	}
 
 	commons.EscribirRespuesta(w, http.StatusOK, response)
+}
+
+func RecibirPcb(w http.ResponseWriter, r *http.Request) {
+	var recibirPcbRequest commons.DispatchResponse
+	err := commons.DecodificarJSON(r.Body, &recibirPcbRequest)
+	if err != nil {
+		log.Printf("Error al decodificar el PCB actualizado del CPU.")
+		// TODO: finalizar proceso
+		// ChangeState(pcb, queues.FinalizedProcesses, "EXIT")
+		// <-globals.Finished
+		// log "Finaliza el proceso <PID> - Motivo: <SUCCESS / INVALID_RESOURCE / INVALID_WRITE>"
+	}
+
+	switch recibirPcbRequest.Reason {
+	case "END_OF_QUANTUM":
+		processes.ChangeState(recibirPcbRequest.Pcb, queues.ReadyProcesses, "READY")
+		<-globals.Ready
+		log.Printf("PID: %d - Desalojado por fin de Quantum", recibirPcbRequest.Pcb.Pid)
+	case "BLOCKED":
+		// TODO: bloquear proceso
+		// ChangeState(recibirPcbRequest.Pcb, queues.BlockedProcesses, "BLOCKED")
+		// <-globals.Blocked
+		// log "PID: <PID> - Bloqueado por: <INTERFAZ / NOMBRE_RECURSO>"
+	case "FINISHED":
+		// TODO: finalizar proceso
+		// ChangeState(recibirPcbRequest.Pcb, queues.FinalizedProcesses, "EXIT")
+		// <-globals.Finished
+		// log "Finaliza el proceso <PID> - Motivo: <SUCCESS / INVALID_RESOURCE / INVALID_WRITE>"
+	}
+
+	commons.EscribirRespuesta(w, http.StatusOK, nil)
 }

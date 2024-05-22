@@ -66,30 +66,7 @@ func SetProcessToRunning() {
 			// TODO: finalizar proceso
 			// ChangeState(pcb, queues.FinalizedProcesses, "EXIT")
 			// <-globals.Finished
-			continue
-		}
-
-		var dispatchResponse commons.DispatchResponse
-		err = commons.DecodificarJSON(response.Body, &dispatchResponse)
-		if err != nil {
-			log.Printf("Error al decodificar el PCB actualizado del CPU.")
-			// TODO: finalizar proceso
-			// ChangeState(pcb, queues.FinalizedProcesses, "EXIT")
-			// <-globals.Finished
-			continue
-		}
-
-		switch dispatchResponse.Reason {
-		case "END_OF_QUANTUM":
-			ChangeState(dispatchResponse.Pcb, queues.ReadyProcesses, "READY")
-			<-globals.Ready
-		case "BLOCKED":
-			// ChangeState(dispatchResponse.Pcb, queues.BlockedProcesses, "BLOCKED")
-			// <-globals.Blocked
-		case "FINISHED":
-			// ChangeState(dispatchResponse.Pcb, queues.FinalizedProcesses, "EXIT")
-			// <-globals.Finished
-		default:
+			// log "Finaliza el proceso <PID> - Motivo: <SUCCESS / INVALID_RESOURCE / INVALID_WRITE>"
 			continue
 		}
 	}
