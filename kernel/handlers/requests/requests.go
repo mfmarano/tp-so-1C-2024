@@ -28,3 +28,12 @@ func Dispatch(pcb commons.PCB) (*http.Response, error) {
 
 	return client.Post(globals.Config.IpCpu, globals.Config.PortCpu, "dispatch", requestBody)
 }
+
+func Interrupt(interruption string) (*http.Response, error) {
+	requestBody, err := commons.CodificarJSON(interruption)
+	if err != nil {
+		return nil, err
+	}
+
+	return client.Post(globals.Config.IpCpu, globals.Config.PortCpu, "interrupt", requestBody)
+}
