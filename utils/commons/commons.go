@@ -40,10 +40,6 @@ type DispatchResponse struct {
 	WorkUnits int `json:"work_units"`
 }
 
-type InterruptionRequest struct {
-	Status bool   `json:"status"`
-}
-
 type GetInstructionRequest struct {
 	Pid int `json:"pid"`
 	PC uint32 `json:"pc"`

@@ -9,6 +9,8 @@ type ModuleConfig struct {
 	Port             int    `json:"port"`
 	IpMemory         string `json:"ip_memory"`
 	PortMemory       int    `json:"port_memory"`
+	IpKernel         string `json:"ip_kernel"`
+	PortKernel       int    `json:"port_kernel"`
 	NumberFellingTlb int    `json:"number_felling_tlb"`
 	AlgorithmTlb     string `json:"algorithm_tlb"`
 }

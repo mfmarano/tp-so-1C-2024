@@ -8,69 +8,74 @@ import (
 	"github.com/sisoputnfrba/tp-golang/cpu/globals"
 	"github.com/sisoputnfrba/tp-golang/cpu/instructions"
 	"github.com/sisoputnfrba/tp-golang/cpu/requests"
+	"github.com/sisoputnfrba/tp-golang/utils/client"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 )
 
 func ReceiveInterruption(w http.ResponseWriter, r *http.Request) {
-	req := new(commons.InterruptionRequest)
-	err := commons.DecodificarJSON(r.Body, &req)
+	var reason string
+	err := commons.DecodificarJSON(r.Body, &reason)
 	if err != nil {
 		return
 	}
 
-	globals.Interruption.Set(req.Status)
+	globals.Interruption.Set(true, reason)
 
-	log.Printf("PID: %d - Interrupcion Kernel", *globals.Pid)
+	log.Printf("PID: %d - Interrupcion Kernel - %s", *globals.Pid, reason)
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("ok"))
+	w.Write([]byte("Interrupcion recibida"))
 }
 
 func RunProcess(w http.ResponseWriter, r *http.Request) {
 	var pcbRequest commons.PCB
-	var dispatchResponse commons.DispatchResponse
 
 	err := commons.DecodificarJSON(r.Body, &pcbRequest)
 	if err != nil {
 		return
 	}
-	
-	//Cargar contexto
-	*globals.Registers = pcbRequest.Registros
-	*globals.Pid = pcbRequest.Pid
-	globals.Registers.PC = uint32(pcbRequest.ProgramCounter)
-
-	//Get tamaño de pagina de memoria, ver si debe hacerse una sola vez en el main
-	//GetPageSize(w)
-
-	for {
-		Fetch(w, r)
-
-		Decode()
-
-		keepRunning, jump := Execute(&dispatchResponse)
-
-		if (!jump) {
-			globals.Registers.PC++
-		}
-
-		if (!keepRunning || Interruption(&dispatchResponse)) {
-			break
-		}
-	}
-
-	dispatchResponse.Pcb = pcbRequest
-	dispatchResponse.Pcb.Registros = *globals.Registers
-	dispatchResponse.Pcb.ProgramCounter = int(globals.Registers.PC)
-
-	resp, err := commons.CodificarJSON(dispatchResponse)
-
-	if err != nil {
-		return
-	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write(resp)
+	w.Write([]byte("Pcb recibido"))
+	
+	go func(request commons.PCB) {		
+		var dispatchResponse commons.DispatchResponse
+
+        //Cargar contexto
+        *globals.Registers = request.Registros
+        *globals.Pid = request.Pid
+        globals.Registers.PC = uint32(request.ProgramCounter)
+
+        //Get tamaño de pagina de memoria, ver si debe hacerse una sola vez en el main
+        // GetPageSize(w)
+
+        for {
+            Fetch(w, r)
+
+            Decode()
+
+            keepRunning, jump := Execute(&dispatchResponse)
+
+            if !jump {
+                globals.Registers.PC++
+            }
+
+            if !keepRunning || Interruption(&dispatchResponse) {
+                break
+            }
+        }
+
+        dispatchResponse.Pcb = request
+        dispatchResponse.Pcb.Registros = *globals.Registers
+        dispatchResponse.Pcb.ProgramCounter = int(globals.Registers.PC)
+
+        resp, err := commons.CodificarJSON(dispatchResponse)
+        if err != nil {
+            return
+        }
+
+        client.Post(globals.Config.IpKernel, globals.Config.PortKernel, "pcb", resp)
+    }(pcbRequest)
 }
 
 func Fetch(w http.ResponseWriter, r *http.Request, ) {
@@ -120,10 +125,10 @@ func Execute(response *commons.DispatchResponse) (bool, bool) {
 }
 
 func Interruption(response *commons.DispatchResponse) bool {
-	status := globals.Interruption.GetAndReset()
+	status, reason := globals.Interruption.GetAndReset()
 
 	if (status) {
-		response.Reason = "KERNEL"
+		response.Reason = reason
 	}
 
 	return status
