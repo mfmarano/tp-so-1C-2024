@@ -52,6 +52,7 @@ func main() {
 	mux.HandleFunc("PUT /plani", handlers.IniciarPlanificacion)
 	mux.HandleFunc("DELETE /plani", handlers.DetenerPlanificacion)
 	mux.HandleFunc("GET /process", handlers.ListarProcesos)
+	mux.HandleFunc("POST /pcb", handlers.RecibirPcb)
 
 	// =======
 	// Rutinas

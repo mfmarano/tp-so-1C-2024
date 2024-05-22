@@ -8,6 +8,7 @@ import (
 	"github.com/sisoputnfrba/tp-golang/utils/logs"
 	"log"
 	"slices"
+	"time"
 )
 
 func ChangeState(pcb commons.PCB, newStateProcesses *queues.ProcessQueue, state string) {
@@ -65,44 +66,26 @@ func SetProcessToRunning() {
 			// TODO: finalizar proceso
 			// ChangeState(pcb, queues.FinalizedProcesses, "EXIT")
 			// <-globals.Finished
-			continue
-		}
-
-		var dispatchResponse commons.DispatchResponse
-		err = commons.DecodificarJSON(response.Body, &dispatchResponse)
-		if err != nil {
-			log.Printf("Error al decodificar el PCB actualizado del CPU.")
-			// TODO: finalizar proceso
-			// ChangeState(pcb, queues.FinalizedProcesses, "EXIT")
-			// <-globals.Finished
-			continue
-		}
-
-		switch dispatchResponse.Reason {
-		case "END_OF_QUANTUM":
-			ChangeState(dispatchResponse.Pcb, queues.ReadyProcesses, "READY")
-			<-globals.Ready
-		case "BLOCKED":
-			// ChangeState(dispatchResponse.Pcb, queues.BlockedProcesses, "BLOCKED")
-			// <-globals.Blocked
-		case "FINISHED":
-			// ChangeState(dispatchResponse.Pcb, queues.FinalizedProcesses, "EXIT")
-			// <-globals.Finished
-		default:
+			// log "Finaliza el proceso <PID> - Motivo: <SUCCESS / INVALID_RESOURCE / INVALID_WRITE>"
 			continue
 		}
 	}
 }
 
 func GetNextProcess() commons.PCB {
+	// TODO: implementar case "VRR"
 	switch globals.Config.PlanningAlgorithm {
 	case "FIFO":
 		return queues.ReadyProcesses.PopProcess()
 	case "RR":
-		// TODO: interrumpir proceso con "fin de quantum"
-		// go timer(globals.Config.Quantum) y enviar "fin de quantum" (por /interrupt) al CPU para desalojar
+		go sendEndOfQuantum()
 		return queues.ReadyProcesses.PopProcess()
 	default:
 		return queues.ReadyProcesses.PopProcess()
 	}
+}
+
+func sendEndOfQuantum() {
+	time.Sleep(time.Duration(globals.Config.Quantum) * time.Second)
+	_, _ = requests.Interrupt("END_OF_QUANTUM")
 }
