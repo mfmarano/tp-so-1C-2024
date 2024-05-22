@@ -40,23 +40,28 @@ func Sub() {
 	PerformOperation(dest, origin, Subtract)
 }
 
-func Jnz() {
+func Jnz() bool {
 	pc := RegMap["PC"].(*uint32)
 	reg := RegMap[(*globals.InstructionParts)[1]]
+
+	jump := false
 
 	switch v := reg.(type) {
 	case *uint8:
 		if (*v != 0) {
 			*pc = ConvertToUint32((*globals.InstructionParts)[2])
+			jump = true
 		}
 	case *uint32:
 		if (*v != 0) {
 			*pc = ConvertToUint32((*globals.InstructionParts)[2])
+			jump = true
 		}
 	default:
 		log.Printf("Valor es de tipo incompatible")
-		return
 	}
+
+	return jump
 }
 
 func IoGenSleep(response *commons.DispatchResponse) {

@@ -38,51 +38,53 @@ func RunProcess(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Pcb recibido"))
 	
-	go func(request commons.PCB) {		
-		var dispatchResponse commons.DispatchResponse
-
-        //Cargar contexto
-        *globals.Registers = request.Registros
-        *globals.Pid = request.Pid
-        globals.Registers.PC = uint32(request.ProgramCounter)
-
-        //Get tamaño de pagina de memoria, ver si debe hacerse una sola vez en el main
-        // GetPageSize(w)
-
-        for {
-            Fetch(w, r)
-
-            Decode()
-
-            keepRunning, jump := Execute(&dispatchResponse)
-
-            if !jump {
-                globals.Registers.PC++
-            }
-
-            if !keepRunning || Interruption(&dispatchResponse) {
-                break
-            }
-        }
-
-        dispatchResponse.Pcb = request
-        dispatchResponse.Pcb.Registros = *globals.Registers
-        dispatchResponse.Pcb.ProgramCounter = int(globals.Registers.PC)
-
-        resp, err := commons.CodificarJSON(dispatchResponse)
-        if err != nil {
-            return
-        }
-
-        client.Post(globals.Config.IpKernel, globals.Config.PortKernel, "pcb", resp)
-    }(pcbRequest)
+	go ExecuteProcess(pcbRequest)
 }
 
-func Fetch(w http.ResponseWriter, r *http.Request, ) {
-	resp, err := requests.GetInstruction(w, r)
+func ExecuteProcess(request commons.PCB) {			
+	var dispatchResponse commons.DispatchResponse
+
+	//Cargar contexto
+	*globals.Registers = request.Registros
+	*globals.Pid = request.Pid
+	globals.Registers.PC = uint32(request.ProgramCounter)
+
+	//Get tamaño de pagina de memoria, ver si debe hacerse una sola vez en el main
+	// GetPageSize(w)
+
+	for {
+		Fetch()
+
+		Decode()
+
+		keepRunning, jump := Execute(&dispatchResponse)
+
+		if !jump {
+			globals.Registers.PC++
+		}
+
+		if !keepRunning || Interruption(&dispatchResponse) {
+			break
+		}
+	}
+
+	dispatchResponse.Pcb = request
+	dispatchResponse.Pcb.Registros = *globals.Registers
+	dispatchResponse.Pcb.ProgramCounter = int(globals.Registers.PC)
+
+	resp, err := commons.CodificarJSON(dispatchResponse)
+	if err != nil {
+		return
+	}
+
+	client.Post(globals.Config.IpKernel, globals.Config.PortKernel, "pcb", resp)
+}
+
+func Fetch() {
+	resp, err := requests.GetInstruction()
 
 	if err != nil || resp == nil {
-		http.Error(w, "Error al buscar instrucción en memoria", http.StatusInternalServerError)
+		log.Fatal("Error al buscar instrucción en memoria")
 		return
 	}
 
@@ -111,8 +113,7 @@ func Execute(response *commons.DispatchResponse) (bool, bool) {
     case "SUB":
         instructions.Sub()
     case "JNZ":
-        instructions.Jnz()
-		jump = true
+        jump = instructions.Jnz()
     case "IO_GEN_SLEEP":
 		instructions.IoGenSleep(response)
 		keepRunning = false

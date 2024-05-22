@@ -12,7 +12,7 @@ func GetMemoryConfig() *http.Response {
 	return client.Get(globals.Config.IpMemory, globals.Config.PortMemory, "config")
 }
 
-func GetInstruction(w http.ResponseWriter, r *http.Request) (*http.Response, error) {
+func GetInstruction() (*http.Response, error) {
 	requestBody, err := commons.CodificarJSON(commons.GetInstructionRequest{Pid: *globals.Pid, PC: globals.Registers.PC})
 	if err != nil {
 		return nil, err
