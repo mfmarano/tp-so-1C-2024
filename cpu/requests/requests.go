@@ -8,17 +8,12 @@ import (
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 )
 
-type GetInstructionRequest struct {
-	Pid int `json:"pid"`
-	PC uint32 `json:"pc"`
-}
-
 func GetMemoryConfig() *http.Response {
 	return client.Get(globals.Config.IpMemory, globals.Config.PortMemory, "config")
 }
 
 func GetInstruction(w http.ResponseWriter, r *http.Request) (*http.Response, error) {
-	requestBody, err := commons.CodificarJSON(GetInstructionRequest{Pid: *globals.Pid, PC: globals.Registers.PC})
+	requestBody, err := commons.CodificarJSON(commons.GetInstructionRequest{Pid: *globals.Pid, PC: globals.Registers.PC})
 	if err != nil {
 		return nil, err
 	}

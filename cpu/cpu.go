@@ -10,6 +10,7 @@ import (
 	"github.com/sisoputnfrba/tp-golang/cpu/globals"
 	"github.com/sisoputnfrba/tp-golang/cpu/globals/interruption"
 	"github.com/sisoputnfrba/tp-golang/cpu/handlers"
+	"github.com/sisoputnfrba/tp-golang/cpu/instructions"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 	"github.com/sisoputnfrba/tp-golang/utils/configs"
 	"github.com/sisoputnfrba/tp-golang/utils/logs"
@@ -20,12 +21,13 @@ func main() {
 	// =============
 	// Configuración
 	// =============
-
-	globals.Registers = new(commons.Registers)
+	globals.Registers = new(commons.Registers)	
 	globals.TLB = new([]globals.TLBEntry)
 	globals.Interruption = new(interruption.Interruption)
 	globals.InstructionParts = new([]string)
 	globals.Pid = new(int)
+
+	instructions.LoadRegistersMap()
 
 	path, err := os.Getwd()
 	if err != nil {

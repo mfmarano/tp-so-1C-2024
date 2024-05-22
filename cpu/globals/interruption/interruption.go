@@ -13,9 +13,10 @@ func (i *Interruption) Set(status bool) {
 	i.Mutex.Unlock()
 }
 
-func (i *Interruption) Get() (bool) {
+func (i *Interruption) GetAndReset() (bool) {
 	i.Mutex.Lock()
 	status := i.Status
+	i.Status = false
 	i.Mutex.Unlock()
 	return status
 }

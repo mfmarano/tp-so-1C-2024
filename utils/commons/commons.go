@@ -44,6 +44,15 @@ type InterruptionRequest struct {
 	Status bool   `json:"status"`
 }
 
+type GetInstructionRequest struct {
+	Pid int `json:"pid"`
+	PC uint32 `json:"pc"`
+}
+
+type GetInstructionResponse struct {
+	Instruction string `json:"instruction"`
+}
+
 func RecibirMensaje(w http.ResponseWriter, r *http.Request) {
 	var mensaje Mensaje
 

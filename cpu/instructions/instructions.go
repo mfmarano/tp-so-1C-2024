@@ -8,22 +8,10 @@ import (
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 )
 
-var regMap = map[string]interface{}{
-	"PC":  &globals.Registers.PC,
-	"AX":  &globals.Registers.AX,
-	"BX":  &globals.Registers.BX,
-	"CX":  &globals.Registers.CX,
-	"DX":  &globals.Registers.DX,
-	"EAX": &globals.Registers.EAX,
-	"EBX": &globals.Registers.EBX,
-	"ECX": &globals.Registers.ECX,
-	"EDX": &globals.Registers.EDX,
-	"SI":  &globals.Registers.SI,
-	"DI":  &globals.Registers.DI,
-}
+var RegMap map[string]interface{}
 
 func Set() {
-	reg := regMap[(*globals.InstructionParts)[1]]
+	reg := RegMap[(*globals.InstructionParts)[1]]
 
 	//Los valores los tomamos en base 10 o 16?
 
@@ -39,22 +27,22 @@ func Set() {
 }
 
 func Sum() {
-	dest := regMap[(*globals.InstructionParts)[1]]
-	origin := regMap[(*globals.InstructionParts)[2]]
+	dest := RegMap[(*globals.InstructionParts)[1]]
+	origin := RegMap[(*globals.InstructionParts)[2]]
 
 	PerformOperation(dest, origin, Add)
 }
 
 func Sub() {
-	dest := regMap[(*globals.InstructionParts)[1]]
-	origin := regMap[(*globals.InstructionParts)[2]]
+	dest := RegMap[(*globals.InstructionParts)[1]]
+	origin := RegMap[(*globals.InstructionParts)[2]]
 
 	PerformOperation(dest, origin, Subtract)
 }
 
 func Jnz() {
-	pc := regMap["PC"].(*uint32)
-	reg := regMap[(*globals.InstructionParts)[1]]
+	pc := RegMap["PC"].(*uint32)
+	reg := RegMap[(*globals.InstructionParts)[1]]
 
 	switch v := reg.(type) {
 	case *uint8:
@@ -113,4 +101,20 @@ func Add(x, y uint32) uint32 {
 
 func Subtract(x, y uint32) uint32 {
 	return x - y
+}
+
+func LoadRegistersMap() {
+	RegMap = map[string]interface{}{
+		"PC":  &globals.Registers.PC,
+		"AX":  &globals.Registers.AX,
+		"BX":  &globals.Registers.BX,
+		"CX":  &globals.Registers.CX,
+		"DX":  &globals.Registers.DX,
+		"EAX": &globals.Registers.EAX,
+		"EBX": &globals.Registers.EBX,
+		"ECX": &globals.Registers.ECX,
+		"EDX": &globals.Registers.EDX,
+		"SI":  &globals.Registers.SI,
+		"DI":  &globals.Registers.DI,
+	}
 }
