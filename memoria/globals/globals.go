@@ -14,5 +14,3 @@ type NewProcess struct {
 	Path string `json:"path"`
 	Pid  int    `json:"pid"`
 }
-
-var fileContents = make(map[int][]string)

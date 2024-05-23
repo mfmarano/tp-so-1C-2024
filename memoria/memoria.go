@@ -39,6 +39,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /mensaje", commons.RecibirMensaje)
 	mux.HandleFunc("POST /process", handlers.NuevoProceso)
+	mux.HandleFunc("POST /instruction", handlers.ObtenerInstruccion)
 
 	// ======
 	// Inicio
