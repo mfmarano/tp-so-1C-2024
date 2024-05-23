@@ -9,10 +9,11 @@ import (
 
 type IniciarProcesoRequest struct {
 	Path string `json:"path"`
+	Pid  int    `json:"pid"`
 }
 
-func IniciarProcesoMemoria(filePath string) (*http.Response, error) {
-	requestBody, err := commons.CodificarJSON(IniciarProcesoRequest{Path: filePath})
+func IniciarProcesoMemoria(filePath string, pid int) (*http.Response, error) {
+	requestBody, err := commons.CodificarJSON(IniciarProcesoRequest{Path: filePath, Pid: pid})
 	if err != nil {
 		return nil, err
 	}

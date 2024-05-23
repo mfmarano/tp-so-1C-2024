@@ -18,9 +18,9 @@ func ChangeState(pcb commons.PCB, newStateProcesses *queues.ProcessQueue, state 
 	log.Printf("PID: %d - Estado Anterior: %s - Estado Actual: %s", pcb.Pid, previousState, state)
 }
 
-func CreateProcess() commons.PCB {
+func CreateProcess(pid int) commons.PCB {
 	pcb := commons.PCB{
-		Pid:     globals.PidCounter.Increment(),
+		Pid:     pid,
 		State:   "NEW",
 		Quantum: globals.Config.Quantum,
 	}

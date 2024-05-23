@@ -21,14 +21,18 @@ func IniciarProceso(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	responseMemoria, err := requests.IniciarProcesoMemoria(iniciarProcesoRequest.Path)
+	pid := globals.PidCounter.Increment()
+
+	responseMemoria, err := requests.IniciarProcesoMemoria(iniciarProcesoRequest.Path, pid)
 	if err != nil || responseMemoria == nil {
 		http.Error(w, "Error al iniciar proceso en memoria", http.StatusInternalServerError)
 		return
 	}
 
+	processes.CreateProcess(pid)
+
 	var iniciarProcesoResponse = responses.IniciarProcesoResponse{
-		Pid: processes.CreateProcess().Pid,
+		Pid: pid,
 	}
 
 	response, err := commons.CodificarJSON(iniciarProcesoResponse)
