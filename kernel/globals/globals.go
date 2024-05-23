@@ -25,6 +25,7 @@ type Counter struct {
 var Config *ModuleConfig
 var PidCounter *Counter
 var Multiprogramming chan int
+var CpuIsFree chan int
 var New chan int
 var Ready chan int
 

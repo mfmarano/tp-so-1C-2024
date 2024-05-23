@@ -120,28 +120,24 @@ func RecibirPcb(w http.ResponseWriter, r *http.Request) {
 	err := commons.DecodificarJSON(r.Body, &recibirPcbRequest)
 	if err != nil {
 		log.Printf("Error al decodificar el PCB actualizado del CPU.")
-		// TODO: finalizar proceso
-		// ChangeState(pcb, queues.FinalizedProcesses, "EXIT")
-		// <-globals.Finished
-		// log "Finaliza el proceso <PID> - Motivo: <SUCCESS / INVALID_RESOURCE / INVALID_WRITE>"
+		commons.EscribirRespuesta(w, http.StatusBadRequest, []byte("Error al decodificar el PCB actualizado del CPU."))
+		return
 	}
+
+	queues.RunningProcesses.PopProcess()
 
 	switch recibirPcbRequest.Reason {
 	case "END_OF_QUANTUM":
-		processes.ChangeState(recibirPcbRequest.Pcb, queues.ReadyProcesses, "READY")
-		<-globals.Ready
 		log.Printf("PID: %d - Desalojado por fin de Quantum", recibirPcbRequest.Pcb.Pid)
+		processes.PrepareProcess(recibirPcbRequest.Pcb)
 	case "BLOCKED":
-		// TODO: bloquear proceso
-		// ChangeState(recibirPcbRequest.Pcb, queues.BlockedProcesses, "BLOCKED")
-		// <-globals.Blocked
-		// log "PID: <PID> - Bloqueado por: <INTERFAZ / NOMBRE_RECURSO>"
+		processes.BlockProcess(recibirPcbRequest.Pcb, recibirPcbRequest.Io)
 	case "FINISHED":
-		// TODO: finalizar proceso
-		// ChangeState(recibirPcbRequest.Pcb, queues.FinalizedProcesses, "EXIT")
-		// <-globals.Finished
-		// log "Finaliza el proceso <PID> - Motivo: <SUCCESS / INVALID_RESOURCE / INVALID_WRITE>"
+		processes.FinalizeProcess(recibirPcbRequest.Pcb, "SUCCESS")
+		<-globals.Multiprogramming
 	}
+
+	<-globals.CpuIsFree
 
 	commons.EscribirRespuesta(w, http.StatusOK, nil)
 }

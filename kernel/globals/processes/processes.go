@@ -30,6 +30,24 @@ func CreateProcess(pid int) commons.PCB {
 	return pcb
 }
 
+func PrepareProcess(pcb commons.PCB) {
+	ChangeState(pcb, queues.ReadyProcesses, "READY")
+
+	log.Printf("Cola Ready: [%s]",
+		logs.IntArrayToString(queues.ReadyProcesses.GetPids(), ", "))
+
+	<-globals.Ready
+}
+
+func FinalizeProcess(pcb commons.PCB, reason string) {
+	log.Printf("Finaliza el proceso %d - Motivo: %s", pcb.Pid, reason)
+}
+
+func BlockProcess(pcb commons.PCB, io string) {
+	ChangeState(pcb, queues.BlockedProcesses, "BLOCKED")
+	log.Printf("PID: %d - Bloqueado por: %s", pcb.Pid, io)
+}
+
 func GetAllProcesses() []commons.PCB {
 	return slices.Concat(
 		queues.NewProcesses.Processes,
@@ -42,20 +60,14 @@ func SetProcessToReady() {
 	for {
 		globals.New <- 0
 		globals.Multiprogramming <- 0
-
-		pcb := queues.NewProcesses.PopProcess()
-		ChangeState(pcb, queues.ReadyProcesses, "READY")
-
-		log.Printf("Cola Ready: [%s]",
-			logs.IntArrayToString(queues.ReadyProcesses.GetPids(), ", "))
-
-		<-globals.Ready
+		PrepareProcess(queues.NewProcesses.PopProcess())
 	}
 }
 
 func SetProcessToRunning() {
 	for {
 		globals.Ready <- 0
+		globals.CpuIsFree <- 0
 
 		pcb := GetNextProcess()
 		ChangeState(pcb, queues.RunningProcesses, "EXEC")
@@ -63,11 +75,10 @@ func SetProcessToRunning() {
 		response, err := requests.Dispatch(pcb)
 		if err != nil || response == nil {
 			log.Printf("Error al enviar el PCB %d al CPU.", pcb.Pid)
-			// TODO: finalizar proceso
-			// ChangeState(pcb, queues.FinalizedProcesses, "EXIT")
-			// <-globals.Finished
-			// log "Finaliza el proceso <PID> - Motivo: <SUCCESS / INVALID_RESOURCE / INVALID_WRITE>"
-			continue
+
+			queues.RunningProcesses.PopProcess()
+			FinalizeProcess(pcb, "ERROR_DISPATCH")
+			<-globals.Multiprogramming
 		}
 	}
 }

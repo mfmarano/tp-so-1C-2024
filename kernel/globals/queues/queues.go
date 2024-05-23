@@ -13,6 +13,7 @@ type ProcessQueue struct {
 var NewProcesses *ProcessQueue
 var ReadyProcesses *ProcessQueue
 var RunningProcesses *ProcessQueue
+var BlockedProcesses *ProcessQueue
 
 func (q *ProcessQueue) AddProcess(pcb commons.PCB) {
 	q.mutex.Lock()
