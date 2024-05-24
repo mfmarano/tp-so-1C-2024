@@ -79,6 +79,7 @@ func SetProcessToRunning() {
 			queues.RunningProcesses.PopProcess()
 			FinalizeProcess(pcb, "ERROR_DISPATCH")
 			<-globals.Multiprogramming
+			<-globals.CpuIsFree
 		}
 	}
 }
