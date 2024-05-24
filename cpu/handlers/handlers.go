@@ -64,6 +64,7 @@ func ExecuteProcess(request commons.PCB) {
 		}
 
 		if !keepRunning || Interruption(&dispatchResponse) {
+			log.Printf("PID: %d - Se devuelve PCB - Motivo: %s - PC: %d", *globals.Pid, dispatchResponse.Reason, globals.Registers.PC)
 			break
 		}
 	}
@@ -123,7 +124,7 @@ func Execute(response *commons.DispatchResponse) (bool, bool) {
 		keepRunning = false
     default:
 		keepRunning = false
-		response.Reason = "EXIT"
+		response.Reason = "FINISHED"
     }
 
 	return keepRunning, jump

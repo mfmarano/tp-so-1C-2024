@@ -41,7 +41,7 @@ func Sub() {
 }
 
 func Jnz() bool {
-	pc := &globals.Registers.PC
+	pc := RegMap["PC"].(*uint32)
 	reg := RegMap[globals.Instruction.Operands[0]]
 
 	jump := false
@@ -110,6 +110,7 @@ func Subtract(x, y uint32) uint32 {
 
 func LoadRegistersMap() {
 	RegMap = map[string]interface{}{
+		"PC":  &globals.Registers.PC,
 		"AX":  &globals.Registers.AX,
 		"BX":  &globals.Registers.BX,
 		"CX":  &globals.Registers.CX,
