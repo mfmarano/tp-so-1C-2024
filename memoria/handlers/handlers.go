@@ -11,8 +11,6 @@ import (
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 )
 
-var fileContents = make(map[int][]string)
-
 func readFile(filePath string) ([]string, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -41,12 +39,12 @@ func addFileToContents(PID int, filePath string) error {
 		return err
 	}
 
-	fileContents[PID] = lines
+	globals.FileContents.AddFile(PID, lines)
 	return nil
 }
 
 func getFileLine(PID int, lineIndex uint32) (string, error) {
-	lines, ok := fileContents[PID]
+	lines, ok := globals.FileContents.GetFile(PID)
 	if !ok {
 		return "", fmt.Errorf("file with PID %d not found", PID)
 	}
@@ -61,7 +59,7 @@ func getFileLine(PID int, lineIndex uint32) (string, error) {
 /*--------------------------------------------------------------------------------------------------------*/
 
 func NuevoProceso(w http.ResponseWriter, r *http.Request) {
-	var nuevoProceso globals.NewProcess
+	var nuevoProceso globals.NewProcessRequest
 
 	err := commons.DecodificarJSON(r.Body, &nuevoProceso)
 	if err != nil {
@@ -75,8 +73,7 @@ func NuevoProceso(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Added file %s with PID %d\n", nuevoProceso.Path, nuevoProceso.Pid)
 	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("espacio reservado"))
+	commons.EscribirRespuesta(w, http.StatusOK, []byte("espacio reservado"))
 }
 
 func ObtenerInstruccion(w http.ResponseWriter, r *http.Request) {

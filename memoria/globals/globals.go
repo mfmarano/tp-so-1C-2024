@@ -1,5 +1,7 @@
 package globals
 
+import "sync"
+
 type ModuleConfig struct {
 	Port            int    `json:"port"`
 	MemorySize      int    `json:"memory_size"`
@@ -10,7 +12,27 @@ type ModuleConfig struct {
 
 var Config *ModuleConfig
 
-type NewProcess struct {
+type NewProcessRequest struct {
 	Path string `json:"path"`
 	Pid  int    `json:"pid"`
+}
+
+type FileContent struct {
+	mutex              sync.Mutex
+	InstructionsPerPcb map[int][]string
+}
+
+var FileContents FileContent
+
+func (f *FileContent) AddFile(PID int, lines []string) {
+	f.mutex.Lock()
+	f.InstructionsPerPcb[PID] = lines
+	f.mutex.Unlock()
+}
+
+func (f *FileContent) GetFile(PID int) ([]string, bool) {
+	f.mutex.Lock()
+	lines, ok := f.InstructionsPerPcb[PID]
+	f.mutex.Unlock()
+	return lines, ok
 }

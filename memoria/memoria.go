@@ -32,6 +32,8 @@ func main() {
 		log.Fatalln("Error al cargar la configuración")
 	}
 
+	globals.FileContents = globals.FileContent{InstructionsPerPcb: make(map[int][]string)}
+
 	// ========
 	// Interfaz
 	// ========
