@@ -2,14 +2,16 @@ package main
 
 import (
 	"fmt"
-	"github.com/sisoputnfrba/tp-golang/memoria/globals"
-	"github.com/sisoputnfrba/tp-golang/utils/commons"
-	"github.com/sisoputnfrba/tp-golang/utils/configs"
-	"github.com/sisoputnfrba/tp-golang/utils/logs"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/sisoputnfrba/tp-golang/memoria/globals"
+	"github.com/sisoputnfrba/tp-golang/memoria/handlers"
+	"github.com/sisoputnfrba/tp-golang/utils/commons"
+	"github.com/sisoputnfrba/tp-golang/utils/configs"
+	"github.com/sisoputnfrba/tp-golang/utils/logs"
 )
 
 func main() {
@@ -30,12 +32,16 @@ func main() {
 		log.Fatalln("Error al cargar la configuración")
 	}
 
+	globals.FileContents = globals.FileContent{InstructionsPerPcb: make(map[int][]string)}
+
 	// ========
 	// Interfaz
 	// ========
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /mensaje", commons.RecibirMensaje)
+	mux.HandleFunc("POST /process", handlers.NuevoProceso)
+	mux.HandleFunc("POST /instruction", handlers.ObtenerInstruccion)
 
 	// ======
 	// Inicio
