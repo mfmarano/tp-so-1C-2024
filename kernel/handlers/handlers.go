@@ -126,6 +126,8 @@ func RecibirPcb(w http.ResponseWriter, r *http.Request) {
 
 	queues.RunningProcesses.PopProcess()
 
+	<-globals.CpuIsFree
+
 	switch recibirPcbRequest.Reason {
 	case "END_OF_QUANTUM":
 		log.Printf("PID: %d - Desalojado por fin de Quantum", recibirPcbRequest.Pcb.Pid)
@@ -136,8 +138,6 @@ func RecibirPcb(w http.ResponseWriter, r *http.Request) {
 		processes.FinalizeProcess(recibirPcbRequest.Pcb, "SUCCESS")
 		<-globals.Multiprogramming
 	}
-
-	<-globals.CpuIsFree
 
 	commons.EscribirRespuesta(w, http.StatusOK, nil)
 }

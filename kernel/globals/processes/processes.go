@@ -98,6 +98,6 @@ func GetNextProcess() commons.PCB {
 }
 
 func sendEndOfQuantum() {
-	time.Sleep(time.Duration(globals.Config.Quantum) * time.Second)
+	time.Sleep(time.Duration(globals.Config.Quantum) * time.Millisecond)
 	_, _ = requests.Interrupt("END_OF_QUANTUM")
 }
