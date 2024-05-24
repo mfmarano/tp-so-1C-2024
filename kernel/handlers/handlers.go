@@ -2,15 +2,17 @@ package handlers
 
 import (
 	"fmt"
-	"github.com/sisoputnfrba/tp-golang/kernel/globals"
-	"github.com/sisoputnfrba/tp-golang/kernel/globals/processes"
-	"github.com/sisoputnfrba/tp-golang/kernel/globals/queues"
-	"github.com/sisoputnfrba/tp-golang/kernel/handlers/requests"
-	"github.com/sisoputnfrba/tp-golang/kernel/handlers/responses"
-	"github.com/sisoputnfrba/tp-golang/utils/commons"
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/sisoputnfrba/tp-golang/kernel/globals"
+	"github.com/sisoputnfrba/tp-golang/kernel/globals/processes"
+	"github.com/sisoputnfrba/tp-golang/kernel/globals/queues"
+	"github.com/sisoputnfrba/tp-golang/kernel/globals/timer"
+	"github.com/sisoputnfrba/tp-golang/kernel/handlers/requests"
+	"github.com/sisoputnfrba/tp-golang/kernel/handlers/responses"
+	"github.com/sisoputnfrba/tp-golang/utils/commons"
 )
 
 func IniciarProceso(w http.ResponseWriter, r *http.Request) {
@@ -134,8 +136,10 @@ func RecibirPcb(w http.ResponseWriter, r *http.Request) {
 		processes.PrepareProcess(recibirPcbRequest.Pcb)
 	case "BLOCKED":
 		processes.BlockProcess(recibirPcbRequest.Pcb, recibirPcbRequest.Io)
+		timer.SignalDiscardTimer()
 	case "FINISHED":
 		processes.FinalizeProcess(recibirPcbRequest.Pcb, "SUCCESS")
+		timer.SignalDiscardTimer()
 		<-globals.Multiprogramming
 	}
 

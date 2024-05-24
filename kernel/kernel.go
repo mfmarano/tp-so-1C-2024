@@ -2,17 +2,19 @@ package main
 
 import (
 	"fmt"
-	"github.com/sisoputnfrba/tp-golang/kernel/globals"
-	"github.com/sisoputnfrba/tp-golang/kernel/globals/processes"
-	"github.com/sisoputnfrba/tp-golang/kernel/globals/queues"
-	"github.com/sisoputnfrba/tp-golang/kernel/handlers"
-	"github.com/sisoputnfrba/tp-golang/utils/commons"
-	"github.com/sisoputnfrba/tp-golang/utils/configs"
-	"github.com/sisoputnfrba/tp-golang/utils/logs"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/sisoputnfrba/tp-golang/kernel/globals"
+	"github.com/sisoputnfrba/tp-golang/kernel/globals/processes"
+	"github.com/sisoputnfrba/tp-golang/kernel/globals/queues"
+	"github.com/sisoputnfrba/tp-golang/kernel/globals/timer"
+	"github.com/sisoputnfrba/tp-golang/kernel/handlers"
+	"github.com/sisoputnfrba/tp-golang/utils/commons"
+	"github.com/sisoputnfrba/tp-golang/utils/configs"
+	"github.com/sisoputnfrba/tp-golang/utils/logs"
 )
 
 func main() {
@@ -38,6 +40,7 @@ func main() {
 	globals.New = make(chan int)
 	globals.Ready = make(chan int)
 	globals.PidCounter = &globals.Counter{Value: 0}
+	globals.Timer = &globals.QuantumTimer{StartTimer: make(chan int, 1), DiscardTimer: make(chan int, 1)}
 	queues.NewProcesses = &queues.ProcessQueue{Processes: make([]commons.PCB, 0)}
 	queues.ReadyProcesses = &queues.ProcessQueue{Processes: make([]commons.PCB, 0)}
 	queues.RunningProcesses = &queues.ProcessQueue{Processes: make([]commons.PCB, 0)}
@@ -59,6 +62,7 @@ func main() {
 	// =======
 	// Rutinas
 	// =======
+	go timer.RunTimer()
 	go processes.SetProcessToReady()
 	go processes.SetProcessToRunning()
 
