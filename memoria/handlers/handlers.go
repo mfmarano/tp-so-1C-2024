@@ -63,16 +63,18 @@ func NuevoProceso(w http.ResponseWriter, r *http.Request) {
 
 	err := commons.DecodificarJSON(r.Body, &nuevoProceso)
 	if err != nil {
+		http.Error(w, "Error al decodificar JSON", http.StatusBadRequest)
 		return
 	}
 
 	err = addFileToContents(nuevoProceso.Pid, nuevoProceso.Path)
 	if err != nil {
-		fmt.Println("Error reading file:", nuevoProceso.Path, err)
-	} else {
-		log.Printf("Added file %s with PID %d\n", nuevoProceso.Path, nuevoProceso.Pid)
+		log.Println("Error al leer archivo", nuevoProceso.Path, err)
+		http.Error(w, "Error al leer archivo", http.StatusInternalServerError)
+		return
 	}
 
+	log.Printf("Archivo %s asociado con PID %d", nuevoProceso.Path, nuevoProceso.Pid)
 	commons.EscribirRespuesta(w, http.StatusOK, []byte("espacio reservado"))
 }
 
