@@ -65,7 +65,7 @@ func Jnz() bool {
 }
 
 func IoGenSleep(response *commons.DispatchResponse) {
-	response.Reason = "BLOCK"
+	response.Reason = "BLOCKED"
 	response.Io = globals.Instruction.Operands[0]
 	value, _ := strconv.ParseInt(globals.Instruction.Operands[1], 10, 32)
 	response.WorkUnits = int(value)
