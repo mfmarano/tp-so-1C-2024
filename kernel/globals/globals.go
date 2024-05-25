@@ -2,6 +2,7 @@ package globals
 
 import (
 	"sync"
+	"time"
 )
 
 type ModuleConfig struct {
@@ -22,8 +23,15 @@ type Counter struct {
 	Value int
 }
 
+type QuantumTimer struct {
+	Timer *time.Timer	
+	StartTimer chan int
+	DiscardTimer chan int
+}
+
 var Config *ModuleConfig
 var PidCounter *Counter
+var Timer *QuantumTimer
 var Multiprogramming chan int
 var CpuIsFree chan int
 var New chan int

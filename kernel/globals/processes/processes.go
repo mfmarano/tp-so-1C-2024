@@ -1,14 +1,15 @@
 package processes
 
 import (
+	"log"
+	"slices"
+
 	"github.com/sisoputnfrba/tp-golang/kernel/globals"
 	"github.com/sisoputnfrba/tp-golang/kernel/globals/queues"
+	"github.com/sisoputnfrba/tp-golang/kernel/globals/timer"
 	"github.com/sisoputnfrba/tp-golang/kernel/handlers/requests"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 	"github.com/sisoputnfrba/tp-golang/utils/logs"
-	"log"
-	"slices"
-	"time"
 )
 
 func ChangeState(pcb commons.PCB, newStateProcesses *queues.ProcessQueue, state string) {
@@ -69,8 +70,9 @@ func SetProcessToRunning() {
 		globals.Ready <- 0
 		globals.CpuIsFree <- 0
 
-		pcb := GetNextProcess()
+		pcb := queues.ReadyProcesses.PopProcess()
 		ChangeState(pcb, queues.RunningProcesses, "EXEC")
+		timer.SignalStartTimer()
 
 		response, err := requests.Dispatch(pcb)
 		if err != nil || response == nil {
@@ -80,24 +82,7 @@ func SetProcessToRunning() {
 			FinalizeProcess(pcb, "ERROR_DISPATCH")
 			<-globals.Multiprogramming
 			<-globals.CpuIsFree
+			timer.SignalDiscardTimer()
 		}
 	}
-}
-
-func GetNextProcess() commons.PCB {
-	// TODO: implementar case "VRR"
-	switch globals.Config.PlanningAlgorithm {
-	case "FIFO":
-		return queues.ReadyProcesses.PopProcess()
-	case "RR":
-		go sendEndOfQuantum()
-		return queues.ReadyProcesses.PopProcess()
-	default:
-		return queues.ReadyProcesses.PopProcess()
-	}
-}
-
-func sendEndOfQuantum() {
-	time.Sleep(time.Duration(globals.Config.Quantum) * time.Millisecond)
-	_, _ = requests.Interrupt("END_OF_QUANTUM")
 }
