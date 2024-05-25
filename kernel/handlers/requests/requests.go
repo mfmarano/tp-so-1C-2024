@@ -13,10 +13,7 @@ type IniciarProcesoRequest struct {
 }
 
 func IniciarProcesoMemoria(filePath string, pid int) (*http.Response, error) {
-	requestBody, err := commons.CodificarJSON(IniciarProcesoRequest{Path: filePath, Pid: pid})
-	if err != nil {
-		return nil, err
-	}
+	requestBody, _ := commons.CodificarJSON(IniciarProcesoRequest{Path: filePath, Pid: pid})
 
 	return client.Post(globals.Config.IpMemory, globals.Config.PortMemory, "process", requestBody)
 }

@@ -26,7 +26,7 @@ func IniciarProceso(w http.ResponseWriter, r *http.Request) {
 	pid := globals.PidCounter.Increment()
 
 	responseMemoria, err := requests.IniciarProcesoMemoria(iniciarProcesoRequest.Path, pid)
-	if err != nil || responseMemoria == nil {
+	if err != nil || responseMemoria.StatusCode != http.StatusOK {
 		http.Error(w, "Error al iniciar proceso en memoria", http.StatusInternalServerError)
 		return
 	}
