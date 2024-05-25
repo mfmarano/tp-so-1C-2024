@@ -36,8 +36,13 @@ type Registers struct {
 type DispatchResponse struct {
 	Pcb    PCB    `json:"pcb"`
 	Reason string `json:"reason"`
-	Io string `json:"io"`
-	WorkUnits int `json:"work_units"`
+	Io IoDispatch `json:"io"`
+}
+
+type IoDispatch struct {
+	Io string `json:"reason"`
+	Instruction string `json:"instruction"`
+	Params []string `json:"params"`
 }
 
 type GetInstructionRequest struct {

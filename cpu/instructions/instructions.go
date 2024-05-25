@@ -66,9 +66,9 @@ func Jnz() bool {
 
 func IoGenSleep(response *commons.DispatchResponse) {
 	response.Reason = "BLOCKED"
-	response.Io = globals.Instruction.Operands[0]
-	value, _ := strconv.ParseInt(globals.Instruction.Operands[1], 10, 32)
-	response.WorkUnits = int(value)
+	response.Io.Io = globals.Instruction.Operands[0]
+	response.Io.Instruction = globals.Instruction.OpCode
+	response.Io.Params = append(response.Io.Params, globals.Instruction.Operands[1])
 }
 
 func ConvertToUint8(str string) uint8 {

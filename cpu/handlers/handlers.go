@@ -1,10 +1,11 @@
 package handlers
 
 import (
-	"github.com/sisoputnfrba/tp-golang/cpu/globals/interruption"
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/sisoputnfrba/tp-golang/cpu/globals/interruption"
 
 	"github.com/sisoputnfrba/tp-golang/cpu/globals"
 	"github.com/sisoputnfrba/tp-golang/cpu/instructions"

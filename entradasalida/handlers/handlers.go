@@ -73,10 +73,10 @@ func produceAndWait(req commons.InstructionRequest) {
 func addRequest(req commons.InstructionRequest) {
 	defer queues.WaitGroup.Done()
 
-	// Consumimos un semaforo de productor que permite hasta 3 recursos
+	// Consumimos un semaforo de productor
 	queues.SemProductor <- 0
-	// Entramos en la sección critica de nuestro mercado, Las variables valor y valores
+	// Entramos en la sección critica
 	queues.InstructionRequests.AddRequest(req)	
-	// Informamos a consumidores que tienen un recurso en el mercado
+	// Informamos a consumidor que tiene un recurso en el mercado
 	<-queues.SemConsumidor
 }
