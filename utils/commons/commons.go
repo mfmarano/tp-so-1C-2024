@@ -49,6 +49,19 @@ type GetInstructionResponse struct {
 	Instruction string `json:"instruction"`
 }
 
+type ConnectRequest struct {
+	Name string `json:"name"`
+	Ip  string    `json:"ip"`
+	Port  int    `json:"port"`
+}
+
+type IoRequest struct {
+	Pid int `json:"pid"`
+	Instruction string `json:"instruction"`
+	Value int `json:"value"`
+}
+
+
 func RecibirMensaje(w http.ResponseWriter, r *http.Request) {
 	var mensaje Mensaje
 
