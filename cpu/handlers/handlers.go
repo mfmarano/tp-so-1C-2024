@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/sisoputnfrba/tp-golang/cpu/globals/interruption"
 	"log"
 	"net/http"
 	"strings"
@@ -13,18 +14,17 @@ import (
 )
 
 func ReceiveInterruption(w http.ResponseWriter, r *http.Request) {
-	var reason string
-	err := commons.DecodificarJSON(r.Body, &reason)
+	var i interruption.Interruption
+	err := commons.DecodificarJSON(r.Body, &i)
 	if err != nil {
 		return
 	}
 
-	globals.Interruption.Set(true, reason)
+	globals.Interruption.Set(true, i.Reason, i.Pid)
 
-	log.Printf("PID: %d - Interrupcion Kernel - %s", *globals.Pid, reason)
+	log.Printf("PID: %d - Interrupcion Kernel - %s", *globals.Pid, i.Reason)
 
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Interrupcion recibida"))
+	commons.EscribirRespuesta(w, http.StatusOK, []byte("Interrupcion recibida"))
 }
 
 func RunProcess(w http.ResponseWriter, r *http.Request) {
@@ -37,11 +37,11 @@ func RunProcess(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Pcb recibido"))
-	
+
 	go ExecuteProcess(pcbRequest)
 }
 
-func ExecuteProcess(request commons.PCB) {			
+func ExecuteProcess(request commons.PCB) {
 	var dispatchResponse commons.DispatchResponse
 
 	//Cargar contexto
@@ -91,7 +91,7 @@ func Fetch() {
 
 	var instResp commons.GetInstructionResponse
 	commons.DecodificarJSON(resp.Body, &instResp)
-	
+
 	globals.Instruction.Parts = strings.Split(instResp.Instruction, " ")
 
 	log.Printf("PID: %d - FETCH - Program Counter: %d", *globals.Pid, globals.Registers.PC)
@@ -111,36 +111,36 @@ func Execute(response *commons.DispatchResponse) (bool, bool) {
 	jump := false
 
 	switch globals.Instruction.OpCode {
-    case "SET":
-        instructions.Set()
-    case "SUM":
-        instructions.Sum()
-    case "SUB":
-        instructions.Sub()
-    case "JNZ":
-        jump = instructions.Jnz()
-    case "IO_GEN_SLEEP":
+	case "SET":
+		instructions.Set()
+	case "SUM":
+		instructions.Sum()
+	case "SUB":
+		instructions.Sub()
+	case "JNZ":
+		jump = instructions.Jnz()
+	case "IO_GEN_SLEEP":
 		instructions.IoGenSleep(response)
 		keepRunning = false
-    default:
+	default:
 		keepRunning = false
 		response.Reason = "FINISHED"
-    }
+	}
 
 	return keepRunning, jump
 }
 
 func Interruption(response *commons.DispatchResponse) bool {
-	status, reason := globals.Interruption.GetAndReset()
+	status, reason, pid := globals.Interruption.GetAndReset()
 
-	if (status) {
+	if status && pid == *globals.Pid {
 		response.Reason = reason
 	}
 
-	return status
+	return status && pid == *globals.Pid
 }
 
-func GetPageSize(w http.ResponseWriter){
+func GetPageSize(w http.ResponseWriter) {
 	resp := requests.GetMemoryConfig()
 
 	commons.DecodificarJSON(resp.Body, &globals.PageSize)
