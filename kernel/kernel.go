@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/globals"
+	"github.com/sisoputnfrba/tp-golang/kernel/globals/io"
 	"github.com/sisoputnfrba/tp-golang/kernel/globals/processes"
 	"github.com/sisoputnfrba/tp-golang/kernel/globals/queues"
 	"github.com/sisoputnfrba/tp-golang/kernel/handlers"
@@ -43,6 +44,7 @@ func main() {
 	queues.ReadyProcesses = &queues.ProcessQueue{Processes: make([]commons.PCB, 0)}
 	queues.RunningProcesses = &queues.ProcessQueue{Processes: make([]commons.PCB, 0)}
 	queues.BlockedProcesses = &queues.ProcessQueue{Processes: make([]commons.PCB, 0)}
+	io.IosMap = &io.IoMap{Ios: make(map[string]io.IoConfig)}
 
 	// ========
 	// Interfaz
@@ -56,6 +58,7 @@ func main() {
 	mux.HandleFunc("DELETE /plani", handlers.DetenerPlanificacion)
 	mux.HandleFunc("GET /process", handlers.ListarProcesos)
 	mux.HandleFunc("POST /pcb", handlers.RecibirPcb)
+	mux.HandleFunc("POST /connect", handlers.RecibirConexion)
 
 	// =======
 	// Rutinas

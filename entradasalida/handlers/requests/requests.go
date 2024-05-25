@@ -9,7 +9,7 @@ import (
 )
 
 func Connect() (*http.Response, error) {
-	req := commons.ConnectRequest { Name: globals.Config.Name, Ip: globals.Config.Ip, Port: globals.Config.Port}
+	req := commons.IoConnectRequest { Name: globals.Config.Name, Ip: globals.Config.Ip, Port: globals.Config.Port}
 	requestBody, err := commons.CodificarJSON(req)
 	if err != nil {
 		return nil, err

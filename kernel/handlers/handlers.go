@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/globals"
+	"github.com/sisoputnfrba/tp-golang/kernel/globals/io"
 	"github.com/sisoputnfrba/tp-golang/kernel/globals/processes"
 	"github.com/sisoputnfrba/tp-golang/kernel/globals/queues"
 	"github.com/sisoputnfrba/tp-golang/kernel/handlers/requests"
@@ -141,4 +142,20 @@ func RecibirPcb(w http.ResponseWriter, r *http.Request) {
 	}
 
 	commons.EscribirRespuesta(w, http.StatusOK, nil)
+}
+
+func RecibirConexion(w http.ResponseWriter, r *http.Request) {
+	var req commons.IoConnectRequest
+	err := commons.DecodificarJSON(r.Body, &req)
+	if err != nil {
+		log.Printf("Error al decodificar la conexion de Io.")
+		commons.EscribirRespuesta(w, http.StatusBadRequest, []byte("Error al decodificar la conexion de Io."))
+		return
+	}
+
+	config := io.IoConfig{Ip: req.Ip, Port: req.Port}
+
+	io.IosMap.AddConfig(req.Name, config)
+	
+	log.Printf("IO %s - Conexion aceptada: ip %s, port %d", req.Name, config.Ip, config.Port)
 }

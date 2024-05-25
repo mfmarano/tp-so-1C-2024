@@ -49,7 +49,7 @@ type GetInstructionResponse struct {
 	Instruction string `json:"instruction"`
 }
 
-type ConnectRequest struct {
+type IoConnectRequest struct {
 	Name string `json:"name"`
 	Ip  string    `json:"ip"`
 	Port  int    `json:"port"`
