@@ -156,6 +156,15 @@ func RecibirConexion(w http.ResponseWriter, r *http.Request) {
 	config := io.IoConfig{Ip: req.Ip, Port: req.Port}
 
 	io.IosMap.AddConfig(req.Name, config)
-	
+
 	log.Printf("IO %s - Conexion aceptada: ip %s, port %d", req.Name, config.Ip, config.Port)
+}
+
+func DesbloquearProceso(w http.ResponseWriter, r *http.Request) {
+	queryParams := r.URL.Query()
+	pid, _ := strconv.Atoi(queryParams.Get("pid"))
+
+	processes.PrepareProcess(queues.BlockedProcesses.RemoveProcess(pid))
+
+	commons.EscribirRespuesta(w, http.StatusOK, nil)
 }

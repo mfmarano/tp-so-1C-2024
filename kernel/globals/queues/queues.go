@@ -38,3 +38,19 @@ func (q *ProcessQueue) GetPids() []int {
 	q.mutex.Unlock()
 	return pids
 }
+
+func (q *ProcessQueue) RemoveProcess(pid int) commons.PCB {
+	var newProcesses []commons.PCB
+	var removedProcess commons.PCB
+	q.mutex.Lock()
+	for _, process := range q.Processes {
+		if process.Pid != pid {
+			newProcesses = append(newProcesses, process)
+		} else {
+			removedProcess = process
+		}
+	}
+	q.Processes = newProcesses
+	q.mutex.Unlock()
+	return removedProcess
+}

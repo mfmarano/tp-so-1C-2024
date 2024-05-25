@@ -59,6 +59,7 @@ func main() {
 	mux.HandleFunc("GET /process", handlers.ListarProcesos)
 	mux.HandleFunc("POST /pcb", handlers.RecibirPcb)
 	mux.HandleFunc("POST /connect", handlers.RecibirConexion)
+	mux.HandleFunc("PUT /unlock-process/{pid}", handlers.DesbloquearProceso)
 
 	// =======
 	// Rutinas
