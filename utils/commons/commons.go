@@ -55,10 +55,10 @@ type IoConnectRequest struct {
 	Port  int    `json:"port"`
 }
 
-type IoRequest struct {
-	Pid int `json:"pid"`
-	Instruction string `json:"instruction"`
-	Value int `json:"value"`
+type InstructionRequest struct {
+	Pid               int	   `json:"pid"`
+	Instruction       string   `json:"instruction"`
+	Params            []string `json:"params"`
 }
 
 

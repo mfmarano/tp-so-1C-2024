@@ -3,9 +3,11 @@ package handlers
 import (
 	"log"
 	"net/http"
-	"time"
+	"slices"
+	"strconv"
 
 	"github.com/sisoputnfrba/tp-golang/entradasalida/globals"
+	"github.com/sisoputnfrba/tp-golang/entradasalida/globals/queues"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 )
 
@@ -17,30 +19,64 @@ type GenericIO struct {
 	UnitWorkTime int
 }
 
-func EjecutarInstruccion(w http.ResponseWriter, r *http.Request) {
-	var req commons.IoRequest
+func RecibirInstruccion(w http.ResponseWriter, r *http.Request) {
+	var req commons.InstructionRequest
 	err := commons.DecodificarJSON(r.Body, &req)
 	if err != nil {
 		return
 	}
 
-	switch globals.Config.Type {
-	case "GENERICA":
-		handleGenericInstruction(w, req)
-	default:
-		log.Fatalf("Non compatible type")
-		commons.EscribirRespuesta(w, http.StatusBadRequest, []byte("Error al procesar el tipo de IO."))
+	if canExecuteInstruction(req) {
+		go produceAndWait(req)
+		//queues.InstructionRequests.AddRequest(req)
+		commons.EscribirRespuesta(w, http.StatusOK, []byte("Instruccion recibida"))
+	} else {
+		log.Printf("PID: %d - No se puede ejecutar instruccion %s", req.Pid, req.Instruction)
+		commons.EscribirRespuesta(w, http.StatusBadRequest, []byte("No se puede ejecutar instruccion"))
 	}
 }
 
-func handleGenericInstruction(w http.ResponseWriter, req commons.IoRequest) {
-	switch req.Instruction {
-	case globals.IO_GEN_SLEEP:
-		log.Printf("PID: %d - Operacion: %s", req.Pid, req.Instruction)
-		time.Sleep(time.Duration(req.Value) * time.Millisecond)
-		commons.EscribirRespuesta(w, http.StatusOK, []byte("Instruccion ejecutada ok."))
-	default:
-		log.Printf("Unknown instruction for GenericIO: %s", req.Instruction)
-		commons.EscribirRespuesta(w, http.StatusBadRequest, []byte("Instruccion no compatible con el tipo de IO."))
+func canExecuteInstruction(req commons.InstructionRequest) bool {
+	switch globals.Config.Type {
+		case globals.GENERIC_TYPE:
+			return canExecuteGenericInstruction(req)
+		default:
+			return false
 	}
+}
+
+func canExecuteGenericInstruction(req commons.InstructionRequest) bool {
+	if !slices.Contains(globals.GENERIC_INSTRUCTIONS, req.Instruction) {
+		return false
+	}
+
+	switch req.Instruction {
+		case globals.GENERIC_INSTRUCTIONS[0]:
+			return canCastToInt(req.Params[0])
+		default:
+			return false
+	}
+}
+
+func canCastToInt(param string) bool {
+	_, err := strconv.Atoi(param)
+    return err == nil
+}
+
+func produceAndWait(req commons.InstructionRequest) {
+	queues.WaitGroup.Add(1)
+	go addRequest(req)
+
+	queues.WaitGroup.Wait()
+}
+
+func addRequest(req commons.InstructionRequest) {
+	defer queues.WaitGroup.Done()
+
+	// Consumimos un semaforo de productor que permite hasta 3 recursos
+	queues.SemProductor <- 0
+	// Entramos en la sección critica de nuestro mercado, Las variables valor y valores
+	queues.InstructionRequests.AddRequest(req)	
+	// Informamos a consumidores que tienen un recurso en el mercado
+	<-queues.SemConsumidor
 }

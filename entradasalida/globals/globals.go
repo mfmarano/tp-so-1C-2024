@@ -28,5 +28,11 @@ const (
 	IO_FS_READ      = "IO_FS_READ"
 )
 
+const (
+	GENERIC_TYPE    = "GENERICA"
+)
+
+var GENERIC_INSTRUCTIONS = []string{IO_GEN_SLEEP}
+
 // Config es una variable global que almacena la configuración del módulo I/O.
 var Config *ModuleConfig
