@@ -12,6 +12,11 @@ type IniciarProcesoRequest struct {
 	Pid  int    `json:"pid"`
 }
 
+type InterruptRequest struct {
+	Pid    int    `json:"pid"`
+	Reason string `json:"reason"`
+}
+
 func IniciarProcesoMemoria(filePath string, pid int) (*http.Response, error) {
 	requestBody, _ := commons.CodificarJSON(IniciarProcesoRequest{Path: filePath, Pid: pid})
 
@@ -27,8 +32,8 @@ func Dispatch(pcb commons.PCB) (*http.Response, error) {
 	return client.Post(globals.Config.IpCpu, globals.Config.PortCpu, "dispatch", requestBody)
 }
 
-func Interrupt(interruption string) (*http.Response, error) {
-	requestBody, err := commons.CodificarJSON(interruption)
+func Interrupt(interruption string, pid int) (*http.Response, error) {
+	requestBody, err := commons.CodificarJSON(InterruptRequest{Reason: interruption, Pid: pid})
 	if err != nil {
 		return nil, err
 	}
