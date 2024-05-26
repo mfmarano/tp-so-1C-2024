@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"sync"
 
 	"github.com/sisoputnfrba/tp-golang/entradasalida/globals"
 	"github.com/sisoputnfrba/tp-golang/entradasalida/globals/instructions"
@@ -34,11 +33,8 @@ func main() {
 		log.Fatalln("Error al cargar la configuración")
 	}
 
-	queues.InstructionRequests = &queues.RequestQueue{Requests: make([]commons.InstructionRequest, 0)}
-	queues.WaitGroup = &sync.WaitGroup{}
-	queues.SemProductor = make(chan int, 1)
-	queues.SemConsumidor = make(chan int)
-
+	queues.InstructionRequests = &queues.RequestQueue{Requests: make([]commons.InstructionRequest, 0), SemProductos: make(chan int, 10)} //cantidad maxima de requests en queue, adaptable
+	
 	// Conectarse al Kernel cuando levanta modulo i/o, le tiene que hacer request a kernel para "conectarse" (le manda nombre de i/o y en qué puerto e ip escucha)
 	_, err = requests.Connect()
 	if err != nil {
@@ -55,7 +51,6 @@ func main() {
 	// =======
 	// Rutinas
 	// =======
-	queues.WaitGroup.Add(1)
 	go instructions.RunExecution()
 
 	// ======

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"slices"
 	"strconv"
+	"sync"
 
 	"github.com/sisoputnfrba/tp-golang/entradasalida/globals"
 	"github.com/sisoputnfrba/tp-golang/entradasalida/globals/queues"
@@ -27,7 +28,7 @@ func RecibirInstruccion(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if canExecuteInstruction(req) {
-		go produceAndWait(req)
+		go waitToProduce(req)
 		//queues.InstructionRequests.AddRequest(req)
 		commons.EscribirRespuesta(w, http.StatusOK, []byte("Instruccion recibida"))
 	} else {
@@ -63,20 +64,20 @@ func canCastToInt(param string) bool {
     return err == nil
 }
 
-func produceAndWait(req commons.InstructionRequest) {
-	queues.WaitGroup.Add(1)
-	go addRequest(req)
+func waitToProduce(req commons.InstructionRequest) {
+    waitGroup := &sync.WaitGroup{}
+	waitGroup.Add(1)
+	go addRequest(req, waitGroup)
 
-	queues.WaitGroup.Wait()
+	waitGroup.Wait()
+	log.Printf("PID: %d - Terminó produceAndWait", req.Pid)
 }
 
-func addRequest(req commons.InstructionRequest) {
-	defer queues.WaitGroup.Done()
+func addRequest(req commons.InstructionRequest, waitGroup *sync.WaitGroup) {
+	defer waitGroup.Done()
 
-	// Consumimos un semaforo de productor
-	queues.SemProductor <- 0
 	// Entramos en la sección critica
 	queues.InstructionRequests.AddRequest(req)	
 	// Informamos a consumidor que tiene un recurso en el mercado
-	<-queues.SemConsumidor
+	queues.InstructionRequests.SemProductos <- 1
 }

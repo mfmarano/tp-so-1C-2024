@@ -9,12 +9,10 @@ import (
 type RequestQueue struct {
 	mutex     sync.Mutex
 	Requests  []commons.InstructionRequest
+	SemProductos chan int
 }
 
 var InstructionRequests *RequestQueue
-var WaitGroup *sync.WaitGroup
-var SemConsumidor chan int
-var SemProductor chan int
 
 func (q *RequestQueue) AddRequest(req commons.InstructionRequest) {
 	q.mutex.Lock()

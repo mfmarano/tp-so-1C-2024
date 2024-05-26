@@ -161,8 +161,9 @@ func RecibirConexion(w http.ResponseWriter, r *http.Request) {
 }
 
 func DesbloquearProceso(w http.ResponseWriter, r *http.Request) {
-	queryParams := r.URL.Query()
-	pid, _ := strconv.Atoi(queryParams.Get("pid"))
+	pid, _ := strconv.Atoi(r.PathValue("pid"))
+
+	log.Printf("PID: %d - Se desbloquea proceso", pid)
 
 	processes.PrepareProcess(queues.BlockedProcesses.RemoveProcess(pid))
 
