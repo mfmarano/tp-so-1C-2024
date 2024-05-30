@@ -112,15 +112,15 @@ func Execute(response *commons.DispatchResponse) (bool, bool) {
 	jump := false
 
 	switch globals.Instruction.OpCode {
-	case "SET":
+	case instructions.SET:
 		instructions.Set()
-	case "SUM":
+	case instructions.SUM:
 		instructions.Sum()
-	case "SUB":
+	case instructions.SUB:
 		instructions.Sub()
-	case "JNZ":
+	case instructions.JNZ:
 		jump = instructions.Jnz()
-	case "IO_GEN_SLEEP":
+	case instructions.IO_GEN_SLEEP:
 		instructions.IoGenSleep(response)
 		keepRunning = false
 	default:

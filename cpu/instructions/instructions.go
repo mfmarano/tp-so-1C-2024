@@ -8,12 +8,25 @@ import (
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 )
 
+const (
+	SET    			= "SET"
+	SUM   			= "SUM"
+	SUB 			= "SUB"
+	JNZ    			= "JNZ"
+	IO_GEN_SLEEP    = "IO_GEN_SLEEP"
+	EXIT  			= "EXIT"
+	MOV_IN     		= "MOV_IN"
+	MOV_OUT      	= "MOV_OUT"
+	RESIZE      	= "RESIZE"
+	COPY_STRING     = "COPY_STRING"
+	IO_STDIN_READ   = "IO_STDIN_READ"
+	IO_STDOUT_WRITE = "IO_STDOUT_WRITE"
+)
+
 var RegMap map[string]interface{}
 
 func Set() {
 	reg := RegMap[globals.Instruction.Operands[0]]
-
-	//Los valores los tomamos en base 10 o 16?
 
 	switch v := reg.(type) {
 	case *uint8:
