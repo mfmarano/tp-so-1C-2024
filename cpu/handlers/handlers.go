@@ -6,10 +6,12 @@ import (
 	"strings"
 
 	"github.com/sisoputnfrba/tp-golang/cpu/globals/interruption"
+	"github.com/sisoputnfrba/tp-golang/cpu/instructions/operands"
 
 	"github.com/sisoputnfrba/tp-golang/cpu/globals"
 	"github.com/sisoputnfrba/tp-golang/cpu/instructions"
 	"github.com/sisoputnfrba/tp-golang/cpu/requests"
+	"github.com/sisoputnfrba/tp-golang/cpu/utils"
 	"github.com/sisoputnfrba/tp-golang/utils/client"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 )
@@ -49,9 +51,6 @@ func ExecuteProcess(request commons.PCB) {
 	*globals.Registers = request.Registros
 	*globals.Pid = request.Pid
 	globals.Registers.PC = uint32(request.ProgramCounter)
-
-	//Get tamaño de pagina de memoria, ver si debe hacerse una sola vez en el main
-	// GetPageSize(w)
 
 	for {
 		Fetch()
@@ -99,10 +98,12 @@ func Fetch() {
 }
 
 func Decode() {
-	//SET, SUM, SUB, JNZ e IO_GEN_SLEEP no necesitan traduccion de direccion ni buscar operandos
-
 	globals.Instruction.OpCode = globals.Instruction.Parts[0]
 	globals.Instruction.Operands = globals.Instruction.Parts[1:]
+
+	if utils.Contains(operands.INSTRUCTIONS_WITH_TRANSLATION, globals.Instruction.OpCode) {
+		globals.Instruction.FetchedOperands = operands.FetchOperands()
+	}
 }
 
 func Execute(response *commons.DispatchResponse) (bool, bool) {
@@ -123,6 +124,8 @@ func Execute(response *commons.DispatchResponse) (bool, bool) {
 	case instructions.IO_GEN_SLEEP:
 		instructions.IoGenSleep(response)
 		keepRunning = false
+	case instructions.RESIZE:
+		keepRunning = instructions.Resize(response)
 	default:
 		keepRunning = false
 		response.Reason = "FINISHED"
@@ -141,14 +144,14 @@ func Interruption(response *commons.DispatchResponse) bool {
 	return status && pid == *globals.Pid
 }
 
-func GetPageSize(w http.ResponseWriter) {
+func GetParams() string {
+	return strings.Join(globals.Instruction.Operands, " ")
+}
+
+func GetPageSize() {
 	resp := requests.GetMemoryConfig()
 
 	commons.DecodificarJSON(resp.Body, &globals.PageSize)
 
-	log.Printf("PID: %d - Tamaño página - Tamaño: %d", *globals.Pid, *globals.PageSize)
-}
-
-func GetParams() string {
-	return strings.Join(globals.Instruction.Operands, " ")
+	log.Printf("MEMORY - SIZE PAGE - SIZE: %d", *globals.PageSize)
 }

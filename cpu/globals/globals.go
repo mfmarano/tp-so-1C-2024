@@ -15,16 +15,11 @@ type ModuleConfig struct {
 	AlgorithmTlb     string `json:"algorithm_tlb"`
 }
 
-type TLBEntry struct {
-	Pid int
-	Page int
-	Frame int
-}
-
 type InstructionStruct struct {
 	Parts []string
 	OpCode string
 	Operands []string
+	FetchedOperands []string
 }
 
 var Config *ModuleConfig
@@ -33,10 +28,8 @@ var Registers *commons.Registers
 
 var Interruption *interruption.Interruption
 
-var TLB *[]TLBEntry
-
 var Instruction *InstructionStruct
 
-var PageSize *uint32
+var PageSize *int
 
 var Pid *int

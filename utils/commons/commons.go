@@ -39,6 +39,11 @@ type DispatchResponse struct {
 	Io IoDispatch `json:"io"`
 }
 
+type ResizeRequest struct {
+	Pid  int    `json:"pcb"`
+	Size int `json:"size"`
+}
+
 type IoDispatch struct {
 	Io string `json:"reason"`
 	Instruction string `json:"instruction"`
@@ -66,6 +71,23 @@ type InstructionRequest struct {
 	Params            []string `json:"params"`
 }
 
+type GetFrameRequest struct {
+	Pid int `json:"pid"`
+	Page int `json:"page"`
+}
+
+type GetFrameResponse struct {
+	Frame int `json:"frame"`
+}
+
+type MemoryReadRequest struct {
+	Pid int `json:"pid"`
+	Frame int `json:"frame"`
+}
+
+type MemoryReadResponse struct {
+	Value string `json:"value"`
+}
 
 func RecibirMensaje(w http.ResponseWriter, r *http.Request) {
 	var mensaje Mensaje

@@ -2,9 +2,10 @@ package instructions
 
 import (
 	"log"
-	"strconv"
 
 	"github.com/sisoputnfrba/tp-golang/cpu/globals"
+	"github.com/sisoputnfrba/tp-golang/cpu/requests"
+	"github.com/sisoputnfrba/tp-golang/cpu/utils"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 )
 
@@ -21,18 +22,36 @@ const (
 	COPY_STRING     = "COPY_STRING"
 	IO_STDIN_READ   = "IO_STDIN_READ"
 	IO_STDOUT_WRITE = "IO_STDOUT_WRITE"
+	IO_FS_WRITE		= "IO_FS_WRITE"
+	IO_FS_READ		= "IO_FS_READ"
 )
 
 var RegMap map[string]interface{}
+
+func LoadRegistersMap() {
+	RegMap = map[string]interface{}{
+		"PC":  &globals.Registers.PC,
+		"AX":  &globals.Registers.AX,
+		"BX":  &globals.Registers.BX,
+		"CX":  &globals.Registers.CX,
+		"DX":  &globals.Registers.DX,
+		"EAX": &globals.Registers.EAX,
+		"EBX": &globals.Registers.EBX,
+		"ECX": &globals.Registers.ECX,
+		"EDX": &globals.Registers.EDX,
+		"SI":  &globals.Registers.SI,
+		"DI":  &globals.Registers.DI,
+	}
+}
 
 func Set() {
 	reg := RegMap[globals.Instruction.Operands[0]]
 
 	switch v := reg.(type) {
 	case *uint8:
-		*v = ConvertToUint8(globals.Instruction.Operands[1])
+		*v = utils.ConvertToUint8(globals.Instruction.Operands[1])
 	case *uint32:
-		*v = ConvertToUint32(globals.Instruction.Operands[1])
+		*v = utils.ConvertToUint32(globals.Instruction.Operands[1])
 	default:
 		log.Printf("Valor es de tipo incompatible")
 		return
@@ -43,14 +62,14 @@ func Sum() {
 	dest := RegMap[globals.Instruction.Operands[0]]
 	origin := RegMap[globals.Instruction.Operands[1]]
 
-	PerformOperation(dest, origin, Add)
+	performOperation(dest, origin, add)
 }
 
 func Sub() {
 	dest := RegMap[globals.Instruction.Operands[0]]
 	origin := RegMap[globals.Instruction.Operands[1]]
 
-	PerformOperation(dest, origin, Subtract)
+	performOperation(dest, origin, subtract)
 }
 
 func Jnz() bool {
@@ -62,12 +81,12 @@ func Jnz() bool {
 	switch v := reg.(type) {
 	case *uint8:
 		if (*v != 0) {
-			*pc = ConvertToUint32(globals.Instruction.Operands[1])
+			*pc = utils.ConvertToUint32(globals.Instruction.Operands[1])
 			jump = true
 		}
 	case *uint32:
 		if (*v != 0) {
-			*pc = ConvertToUint32(globals.Instruction.Operands[1])
+			*pc = utils.ConvertToUint32(globals.Instruction.Operands[1])
 			jump = true
 		}
 	default:
@@ -84,17 +103,22 @@ func IoGenSleep(response *commons.DispatchResponse) {
 	response.Io.Params = append(response.Io.Params, globals.Instruction.Operands[1])
 }
 
-func ConvertToUint8(str string) uint8 {
-	val, _ := strconv.ParseUint(str, 10, 8)
-	return uint8(val)
+func Resize(response *commons.DispatchResponse) bool {
+	resp, err := requests.Resize()
+	if (err != nil) {
+		response.Reason = "ERROR"
+		return false
+	}
+
+	if (resp.StatusCode != 200) {
+		response.Reason = "OUT_OF_MEMORY"
+		return false
+	}
+
+	return true
 }
 
-func ConvertToUint32(str string) uint32 {
-	val, _ := strconv.ParseUint(str, 10, 32)
-	return uint32(val)
-}
-
-func PerformOperation(dest, origin interface{}, operation func(uint32, uint32) uint32) {
+func performOperation(dest, origin interface{}, operation func(uint32, uint32) uint32) {
 	switch typedDest := dest.(type) {
 	case *uint8:
 		switch typedOrigin := origin.(type) {
@@ -113,26 +137,10 @@ func PerformOperation(dest, origin interface{}, operation func(uint32, uint32) u
 	}
 }
 
-func Add(x, y uint32) uint32 {
+func add(x, y uint32) uint32 {
 	return x + y
 }
 
-func Subtract(x, y uint32) uint32 {
+func subtract(x, y uint32) uint32 {
 	return x - y
-}
-
-func LoadRegistersMap() {
-	RegMap = map[string]interface{}{
-		"PC":  &globals.Registers.PC,
-		"AX":  &globals.Registers.AX,
-		"BX":  &globals.Registers.BX,
-		"CX":  &globals.Registers.CX,
-		"DX":  &globals.Registers.DX,
-		"EAX": &globals.Registers.EAX,
-		"EBX": &globals.Registers.EBX,
-		"ECX": &globals.Registers.ECX,
-		"EDX": &globals.Registers.EDX,
-		"SI":  &globals.Registers.SI,
-		"DI":  &globals.Registers.DI,
-	}
 }
