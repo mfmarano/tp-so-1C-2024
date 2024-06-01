@@ -1,8 +1,8 @@
 package tlb
 
 import (
+	"container/list"
 	"log"
-	"time"
 
 	"github.com/sisoputnfrba/tp-golang/cpu/globals"
 )
@@ -12,59 +12,40 @@ type Key struct {
 }
 
 type TLBEntry struct {
-	Pid   int
-	Page  int
 	Frame int
-	lastUsed time.Time
+	KeyPtr *list.Element
 }
 
 type TLBType struct {
-	Entries map[Key]TLBEntry
-	Cap     int
+	Queue    *list.List
+	Entries map[Key]*TLBEntry
+	Capacity     int
 }
-
-var TLB *TLBType
 
 const (
 	FIFO = "FIFO"
 	LRU	 = "LRU"
 )
 
-func Get(page int) (int, bool) {
-	key := Key{Pid: *globals.Pid, Page: page }
-	entry, exists := TLB.Entries[key]
+func (l *TLBType) Put(page int, frame int) {
+	key := Key{Pid: *globals.Pid, Page: page}
+	if l.Capacity == len(l.Entries) {
+		back := l.Queue.Back()
+		l.Queue.Remove(back)
+		delete(l.Entries, back.Value.(Key))
+	}
+	l.Entries[key] = &TLBEntry{Frame: frame, KeyPtr: l.Queue.PushFront(key)}
+}
 
-	if exists {
+func (l *TLBType) Get(page int) (int, bool) {
+	key := Key{Pid: *globals.Pid, Page: page}
+	if item, ok := l.Entries[key]; ok {
+		if globals.Config.AlgorithmTlb == LRU {
+			l.Queue.MoveToFront(item.KeyPtr)
+		}
 		log.Printf("PID: %d - TLB HIT - Pagina: %d", *globals.Pid, page)
-		updateEntry(entry, key)
-	} else {
-		log.Printf("PID: %d - TLB MISS - Pagina: %d", *globals.Pid, page)
+		return item.Frame, true
 	}
-
-	return entry.Frame, exists
-}
-
-func Add(page int, frame int) {	
-	entry := TLBEntry{Pid: *globals.Pid, Page: page, Frame: frame, lastUsed: time.Now()}
-	if len(TLB.Entries) >= TLB.Cap {
-        var oldestEntryKey Key
-        oldestInsertionTime := time.Now()
-
-        for key, entry := range TLB.Entries {
-            if entry.lastUsed.Before(oldestInsertionTime) {
-                oldestInsertionTime = entry.lastUsed
-                oldestEntryKey = key
-            }
-        }
-		
-        delete(TLB.Entries, oldestEntryKey)
-    }
-    TLB.Entries[Key{entry.Pid, entry.Page}] = entry
-}
-
-func updateEntry(entry TLBEntry, key Key) {
-	if globals.Config.AlgorithmTlb == LRU {
-		entry.lastUsed = time.Now()
-		TLB.Entries[key] = entry
-	}
+	log.Printf("PID: %d - TLB MISS - Pagina: %d", *globals.Pid, page)
+	return -1, false
 }

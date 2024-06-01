@@ -1,6 +1,7 @@
 package main
 
 import (
+	"container/list"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 	"github.com/sisoputnfrba/tp-golang/cpu/globals/interruption"
 	"github.com/sisoputnfrba/tp-golang/cpu/handlers"
 	"github.com/sisoputnfrba/tp-golang/cpu/instructions"
+	"github.com/sisoputnfrba/tp-golang/cpu/mmu"
 	"github.com/sisoputnfrba/tp-golang/cpu/mmu/tlb"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 	"github.com/sisoputnfrba/tp-golang/utils/configs"
@@ -26,7 +28,7 @@ func main() {
 	globals.Interruption = new(interruption.Interruption)
 	globals.Instruction = new(globals.InstructionStruct)
 	globals.Pid = new(int)
-	tlb.TLB = &tlb.TLBType{Entries: make(map[tlb.Key]tlb.TLBEntry), Cap: globals.Config.NumberFellingTlb}
+	mmu.TLB = &tlb.TLBType{Queue: list.New(), Entries: make(map[tlb.Key]*tlb.TLBEntry), Capacity: globals.Config.NumberFellingTlb}
 
 	instructions.LoadRegistersMap()
 

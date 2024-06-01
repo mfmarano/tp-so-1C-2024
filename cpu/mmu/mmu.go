@@ -11,12 +11,7 @@ import (
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 )
 
-func TranslateAddress(logicalAddress uint32) (int, int) {
-	page := int(math.Floor(float64(logicalAddress)/float64(*globals.PageSize)))
-	offset := int(logicalAddress) - page * (int(*globals.PageSize))
-
-	return page, offset
-}
+var TLB *tlb.TLBType
 
 func GetRegAddress(reg string) string {
 	ptr := instructions.RegMap[reg]
@@ -24,22 +19,14 @@ func GetRegAddress(reg string) string {
 
 	switch v := ptr.(type) {
 	case *uint8:
-		page, offset = TranslateAddress(uint32(*v))
+		page, offset = translateAddress(uint32(*v))
 	case *uint32:
-		page, offset = TranslateAddress(*v)
+		page, offset = translateAddress(*v)
 	}
 
-	frame, hit := tlb.Get(page)
+	frame := getFrame(page)
 
-	if !hit {
-		response, _ := requests.GetFrame(page)
-		var resp commons.GetFrameResponse
-		commons.DecodificarJSON(response.Body, &resp)
-		frame = resp.Frame
-		tlb.Add(page, frame)
-	}
-
-	return strconv.Itoa(frame + offset)
+	return strconv.Itoa(frame * *globals.PageSize + offset)
 }
 
 func GetOperand(reg string) string {
@@ -48,27 +35,40 @@ func GetOperand(reg string) string {
 
 	switch v := ptr.(type) {
 	case *uint8:
-		page, offset = TranslateAddress(uint32(*v))
+		page, offset = translateAddress(uint32(*v))
 	case *uint32:
-		page, offset = TranslateAddress(*v)
+		page, offset = translateAddress(*v)
 	}
 
-	frame, hit := tlb.Get(page)
+	frame := getFrame(page)
+
+	return fetchOperand(frame * *globals.PageSize + offset)
+}
+
+func fetchOperand(frame int) string {
+	response, _ := requests.FetchOperand(frame)
+	var resp commons.MemoryReadResponse
+	commons.DecodificarJSON(response.Body, &resp)
+	return resp.Value
+}
+
+func getFrame(page int) int {
+	frame, hit := TLB.Get(page)
 
 	if !hit {
 		response, _ := requests.GetFrame(page)
 		var resp commons.GetFrameResponse
 		commons.DecodificarJSON(response.Body, &resp)
 		frame = resp.Frame
-		tlb.Add(page, frame)
+		TLB.Put(page, frame)
 	}
 
-	return FetchOperand(frame + offset)
+	return frame
 }
 
-func FetchOperand(frame int) string {
-	response, _ := requests.FetchOperand(frame)
-	var resp commons.MemoryReadResponse
-	commons.DecodificarJSON(response.Body, &resp)
-	return resp.Value
+func translateAddress(logicalAddress uint32) (int, int) {
+	page := int(math.Floor(float64(logicalAddress)/float64(*globals.PageSize)))
+	offset := int(logicalAddress) - page * (int(*globals.PageSize))
+
+	return page, offset
 }
