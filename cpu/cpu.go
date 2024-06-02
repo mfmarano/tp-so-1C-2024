@@ -26,11 +26,10 @@ func main() {
 	// =============
 	globals.Registers = new(commons.Registers)
 	globals.Interruption = new(interruption.Interruption)
-	globals.Instruction = new(globals.InstructionStruct)
 	globals.Pid = new(int)
-	mmu.TLB = &tlb.TLBType{Queue: list.New(), Entries: make(map[tlb.Key]*tlb.TLBEntry), Capacity: globals.Config.NumberFellingTlb}
+	instructions.Instruction = new(instructions.InstructionStruct)
 
-	instructions.LoadRegistersMap()
+	globals.LoadRegistersMap()
 
 	path, err := os.Getwd()
 	if err != nil {
@@ -43,6 +42,8 @@ func main() {
 	if globals.Config == nil {
 		log.Fatalln("Error al cargar la configuración")
 	}
+	
+	mmu.TLB = &tlb.TLBType{Queue: list.New(), Entries: make(map[tlb.Key]*tlb.TLBEntry), Capacity: globals.Config.NumberFellingTlb}
 
 	handlers.GetPageSize()
 

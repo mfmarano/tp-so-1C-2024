@@ -6,12 +6,10 @@ import (
 	"strings"
 
 	"github.com/sisoputnfrba/tp-golang/cpu/globals/interruption"
-	"github.com/sisoputnfrba/tp-golang/cpu/instructions/operands"
 
 	"github.com/sisoputnfrba/tp-golang/cpu/globals"
 	"github.com/sisoputnfrba/tp-golang/cpu/instructions"
 	"github.com/sisoputnfrba/tp-golang/cpu/requests"
-	"github.com/sisoputnfrba/tp-golang/cpu/utils"
 	"github.com/sisoputnfrba/tp-golang/utils/client"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 )
@@ -92,41 +90,52 @@ func Fetch() {
 	var instResp commons.GetInstructionResponse
 	commons.DecodificarJSON(resp.Body, &instResp)
 
-	globals.Instruction.Parts = strings.Split(instResp.Instruction, " ")
+	instructions.Instruction.Parts = strings.Split(instResp.Instruction, " ")
 
 	log.Printf("PID: %d - FETCH - Program Counter: %d", *globals.Pid, globals.Registers.PC)
 }
 
 func Decode() {
-	globals.Instruction.OpCode = globals.Instruction.Parts[0]
-	globals.Instruction.Operands = globals.Instruction.Parts[1:]
-
-	if utils.Contains(operands.INSTRUCTIONS_WITH_TRANSLATION, globals.Instruction.OpCode) {
-		globals.Instruction.FetchedOperands = operands.FetchOperands()
-	}
+	instructions.Instruction.OpCode = instructions.Instruction.Parts[0]
+	instructions.Instruction.Operands = instructions.Instruction.Parts[1:]
 }
 
 func Execute(response *commons.DispatchResponse) (bool, bool) {
-	log.Printf("PID: %d - Ejecutando: %s - %s", *globals.Pid, globals.Instruction.OpCode, GetParams())
+	log.Printf("PID: %d - Ejecutando: %s - %s", *globals.Pid, instructions.Instruction.OpCode, GetParams())
 
 	keepRunning := true
 	jump := false
 
-	switch globals.Instruction.OpCode {
+	switch instructions.Instruction.OpCode {
 	case instructions.SET:
 		instructions.Set()
+	case instructions.MOV_IN:
+		instructions.MovIn()
+	case instructions.MOV_OUT:
+		instructions.MovOut()
 	case instructions.SUM:
 		instructions.Sum()
 	case instructions.SUB:
 		instructions.Sub()
 	case instructions.JNZ:
 		jump = instructions.Jnz()
-	case instructions.IO_GEN_SLEEP:
-		instructions.IoGenSleep(response)
-		keepRunning = false
 	case instructions.RESIZE:
 		keepRunning = instructions.Resize(response)
-	default:
+	case instructions.COPY_STRING:
+		instructions.CopyString()
+	case instructions.WAIT:
+		keepRunning = instructions.Wait(response)
+	case instructions.SIGNAL:
+		keepRunning = instructions.Signal(response)
+	case instructions.IO_GEN_SLEEP, instructions.IO_FS_CREATE, instructions.IO_FS_DELETE:
+		keepRunning = instructions.IoSleepFsFilesCommon(response)
+	case instructions.IO_STDIN_READ, instructions.IO_STDOUT_WRITE:
+		keepRunning = instructions.IoStdCommon(response)
+	case instructions.IO_FS_SEEK, instructions.IO_FS_TRUNCATE:
+		keepRunning = instructions.IoFsSeekTruncateCommon(response)
+	case instructions.IO_FS_READ, instructions.IO_FS_WRITE:
+		keepRunning = instructions.IoFsReadWriteCommon(response)
+	case instructions.EXIT:
 		keepRunning = false
 		response.Reason = "FINISHED"
 	}
@@ -145,13 +154,16 @@ func Interruption(response *commons.DispatchResponse) bool {
 }
 
 func GetParams() string {
-	return strings.Join(globals.Instruction.Operands, " ")
+	return strings.Join(instructions.Instruction.Operands, " ")
 }
 
 func GetPageSize() {
-	resp := requests.GetMemoryConfig()
+	resp, err := requests.GetMemoryConfig()
+	if err != nil || resp.StatusCode != 200 {
+		log.Printf("Error al conectarse a memoria")
+		return
+	}
 
 	commons.DecodificarJSON(resp.Body, &globals.PageSize)
-
 	log.Printf("MEMORY - SIZE PAGE - SIZE: %d", *globals.PageSize)
 }

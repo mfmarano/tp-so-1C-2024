@@ -37,6 +37,7 @@ type DispatchResponse struct {
 	Pcb    PCB    `json:"pcb"`
 	Reason string `json:"reason"`
 	Io IoDispatch `json:"io"`
+	Resource string `json:"resource"`
 }
 
 type ResizeRequest struct {
@@ -86,6 +87,12 @@ type MemoryReadRequest struct {
 }
 
 type MemoryReadResponse struct {
+	Value string `json:"value"`
+}
+
+type MemoryWriteRequest struct {
+	Pid int `json:"pid"`
+	Frame int `json:"frame"`
 	Value string `json:"value"`
 }
 

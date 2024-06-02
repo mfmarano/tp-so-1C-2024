@@ -1,11 +1,10 @@
 package mmu
 
 import (
+	"log"
 	"math"
-	"strconv"
 
 	"github.com/sisoputnfrba/tp-golang/cpu/globals"
-	"github.com/sisoputnfrba/tp-golang/cpu/instructions"
 	"github.com/sisoputnfrba/tp-golang/cpu/mmu/tlb"
 	"github.com/sisoputnfrba/tp-golang/cpu/requests"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
@@ -13,8 +12,8 @@ import (
 
 var TLB *tlb.TLBType
 
-func GetRegAddress(reg string) string {
-	ptr := instructions.RegMap[reg]
+func CalculateRegAddress(reg string) int {
+	ptr := globals.RegMap[reg]
 	var page, offset int
 
 	switch v := ptr.(type) {
@@ -26,29 +25,25 @@ func GetRegAddress(reg string) string {
 
 	frame := getFrame(page)
 
-	return strconv.Itoa(frame * *globals.PageSize + offset)
+	return frame * *globals.PageSize + offset
 }
 
-func GetOperand(reg string) string {
-	ptr := instructions.RegMap[reg]
-	var page, offset int
+func Read(reg string) string {
+	address := CalculateRegAddress(reg)
 
-	switch v := ptr.(type) {
-	case *uint8:
-		page, offset = translateAddress(uint32(*v))
-	case *uint32:
-		page, offset = translateAddress(*v)
-	}
-
-	frame := getFrame(page)
-
-	return fetchOperand(frame * *globals.PageSize + offset)
+	return readFromMemory(address)
 }
 
-func fetchOperand(frame int) string {
-	response, _ := requests.FetchOperand(frame)
+func Write(address int, value string) {
+	requests.Write(address, value)
+	log.Printf("PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %s", *globals.Pid, address, value)
+}
+
+func readFromMemory(address int) string {
+	response, _ := requests.FetchOperand(address)
 	var resp commons.MemoryReadResponse
 	commons.DecodificarJSON(response.Body, &resp)
+	log.Printf("PID: %d - Acción: LEER - Dirección Física: %d - Valor: %s", *globals.Pid, address, resp.Value)
 	return resp.Value
 }
 
@@ -60,6 +55,7 @@ func getFrame(page int) int {
 		var resp commons.GetFrameResponse
 		commons.DecodificarJSON(response.Body, &resp)
 		frame = resp.Frame
+		log.Printf("PID: %d - OBTENER MARCO - Página: %d - Marco: %d", globals.Pid, page, frame)
 		TLB.Put(page, frame)
 	}
 

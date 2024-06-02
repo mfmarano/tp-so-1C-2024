@@ -1,9 +1,10 @@
 package instructions
 
 import (
-	"log"
+	"strconv"
 
 	"github.com/sisoputnfrba/tp-golang/cpu/globals"
+	"github.com/sisoputnfrba/tp-golang/cpu/mmu"
 	"github.com/sisoputnfrba/tp-golang/cpu/requests"
 	"github.com/sisoputnfrba/tp-golang/cpu/utils"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
@@ -11,100 +12,75 @@ import (
 
 const (
 	SET    			= "SET"
-	SUM   			= "SUM"
-	SUB 			= "SUB"
-	JNZ    			= "JNZ"
-	IO_GEN_SLEEP    = "IO_GEN_SLEEP"
-	EXIT  			= "EXIT"
 	MOV_IN     		= "MOV_IN"
 	MOV_OUT      	= "MOV_OUT"
+	SUM   			= "SUM"
+	SUB 			= "SUB"
+	JNZ    			= "JNZ"	
 	RESIZE      	= "RESIZE"
 	COPY_STRING     = "COPY_STRING"
+	WAIT 			= "WAIT"
+	SIGNAL 			= "SIGNAL"
+	IO_GEN_SLEEP    = "IO_GEN_SLEEP"
 	IO_STDIN_READ   = "IO_STDIN_READ"
 	IO_STDOUT_WRITE = "IO_STDOUT_WRITE"
+	IO_FS_CREATE	= "IO_FS_CREATE"
+	IO_FS_DELETE	= "IO_FS_DELETE"
+	IO_FS_SEEK		= "IO_FS_SEEK"
+	IO_FS_TRUNCATE	= "IO_FS_TRUNCATE"
 	IO_FS_WRITE		= "IO_FS_WRITE"
 	IO_FS_READ		= "IO_FS_READ"
+	EXIT  			= "EXIT"
 )
 
-var RegMap map[string]interface{}
-
-func LoadRegistersMap() {
-	RegMap = map[string]interface{}{
-		"PC":  &globals.Registers.PC,
-		"AX":  &globals.Registers.AX,
-		"BX":  &globals.Registers.BX,
-		"CX":  &globals.Registers.CX,
-		"DX":  &globals.Registers.DX,
-		"EAX": &globals.Registers.EAX,
-		"EBX": &globals.Registers.EBX,
-		"ECX": &globals.Registers.ECX,
-		"EDX": &globals.Registers.EDX,
-		"SI":  &globals.Registers.SI,
-		"DI":  &globals.Registers.DI,
-	}
+type InstructionStruct struct {
+	Parts []string
+	OpCode string
+	Operands []string
 }
 
-func Set() {
-	reg := RegMap[globals.Instruction.Operands[0]]
+var Instruction *InstructionStruct
 
-	switch v := reg.(type) {
-	case *uint8:
-		*v = utils.ConvertToUint8(globals.Instruction.Operands[1])
-	case *uint32:
-		*v = utils.ConvertToUint32(globals.Instruction.Operands[1])
-	default:
-		log.Printf("Valor es de tipo incompatible")
-		return
-	}
+func Set() {
+	applySet(Instruction.Operands[0], utils.ConvertStrToUInt32(Instruction.Operands[1]))
+}
+
+func MovIn() {
+	value := mmu.Read(Instruction.Operands[1])
+	applySet(Instruction.Operands[0], utils.ConvertStrToUInt32(value))
+}
+
+func MovOut() {
+	value := getRegValue(Instruction.Operands[1])
+	address := mmu.CalculateRegAddress(Instruction.Operands[0])
+	mmu.Write(address, utils.ConvertUInt32ToString(value))
 }
 
 func Sum() {
-	dest := RegMap[globals.Instruction.Operands[0]]
-	origin := RegMap[globals.Instruction.Operands[1]]
+	destValue := getRegValue(Instruction.Operands[0])
+	originValue := getRegValue(Instruction.Operands[1])
 
-	performOperation(dest, origin, add)
+	applySet(Instruction.Operands[0], destValue + originValue)
 }
 
 func Sub() {
-	dest := RegMap[globals.Instruction.Operands[0]]
-	origin := RegMap[globals.Instruction.Operands[1]]
+	destValue := getRegValue(Instruction.Operands[0])
+	originValue := getRegValue(Instruction.Operands[1])
 
-	performOperation(dest, origin, subtract)
+	applySet(Instruction.Operands[0], destValue - originValue)
 }
 
 func Jnz() bool {
-	pc := RegMap["PC"].(*uint32)
-	reg := RegMap[globals.Instruction.Operands[0]]
+	regValue := getRegValue(Instruction.Operands[0])
 
-	jump := false
-
-	switch v := reg.(type) {
-	case *uint8:
-		if (*v != 0) {
-			*pc = utils.ConvertToUint32(globals.Instruction.Operands[1])
-			jump = true
-		}
-	case *uint32:
-		if (*v != 0) {
-			*pc = utils.ConvertToUint32(globals.Instruction.Operands[1])
-			jump = true
-		}
-	default:
-		log.Printf("Valor es de tipo incompatible")
+	if regValue != 0 {
+		applySet("PC", utils.ConvertStrToUInt32((Instruction.Operands[1])))
 	}
-
-	return jump
-}
-
-func IoGenSleep(response *commons.DispatchResponse) {
-	response.Reason = "BLOCKED"
-	response.Io.Io = globals.Instruction.Operands[0]
-	response.Io.Instruction = globals.Instruction.OpCode
-	response.Io.Params = append(response.Io.Params, globals.Instruction.Operands[1])
+	return regValue != 0
 }
 
 func Resize(response *commons.DispatchResponse) bool {
-	resp, err := requests.Resize()
+	resp, err := requests.Resize(Instruction.Operands[0])
 	if (err != nil) {
 		response.Reason = "ERROR"
 		return false
@@ -118,29 +94,76 @@ func Resize(response *commons.DispatchResponse) bool {
 	return true
 }
 
-func performOperation(dest, origin interface{}, operation func(uint32, uint32) uint32) {
-	switch typedDest := dest.(type) {
+func CopyString() {
+	siValue := mmu.Read("SI")
+	size, _ := strconv.Atoi(Instruction.Operands[0])
+	mmu.Write(mmu.CalculateRegAddress("DI"), siValue[:size])
+}
+
+func Wait(response *commons.DispatchResponse) bool {
+	response.Reason = "WAIT"
+	response.Resource = Instruction.Operands[0]
+	return false
+}
+
+func Signal(response *commons.DispatchResponse) bool {
+	response.Reason = "SIGNAL"
+	response.Resource = Instruction.Operands[0]
+	return false
+}
+
+func IoSleepFsFilesCommon(response *commons.DispatchResponse) bool {
+	setIoBaseParams(response)
+	response.Io.Params = append(response.Io.Params, Instruction.Operands[1])
+	return false
+}
+
+func IoStdCommon(response *commons.DispatchResponse) bool {
+	setIoBaseParams(response)
+	response.Io.Params = append(response.Io.Params, utils.ConvertIntToString(mmu.CalculateRegAddress(Instruction.Operands[1])))
+	response.Io.Params = append(response.Io.Params, utils.ConvertUInt32ToString(getRegValue(Instruction.Operands[2])))
+	return false
+}
+
+func IoFsSeekTruncateCommon(response *commons.DispatchResponse) bool {
+	setIoBaseParams(response)
+	response.Io.Params = append(response.Io.Params, Instruction.Operands[1])
+	response.Io.Params = append(response.Io.Params, utils.ConvertUInt32ToString(getRegValue(Instruction.Operands[2])))
+	return false
+}
+
+func IoFsReadWriteCommon(response *commons.DispatchResponse) bool {
+	setIoBaseParams(response)
+	response.Io.Params = append(response.Io.Params, Instruction.Operands[1])
+	response.Io.Params = append(response.Io.Params, utils.ConvertIntToString(mmu.CalculateRegAddress(Instruction.Operands[2])))
+	response.Io.Params = append(response.Io.Params, utils.ConvertUInt32ToString(getRegValue(Instruction.Operands[3])))
+	response.Io.Params = append(response.Io.Params, utils.ConvertUInt32ToString(getRegValue(Instruction.Operands[4])))
+	return false
+}
+
+func setIoBaseParams(response *commons.DispatchResponse) {
+	response.Reason = "BLOCKED"
+	response.Io.Io = Instruction.Operands[0]
+	response.Io.Instruction = Instruction.OpCode
+}
+
+func applySet(regName string, value uint32) {
+	reg := globals.RegMap[regName]
+	switch v := reg.(type) {
 	case *uint8:
-		switch typedOrigin := origin.(type) {
-		case *uint8:
-			*typedDest = uint8(operation(uint32(*typedDest), uint32(*typedOrigin)))
-		case *uint32:
-			*typedDest = uint8(operation(uint32(*typedDest), *typedOrigin))
-		}
+		*v = uint8(value)
 	case *uint32:
-		switch typedOrigin := origin.(type) {
-		case *uint8:
-			*typedDest = operation(*typedDest, uint32(*typedOrigin))
-		case *uint32:
-			*typedDest = operation(*typedDest, *typedOrigin)
-		}
+		*v = value
 	}
 }
 
-func add(x, y uint32) uint32 {
-	return x + y
-}
-
-func subtract(x, y uint32) uint32 {
-	return x - y
+func getRegValue(regName string) uint32 {
+	var value uint32
+	switch v := globals.RegMap[regName].(type) {
+	case *uint32:
+		value = *v
+	case *uint8:
+		value = uint32(*v)
+	}
+	return value
 }

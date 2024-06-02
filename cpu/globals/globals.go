@@ -15,21 +15,25 @@ type ModuleConfig struct {
 	AlgorithmTlb     string `json:"algorithm_tlb"`
 }
 
-type InstructionStruct struct {
-	Parts []string
-	OpCode string
-	Operands []string
-	FetchedOperands []string
-}
-
 var Config *ModuleConfig
-
 var Registers *commons.Registers
-
 var Interruption *interruption.Interruption
-
-var Instruction *InstructionStruct
-
 var PageSize *int
-
 var Pid *int
+var RegMap map[string]interface{}
+
+func LoadRegistersMap() {
+	RegMap = map[string]interface{}{
+		"PC":  &Registers.PC,
+		"AX":  &Registers.AX,
+		"BX":  &Registers.BX,
+		"CX":  &Registers.CX,
+		"DX":  &Registers.DX,
+		"EAX": &Registers.EAX,
+		"EBX": &Registers.EBX,
+		"ECX": &Registers.ECX,
+		"EDX": &Registers.EDX,
+		"SI":  &Registers.SI,
+		"DI":  &Registers.DI,
+	}
+}

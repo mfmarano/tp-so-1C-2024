@@ -9,7 +9,7 @@ import (
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 )
 
-func GetMemoryConfig() *http.Response {
+func GetMemoryConfig() (*http.Response, error) {
 	return client.Get(globals.Config.IpMemory, globals.Config.PortMemory, "config")
 }
 
@@ -22,8 +22,8 @@ func GetInstruction() (*http.Response, error) {
 	return client.Post(globals.Config.IpMemory, globals.Config.PortMemory, "instruction", requestBody)
 }
 
-func Resize() (*http.Response, error) {
-	size, _ := strconv.Atoi(globals.Instruction.Operands[0])
+func Resize(value string) (*http.Response, error) {
+	size, _ := strconv.Atoi(value)
 	requestBody, err := commons.CodificarJSON(commons.ResizeRequest{Pid: *globals.Pid, Size: size})
 	if err != nil {
 		return nil, err
@@ -38,7 +38,7 @@ func FetchOperand(address int) (*http.Response, error) {
 		return nil, err
 	}
 
-	return client.Post(globals.Config.IpMemory, globals.Config.PortMemory, "operation", requestBody)
+	return client.Post(globals.Config.IpMemory, globals.Config.PortMemory, "read", requestBody)
 }
 
 func GetFrame(page int) (*http.Response, error) {
@@ -48,4 +48,13 @@ func GetFrame(page int) (*http.Response, error) {
 	}
 
 	return client.Post(globals.Config.IpMemory, globals.Config.PortMemory, "frame", requestBody)
+}
+
+func Write(frame int, value string) (*http.Response, error) {
+	requestBody, err := commons.CodificarJSON(commons.MemoryWriteRequest{Pid: *globals.Pid, Frame: frame, Value: value})
+	if err != nil {
+		return nil, err
+	}
+
+	return client.Post(globals.Config.IpMemory, globals.Config.PortMemory, "write", requestBody)
 }

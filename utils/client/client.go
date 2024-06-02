@@ -45,19 +45,17 @@ func Put(ip string, port int, queryString string) (*http.Response, error) {
 	return response, err
 }
 
-func Get(ip string, port int, queryString string) *http.Response {
+func Get(ip string, port int, queryString string) (*http.Response, error) {
 	url := fmt.Sprintf("http://%s:%d/%s", ip, port, queryString)
 	response, err := http.Get(url)
 
 	if err != nil {
 		log.Printf("Error enviando mensaje a ip:%s puerto:%d. Error: %s\n", ip, port, err.Error())
-		return nil
 	}
 
 	if response != nil && response.StatusCode != 200 {
 		log.Printf("Error enviando mensaje a ip:%s puerto:%d. Response: %s\n", ip, port, response)
-		return nil
 	}
 
-	return response
+	return response, err
 }
