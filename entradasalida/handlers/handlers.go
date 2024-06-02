@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 	"slices"
-	"strconv"
 	"sync"
 
 	"github.com/sisoputnfrba/tp-golang/entradasalida/globals"
@@ -29,7 +28,6 @@ func RecibirInstruccion(w http.ResponseWriter, r *http.Request) {
 
 	if canExecuteInstruction(req) {
 		go waitToProduce(req)
-		//queues.InstructionRequests.AddRequest(req)
 		commons.EscribirRespuesta(w, http.StatusOK, []byte("Instruccion recibida"))
 	} else {
 		log.Printf("PID: %d - No se puede ejecutar instruccion %s", req.Pid, req.Instruction)
@@ -47,21 +45,7 @@ func canExecuteInstruction(req commons.InstructionRequest) bool {
 }
 
 func canExecuteGenericInstruction(req commons.InstructionRequest) bool {
-	if !slices.Contains(globals.GENERIC_INSTRUCTIONS, req.Instruction) {
-		return false
-	}
-
-	switch req.Instruction {
-		case globals.GENERIC_INSTRUCTIONS[0]:
-			return canCastToInt(req.Params[0])
-		default:
-			return false
-	}
-}
-
-func canCastToInt(param string) bool {
-	_, err := strconv.Atoi(param)
-    return err == nil
+	return slices.Contains(globals.GENERIC_INSTRUCTIONS, req.Instruction)
 }
 
 func waitToProduce(req commons.InstructionRequest) {
