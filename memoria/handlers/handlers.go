@@ -111,3 +111,15 @@ func ObtenerInstruccion(w http.ResponseWriter, r *http.Request) {
 
 	commons.EscribirRespuesta(w, http.StatusOK, response)
 }
+
+func SizeMemory(w http.ResponseWriter, r *http.Request) {
+
+	response, err := commons.CodificarJSON(globals.MemorySizeResponse{Size: globals.Config.MemorySize})
+
+	if err != nil {
+		http.Error(w, "Error al codificar la respuesta como JSON", http.StatusInternalServerError)
+		return
+	}
+
+	commons.EscribirRespuesta(w, http.StatusOK, response)
+}
