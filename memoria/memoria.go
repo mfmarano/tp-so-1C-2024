@@ -33,6 +33,8 @@ func main() {
 	}
 
 	globals.FileContents = globals.FileContent{InstructionsPerPcb: make(map[int][]string)}
+	globals.BitMapMemory = make([]int, globals.Config.MemorySize/globals.Config.PageSize)
+	globals.PageTables = &globals.PageTable{Data: make(map[int][]int)}
 
 	// ========
 	// Interfaz
@@ -42,6 +44,11 @@ func main() {
 	mux.HandleFunc("POST /mensaje", commons.RecibirMensaje)
 	mux.HandleFunc("POST /process", handlers.NuevoProceso)
 	mux.HandleFunc("POST /instruction", handlers.ObtenerInstruccion)
+
+	//mux.HandleFunc("GET /config", handlers.SizeMemory)
+	//mux.HandleFunc("POST /resize", handlers.Resize)
+	//mux.HandleFunc("POST /operation", handlers.Operation)
+	//mux.HandleFunc("POST /frame", handlers.ObtenerFrame)
 
 	// ======
 	// Inicio

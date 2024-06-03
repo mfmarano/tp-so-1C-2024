@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/sisoputnfrba/tp-golang/memoria/globals"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
@@ -74,6 +75,10 @@ func NuevoProceso(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	globals.PageTables.AddTable(nuevoProceso.Pid, make([]int, 0))
+
+	log.Printf("Creacion PID: %d - Tamaño: %d", nuevoProceso.Pid, len(globals.PageTables.Data[nuevoProceso.Pid]))
+
 	log.Printf("Archivo %s asociado con PID %d", nuevoProceso.Path, nuevoProceso.Pid)
 	commons.EscribirRespuesta(w, http.StatusOK, []byte("espacio reservado"))
 }
@@ -92,6 +97,8 @@ func ObtenerInstruccion(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error reading file: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	time.Sleep(time.Duration(globals.Config.DelayResponse) * time.Millisecond)
 
 	log.Printf("File with PID %d, Line %d: %s\n", instruccion.Pid, instruccion.PC, line)
 
