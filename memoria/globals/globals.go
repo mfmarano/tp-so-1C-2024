@@ -17,6 +17,10 @@ type NewProcessRequest struct {
 	Pid  int    `json:"pid"`
 }
 
+type MemorySizeResponse struct {
+	Size int `json:"size"`
+}
+
 type FileContent struct {
 	mutex              sync.Mutex
 	InstructionsPerPcb map[int][]string

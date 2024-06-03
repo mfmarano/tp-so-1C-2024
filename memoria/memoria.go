@@ -44,8 +44,8 @@ func main() {
 	mux.HandleFunc("POST /mensaje", commons.RecibirMensaje)
 	mux.HandleFunc("POST /process", handlers.NuevoProceso)
 	mux.HandleFunc("POST /instruction", handlers.ObtenerInstruccion)
+	mux.HandleFunc("GET /config", handlers.SizeMemory)
 
-	//mux.HandleFunc("GET /config", handlers.SizeMemory)
 	//mux.HandleFunc("POST /resize", handlers.Resize)
 	//mux.HandleFunc("POST /operation", handlers.Operation)
 	//mux.HandleFunc("POST /frame", handlers.ObtenerFrame)
