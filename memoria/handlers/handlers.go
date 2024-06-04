@@ -1,63 +1,15 @@
 package handlers
 
 import (
-	"bufio"
-	"fmt"
 	"log"
 	"net/http"
-	"os"
+	"sync"
 	"time"
 
 	"github.com/sisoputnfrba/tp-golang/memoria/globals"
+	"github.com/sisoputnfrba/tp-golang/memoria/utils"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 )
-
-func readFile(filePath string) ([]string, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	var lines []string
-
-	scanner := bufio.NewScanner(file)
-
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
-	}
-
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-
-	return lines, nil
-}
-
-func addFileToContents(PID int, filePath string) error {
-	lines, err := readFile(filePath)
-	if err != nil {
-		return err
-	}
-
-	globals.FileContents.AddFile(PID, lines)
-	return nil
-}
-
-func getFileLine(PID int, lineIndex uint32) (string, error) {
-	lines, ok := globals.FileContents.GetFile(PID)
-	if !ok {
-		return "", fmt.Errorf("file with PID %d not found", PID)
-	}
-
-	if lineIndex >= uint32(len(lines)) {
-		return "", fmt.Errorf("line with index %d not found in file with PID %d", lineIndex, PID)
-	}
-
-	return lines[lineIndex], nil
-}
-
-/*--------------------------------------------------------------------------------------------------------*/
 
 func NuevoProceso(w http.ResponseWriter, r *http.Request) {
 	var nuevoProceso globals.NewProcessRequest
@@ -68,51 +20,50 @@ func NuevoProceso(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = addFileToContents(nuevoProceso.Pid, nuevoProceso.Path)
+	err = utils.AddFileToContents(nuevoProceso.Pid, nuevoProceso.Path)
 	if err != nil {
-		log.Println("Error al leer archivo", nuevoProceso.Path, err)
 		http.Error(w, "Error al leer archivo", http.StatusInternalServerError)
 		return
 	}
 
-	globals.PageTables.AddTable(nuevoProceso.Pid, make([]int, 0))
+	globals.PageTables.Data[nuevoProceso.Pid-1] = make([]globals.Page, len(globals.BitMapMemory))
 
-	log.Printf("Creacion PID: %d - Tamaño: %d", nuevoProceso.Pid, len(globals.PageTables.Data[nuevoProceso.Pid]))
+	println(utils.CountFramesFree())
 
-	log.Printf("Archivo %s asociado con PID %d", nuevoProceso.Path, nuevoProceso.Pid)
-	commons.EscribirRespuesta(w, http.StatusOK, []byte("espacio reservado"))
+	log.Printf("Creacion PID: %d - Tamaño: %d", nuevoProceso.Pid, utils.CountPages(globals.PageTables.Data[nuevoProceso.Pid-1]))
+
+	commons.EscribirRespuesta(w, http.StatusOK, []byte("proceso creado sin espacio reservado"))
 }
 
-func ObtenerInstruccion(w http.ResponseWriter, r *http.Request) {
+func GetInstruction(w http.ResponseWriter, r *http.Request) {
 	var instruccion commons.GetInstructionRequest
 
 	err := commons.DecodificarJSON(r.Body, &instruccion)
 	if err != nil {
+		http.Error(w, "Error al decodificar JSON", http.StatusBadRequest)
 		return
 	}
 
-	line, err := getFileLine(instruccion.Pid, instruccion.PC)
+	line, err := utils.GetFileLine(instruccion.Pid, instruccion.PC)
 	if err != nil {
-		fmt.Println("Error:", err)
-		http.Error(w, "Error reading file: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Error al leer archivo", http.StatusInternalServerError)
 		return
 	}
 
 	time.Sleep(time.Duration(globals.Config.DelayResponse) * time.Millisecond)
 
-	log.Printf("File with PID %d, Line %d: %s\n", instruccion.Pid, instruccion.PC, line)
+	log.Printf("File with PID %d, Line %d: %s\n", instruccion.Pid, instruccion.PC, line) //
 
 	response, err := commons.CodificarJSON(commons.GetInstructionResponse{Instruction: line})
 	if err != nil {
-		fmt.Println("Error encoding JSON:", err)
-		http.Error(w, "Error encoding JSON: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Error al codificar la respuesta como JSON", http.StatusInternalServerError)
 		return
 	}
 
 	commons.EscribirRespuesta(w, http.StatusOK, response)
 }
 
-func SizeMemory(w http.ResponseWriter, r *http.Request) {
+func MemorySize(w http.ResponseWriter, r *http.Request) {
 
 	response, err := commons.CodificarJSON(globals.MemorySizeResponse{Size: globals.Config.MemorySize})
 
@@ -122,4 +73,54 @@ func SizeMemory(w http.ResponseWriter, r *http.Request) {
 	}
 
 	commons.EscribirRespuesta(w, http.StatusOK, response)
+}
+
+func GetFrame(w http.ResponseWriter, r *http.Request) {
+	var frame commons.GetFrameRequest
+
+	err := commons.DecodificarJSON(r.Body, &frame)
+	if err != nil {
+		http.Error(w, "Error al decodificar JSON", http.StatusBadRequest)
+		return
+	}
+
+	response, err := commons.CodificarJSON(commons.GetFrameResponse{Frame: globals.PageTables.Data[frame.Pid-1][frame.Page].Frame})
+
+	if err != nil {
+		http.Error(w, "Error al codificar la respuesta como JSON", http.StatusInternalServerError)
+		return
+	}
+
+	log.Printf("Acceso a tabla de páginas PID: %d - Página: %d - Marco: %d", frame.Pid, frame.Page, globals.PageTables.Data[frame.Pid-1][frame.Page].Frame)
+
+	commons.EscribirRespuesta(w, http.StatusOK, response)
+}
+
+func Resize(w http.ResponseWriter, r *http.Request) {
+	var resize commons.ResizeRequest
+	var mutex sync.Mutex
+	var pages int
+
+	err := commons.DecodificarJSON(r.Body, &resize)
+	if err != nil {
+		http.Error(w, "Error al decodificar JSON", http.StatusBadRequest)
+		return
+	}
+
+	pages = utils.CountPages(globals.PageTables.Data[resize.Pid-1])
+
+	mutex.Lock()
+	if pages < resize.Size && resize.Size-pages > utils.CountFramesFree() {
+		commons.EscribirRespuesta(w, http.StatusNotFound, []byte("OUT_OF_MEMORY"))
+		log.Printf("Ampliación PID: %d - Tamaño actual: %d - Tamaño a ampliar: %d - OUT_OF_MEMORY", resize.Pid, pages, resize.Size)
+	} else if pages < resize.Size {
+		utils.ResizeFrames(resize.Size, globals.PageTables.Data[resize.Pid-1])
+		commons.EscribirRespuesta(w, http.StatusOK, []byte("resize ejecutado"))
+		log.Printf("Ampliación PID: %d - Tamaño actual: %d - Tamaño a ampliar: %d", resize.Pid, pages, resize.Size)
+	} else {
+		utils.ResizeFrames(resize.Size, globals.PageTables.Data[resize.Pid-1])
+		commons.EscribirRespuesta(w, http.StatusOK, []byte("resize ejecutado"))
+		log.Printf("Reducción PID: %d - Tamaño actual: %d - Tamaño a reducir: %d", resize.Pid, pages, resize.Size)
+	}
+	mutex.Unlock()
 }

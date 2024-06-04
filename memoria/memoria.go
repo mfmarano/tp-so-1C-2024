@@ -34,7 +34,8 @@ func main() {
 
 	globals.FileContents = globals.FileContent{InstructionsPerPcb: make(map[int][]string)}
 	globals.BitMapMemory = make([]int, globals.Config.MemorySize/globals.Config.PageSize)
-	globals.PageTables = &globals.PageTable{Data: make(map[int][]int)}
+	globals.Memory = make([]byte, globals.Config.MemorySize)
+	globals.PageTables = &globals.PageTable{Data: make(map[int][]globals.Page)}
 
 	// ========
 	// Interfaz
@@ -43,12 +44,16 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /mensaje", commons.RecibirMensaje)
 	mux.HandleFunc("POST /process", handlers.NuevoProceso)
-	mux.HandleFunc("POST /instruction", handlers.ObtenerInstruccion)
-	mux.HandleFunc("GET /config", handlers.SizeMemory)
+	mux.HandleFunc("POST /instruction", handlers.GetInstruction)
+	mux.HandleFunc("GET /config", handlers.MemorySize)
+	mux.HandleFunc("POST /resize", handlers.Resize)
+	mux.HandleFunc("POST /frame", handlers.GetFrame)
 
-	//mux.HandleFunc("POST /resize", handlers.Resize)
-	//mux.HandleFunc("POST /operation", handlers.Operation)
-	//mux.HandleFunc("POST /frame", handlers.ObtenerFrame)
+	//mux.HandleFunc("POST /read", handlers.Read) acordarse cadena <-> byte
+	//mux.HandleFunc("POST /write", handlers.Write) acordarse cadena <-> byte
+	//mux.HandleFunc("POST /endProcess", handlers.FinProceso)
+
+	//mux.HandleFunc (falta request de I/O)
 
 	// ======
 	// Inicio
