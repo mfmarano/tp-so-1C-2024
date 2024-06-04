@@ -34,26 +34,26 @@ type Registers struct {
 }
 
 type DispatchResponse struct {
-	Pcb    PCB    `json:"pcb"`
-	Reason string `json:"reason"`
-	Io IoDispatch `json:"io"`
-	Resource string `json:"resource"`
+	Pcb      PCB        `json:"pcb"`
+	Reason   string     `json:"reason"`
+	Io       IoDispatch `json:"io"`
+	Resource string     `json:"resource"`
 }
 
 type ResizeRequest struct {
-	Pid  int    `json:"pcb"`
+	Pid  int `json:"pid"`
 	Size int `json:"size"`
 }
 
 type IoDispatch struct {
-	Io string `json:"reason"`
-	Instruction string `json:"instruction"`
-	Params []string `json:"params"`
+	Io          string   `json:"reason"`
+	Instruction string   `json:"instruction"`
+	Params      []string `json:"params"`
 }
 
 type GetInstructionRequest struct {
-	Pid int `json:"pid"`
-	PC uint32 `json:"pc"`
+	Pid int    `json:"pid"`
+	PC  uint32 `json:"pc"`
 }
 
 type GetInstructionResponse struct {
@@ -62,18 +62,18 @@ type GetInstructionResponse struct {
 
 type IoConnectRequest struct {
 	Name string `json:"name"`
-	Ip  string    `json:"ip"`
-	Port  int    `json:"port"`
+	Ip   string `json:"ip"`
+	Port int    `json:"port"`
 }
 
 type InstructionRequest struct {
-	Pid               int	   `json:"pid"`
-	Instruction       string   `json:"instruction"`
-	Params            []string `json:"params"`
+	Pid         int      `json:"pid"`
+	Instruction string   `json:"instruction"`
+	Params      []string `json:"params"`
 }
 
 type GetFrameRequest struct {
-	Pid int `json:"pid"`
+	Pid  int `json:"pid"`
 	Page int `json:"page"`
 }
 
@@ -82,7 +82,7 @@ type GetFrameResponse struct {
 }
 
 type MemoryReadRequest struct {
-	Pid int `json:"pid"`
+	Pid   int `json:"pid"`
 	Frame int `json:"frame"`
 }
 
@@ -91,8 +91,8 @@ type MemoryReadResponse struct {
 }
 
 type MemoryWriteRequest struct {
-	Pid int `json:"pid"`
-	Frame int `json:"frame"`
+	Pid   int    `json:"pid"`
+	Frame int    `json:"frame"`
 	Value string `json:"value"`
 }
 

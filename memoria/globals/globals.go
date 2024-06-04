@@ -30,9 +30,15 @@ var FileContents FileContent
 
 var BitMapMemory []int
 
+var Memory []byte
+
+type Page struct {
+	Frame   int
+	IsValid bool
+}
+
 type PageTable struct {
-	mutex sync.Mutex
-	Data  map[int][]int
+	Data map[int][]Page
 }
 
 var PageTables *PageTable
@@ -48,10 +54,4 @@ func (f *FileContent) GetFile(PID int) ([]string, bool) {
 	lines, ok := f.InstructionsPerPcb[PID]
 	f.mutex.Unlock()
 	return lines, ok
-}
-
-func (p *PageTable) AddTable(PID int, data []int) {
-	p.mutex.Lock()
-	p.Data[PID] = data
-	p.mutex.Unlock()
 }
