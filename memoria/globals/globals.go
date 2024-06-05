@@ -17,7 +17,7 @@ type NewProcessRequest struct {
 	Pid  int    `json:"pid"`
 }
 
-type MemorySizeResponse struct {
+type PageSizeResponse struct {
 	Size int `json:"size"`
 }
 
@@ -43,6 +43,8 @@ type PageTable struct {
 
 var PageTables *PageTable
 
+var MutexFrame sync.Mutex
+
 func (f *FileContent) AddFile(PID int, lines []string) {
 	f.mutex.Lock()
 	f.InstructionsPerPcb[PID] = lines
@@ -55,3 +57,10 @@ func (f *FileContent) GetFile(PID int) ([]string, bool) {
 	f.mutex.Unlock()
 	return lines, ok
 }
+
+// ************* EN DESARROLLO ******//
+type FinProceso struct {
+	Pid int `json:"pid"`
+}
+
+// ************* EN DESARROLLO ******//

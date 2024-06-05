@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 
@@ -53,6 +54,22 @@ func GetFileLine(PID int, lineIndex uint32) (string, error) {
 	return lines[lineIndex], nil
 }
 
+func FinalizeProcess(pid int) {
+	page := 0
+	for globals.PageTables.Data[pid-1][page].IsValid {
+		globals.PageTables.Data[pid-1][page].IsValid = false
+		globals.BitMapMemory[globals.PageTables.Data[pid-1][page].Frame] = 0
+		page++
+	}
+}
+
+func FrameNumber(pid int, page int) (int, error) {
+	if !globals.PageTables.Data[pid-1][page].IsValid {
+		return 0, errors.New("page fault")
+	}
+	return globals.PageTables.Data[pid-1][page].Frame, nil
+}
+
 func CountFramesFree() int {
 	count := 0
 	for _, v := range globals.BitMapMemory {
@@ -85,7 +102,7 @@ func ResizeFrames(size int, data []globals.Page) {
 	} else {
 		for pages > size {
 			data[pages-1].IsValid = false
-			data[pages-1].Frame = 0
+			//data[pages-1].Frame = 0
 			globals.BitMapMemory[data[pages-1].Frame] = 0
 			pages--
 		}

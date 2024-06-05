@@ -43,15 +43,15 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /mensaje", commons.RecibirMensaje)
-	mux.HandleFunc("POST /process", handlers.NuevoProceso)
+	mux.HandleFunc("POST /process", handlers.NewProcess)
+	mux.HandleFunc("POST /endProcess", handlers.EndProcess) //************* EN DESARROLLO ******//
 	mux.HandleFunc("POST /instruction", handlers.GetInstruction)
-	mux.HandleFunc("GET /config", handlers.MemorySize)
+	mux.HandleFunc("GET /config", handlers.PageSize)
 	mux.HandleFunc("POST /resize", handlers.Resize)
 	mux.HandleFunc("POST /frame", handlers.GetFrame)
+	mux.HandleFunc("POST /read", handlers.Read)
 
-	//mux.HandleFunc("POST /read", handlers.Read) acordarse cadena <-> byte
 	//mux.HandleFunc("POST /write", handlers.Write) acordarse cadena <-> byte
-	//mux.HandleFunc("POST /endProcess", handlers.FinProceso)
 
 	//mux.HandleFunc (falta request de I/O)
 

@@ -3,7 +3,6 @@ package handlers
 import (
 	"log"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/sisoputnfrba/tp-golang/memoria/globals"
@@ -11,7 +10,7 @@ import (
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 )
 
-func NuevoProceso(w http.ResponseWriter, r *http.Request) {
+func NewProcess(w http.ResponseWriter, r *http.Request) {
 	var nuevoProceso globals.NewProcessRequest
 
 	err := commons.DecodificarJSON(r.Body, &nuevoProceso)
@@ -28,12 +27,31 @@ func NuevoProceso(w http.ResponseWriter, r *http.Request) {
 
 	globals.PageTables.Data[nuevoProceso.Pid-1] = make([]globals.Page, len(globals.BitMapMemory))
 
-	println(utils.CountFramesFree())
-
-	log.Printf("Creacion PID: %d - Tamaño: %d", nuevoProceso.Pid, utils.CountPages(globals.PageTables.Data[nuevoProceso.Pid-1]))
+	log.Printf("Creacion Tabla de Páginas: PID: %d - Tamaño: %d", nuevoProceso.Pid, utils.CountPages(globals.PageTables.Data[nuevoProceso.Pid-1]))
 
 	commons.EscribirRespuesta(w, http.StatusOK, []byte("proceso creado sin espacio reservado"))
 }
+
+// ************************************** EN DESARROLLO *************************************************//
+func EndProcess(w http.ResponseWriter, r *http.Request) {
+	var finProceso globals.FinProceso
+
+	err := commons.DecodificarJSON(r.Body, &finProceso)
+	if err != nil {
+		http.Error(w, "Error al decodificar JSON", http.StatusBadRequest)
+		return
+	}
+
+	globals.MutexFrame.Lock() //chequear si va*****
+	utils.FinalizeProcess(finProceso.Pid)
+	globals.MutexFrame.Unlock()
+
+	log.Printf("Destrucción Tabla de Páginas: PID: %d - Tamaño: %d", finProceso.Pid, utils.CountPages(globals.PageTables.Data[finProceso.Pid-1]))
+
+	commons.EscribirRespuesta(w, http.StatusOK, []byte("proceso finalizado"))
+}
+
+//***************************** EN DESARROLLO *****************************************************//
 
 func GetInstruction(w http.ResponseWriter, r *http.Request) {
 	var instruccion commons.GetInstructionRequest
@@ -63,9 +81,9 @@ func GetInstruction(w http.ResponseWriter, r *http.Request) {
 	commons.EscribirRespuesta(w, http.StatusOK, response)
 }
 
-func MemorySize(w http.ResponseWriter, r *http.Request) {
+func PageSize(w http.ResponseWriter, r *http.Request) {
 
-	response, err := commons.CodificarJSON(globals.MemorySizeResponse{Size: globals.Config.MemorySize})
+	response, err := commons.CodificarJSON(globals.PageSizeResponse{Size: globals.Config.PageSize})
 
 	if err != nil {
 		http.Error(w, "Error al codificar la respuesta como JSON", http.StatusInternalServerError)
@@ -84,7 +102,13 @@ func GetFrame(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := commons.CodificarJSON(commons.GetFrameResponse{Frame: globals.PageTables.Data[frame.Pid-1][frame.Page].Frame})
+	number, err := utils.FrameNumber(frame.Pid, frame.Page)
+	if err != nil {
+		http.Error(w, "Page Fault", http.StatusNotFound)
+		return
+	}
+
+	response, err := commons.CodificarJSON(commons.GetFrameResponse{Frame: number})
 
 	if err != nil {
 		http.Error(w, "Error al codificar la respuesta como JSON", http.StatusInternalServerError)
@@ -98,7 +122,6 @@ func GetFrame(w http.ResponseWriter, r *http.Request) {
 
 func Resize(w http.ResponseWriter, r *http.Request) {
 	var resize commons.ResizeRequest
-	var mutex sync.Mutex
 	var pages int
 
 	err := commons.DecodificarJSON(r.Body, &resize)
@@ -109,7 +132,7 @@ func Resize(w http.ResponseWriter, r *http.Request) {
 
 	pages = utils.CountPages(globals.PageTables.Data[resize.Pid-1])
 
-	mutex.Lock()
+	globals.MutexFrame.Lock()
 	if pages < resize.Size && resize.Size-pages > utils.CountFramesFree() {
 		commons.EscribirRespuesta(w, http.StatusNotFound, []byte("OUT_OF_MEMORY"))
 		log.Printf("Ampliación PID: %d - Tamaño actual: %d - Tamaño a ampliar: %d - OUT_OF_MEMORY", resize.Pid, pages, resize.Size)
@@ -122,5 +145,13 @@ func Resize(w http.ResponseWriter, r *http.Request) {
 		commons.EscribirRespuesta(w, http.StatusOK, []byte("resize ejecutado"))
 		log.Printf("Reducción PID: %d - Tamaño actual: %d - Tamaño a reducir: %d", resize.Pid, pages, resize.Size)
 	}
-	mutex.Unlock()
+	globals.MutexFrame.Unlock()
 }
+
+// **************************** EN DESARROLLO *****************************************************//
+
+func Read(w http.ResponseWriter, r *http.Request) {
+
+}
+
+// ***************************** EN DESARROLLO *************************************************//
