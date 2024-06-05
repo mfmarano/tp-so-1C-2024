@@ -37,15 +37,23 @@ func RecibirInstruccion(w http.ResponseWriter, r *http.Request) {
 
 func canExecuteInstruction(req commons.InstructionRequest) bool {
 	switch globals.Config.Type {
-		case globals.GENERIC_TYPE:
-			return canExecuteGenericInstruction(req)
-		default:
-			return false
+	case globals.GENERIC_TYPE:
+		return canExecuteGenericInstruction(req)
+	case "STDIN":
+		return canExecuteIoInstruction(req.Instruction, "IO_STDIN_READ")
+	case "STDOUT":
+		return canExecuteIoInstruction(req.Instruction, "IO_STDOUT_WRITE")
+	default:
+		return false
 	}
 }
 
 func canExecuteGenericInstruction(req commons.InstructionRequest) bool {
 	return slices.Contains(globals.GENERIC_INSTRUCTIONS, req.Instruction)
+}
+
+func canExecuteIoInstruction(instruction, expected string) bool {
+	return instruction == expected
 }
 
 func waitToProduce(req commons.InstructionRequest) {
