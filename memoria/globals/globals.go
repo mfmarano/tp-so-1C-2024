@@ -41,9 +41,11 @@ type PageTable struct {
 	Data map[int][]Page
 }
 
-var PageTables *PageTable
+var PageTables PageTable
 
 var MutexFrame sync.Mutex
+
+var MutexMemory sync.Mutex
 
 func (f *FileContent) AddFile(PID int, lines []string) {
 	f.mutex.Lock()

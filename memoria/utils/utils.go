@@ -11,6 +11,7 @@ import (
 
 func readFile(filePath string) ([]string, error) {
 	file, err := os.Open(filePath)
+
 	if err != nil {
 		return nil, err
 	}
@@ -33,16 +34,19 @@ func readFile(filePath string) ([]string, error) {
 
 func AddFileToContents(PID int, filePath string) error {
 	lines, err := readFile(filePath)
+
 	if err != nil {
 		return err
 	}
 
 	globals.FileContents.AddFile(PID, lines)
+
 	return nil
 }
 
 func GetFileLine(PID int, lineIndex uint32) (string, error) {
 	lines, ok := globals.FileContents.GetFile(PID)
+
 	if !ok {
 		return "", fmt.Errorf("file with PID %d not found", PID)
 	}
@@ -56,6 +60,7 @@ func GetFileLine(PID int, lineIndex uint32) (string, error) {
 
 func FinalizeProcess(pid int) {
 	page := 0
+
 	for globals.PageTables.Data[pid-1][page].IsValid {
 		globals.PageTables.Data[pid-1][page].IsValid = false
 		globals.BitMapMemory[globals.PageTables.Data[pid-1][page].Frame] = 0
@@ -67,29 +72,35 @@ func FrameNumber(pid int, page int) (int, error) {
 	if !globals.PageTables.Data[pid-1][page].IsValid {
 		return 0, errors.New("page fault")
 	}
+
 	return globals.PageTables.Data[pid-1][page].Frame, nil
 }
 
 func CountFramesFree() int {
 	count := 0
+
 	for _, v := range globals.BitMapMemory {
 		if v == 0 {
 			count++
 		}
 	}
+
 	return count
 }
 
 func CountPages(data []globals.Page) int {
 	count := 0
+
 	for data[count].IsValid {
 		count++
 	}
+
 	return count
 }
 
 func ResizeFrames(size int, data []globals.Page) {
 	pages := CountPages(data)
+
 	if pages < size {
 		for i := 0; pages < size; i++ {
 			if globals.BitMapMemory[i] == 0 {
@@ -102,9 +113,28 @@ func ResizeFrames(size int, data []globals.Page) {
 	} else {
 		for pages > size {
 			data[pages-1].IsValid = false
-			//data[pages-1].Frame = 0
 			globals.BitMapMemory[data[pages-1].Frame] = 0
 			pages--
 		}
+	}
+}
+
+func GetContent(df int, qty int, pid int) string {
+	var content []byte
+
+	for i := 1; i <= qty; i++ {
+		content = append(content, globals.Memory[df])
+		df++
+	}
+	contentString := string(content)
+	return contentString
+}
+
+func PutContent(pid int, df int, value string) {
+	content := []byte(value)
+
+	for i := 0; i < len(content); i++ {
+		globals.Memory[df] = content[i]
+		df++
 	}
 }

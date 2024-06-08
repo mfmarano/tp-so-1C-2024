@@ -35,7 +35,7 @@ func main() {
 	globals.FileContents = globals.FileContent{InstructionsPerPcb: make(map[int][]string)}
 	globals.BitMapMemory = make([]int, globals.Config.MemorySize/globals.Config.PageSize)
 	globals.Memory = make([]byte, globals.Config.MemorySize)
-	globals.PageTables = &globals.PageTable{Data: make(map[int][]globals.Page)}
+	globals.PageTables = globals.PageTable{Data: make(map[int][]globals.Page)}
 
 	// ========
 	// Interfaz
@@ -50,10 +50,7 @@ func main() {
 	mux.HandleFunc("POST /resize", handlers.Resize)
 	mux.HandleFunc("POST /frame", handlers.GetFrame)
 	mux.HandleFunc("POST /read", handlers.Read)
-
-	//mux.HandleFunc("POST /write", handlers.Write) acordarse cadena <-> byte
-
-	//mux.HandleFunc (falta request de I/O)
+	mux.HandleFunc("POST /write", handlers.Write)
 
 	// ======
 	// Inicio

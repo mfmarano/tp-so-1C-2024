@@ -42,11 +42,13 @@ func EndProcess(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	globals.MutexFrame.Lock() //chequear si va*****
-	utils.FinalizeProcess(finProceso.Pid)
+	size := utils.CountPages(globals.PageTables.Data[finProceso.Pid-1])
+
+	globals.MutexFrame.Lock()
+	utils.FinalizeProcess(finProceso.Pid) //********falta error
 	globals.MutexFrame.Unlock()
 
-	log.Printf("Destrucción Tabla de Páginas: PID: %d - Tamaño: %d", finProceso.Pid, utils.CountPages(globals.PageTables.Data[finProceso.Pid-1]))
+	log.Printf("Destrucción Tabla de Páginas: PID: %d - Tamaño: %d", finProceso.Pid, size)
 
 	commons.EscribirRespuesta(w, http.StatusOK, []byte("proceso finalizado"))
 }
@@ -55,6 +57,8 @@ func EndProcess(w http.ResponseWriter, r *http.Request) {
 
 func GetInstruction(w http.ResponseWriter, r *http.Request) {
 	var instruccion commons.GetInstructionRequest
+
+	time.Sleep(time.Duration(globals.Config.DelayResponse) * time.Millisecond)
 
 	err := commons.DecodificarJSON(r.Body, &instruccion)
 	if err != nil {
@@ -67,8 +71,6 @@ func GetInstruction(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error al leer archivo", http.StatusInternalServerError)
 		return
 	}
-
-	time.Sleep(time.Duration(globals.Config.DelayResponse) * time.Millisecond)
 
 	log.Printf("File with PID %d, Line %d: %s\n", instruccion.Pid, instruccion.PC, line) //
 
@@ -95,6 +97,8 @@ func PageSize(w http.ResponseWriter, r *http.Request) {
 
 func GetFrame(w http.ResponseWriter, r *http.Request) {
 	var frame commons.GetFrameRequest
+
+	time.Sleep(time.Duration(globals.Config.DelayResponse) * time.Millisecond)
 
 	err := commons.DecodificarJSON(r.Body, &frame)
 	if err != nil {
@@ -124,6 +128,8 @@ func Resize(w http.ResponseWriter, r *http.Request) {
 	var resize commons.ResizeRequest
 	var pages int
 
+	time.Sleep(time.Duration(globals.Config.DelayResponse) * time.Millisecond)
+
 	err := commons.DecodificarJSON(r.Body, &resize)
 	if err != nil {
 		http.Error(w, "Error al decodificar JSON", http.StatusBadRequest)
@@ -148,10 +154,51 @@ func Resize(w http.ResponseWriter, r *http.Request) {
 	globals.MutexFrame.Unlock()
 }
 
-// **************************** EN DESARROLLO *****************************************************//
-
 func Read(w http.ResponseWriter, r *http.Request) {
+	var read commons.MemoryReadRequest
+
+	time.Sleep(time.Duration(globals.Config.DelayResponse) * time.Millisecond)
+
+	err := commons.DecodificarJSON(r.Body, &read)
+	if err != nil {
+		http.Error(w, "Error al decodificar JSON", http.StatusBadRequest)
+		return
+	}
+
+	globals.MutexMemory.Lock()
+	content := utils.GetContent(read.DF, read.Qty, read.Pid) //********falta error
+	globals.MutexMemory.Unlock()
+
+	response, err := commons.CodificarJSON(commons.MemoryReadResponse{Value: content})
+
+	if err != nil {
+		http.Error(w, "Error al codificar la respuesta como JSON", http.StatusInternalServerError)
+		return
+	}
+
+	log.Printf("Acceso a espacio de usuario PID: %d - Acción: Leer - DF: %d - Tamaño: %d", read.Pid, read.DF, read.Qty)
+
+	commons.EscribirRespuesta(w, http.StatusOK, response)
 
 }
 
-// ***************************** EN DESARROLLO *************************************************//
+func Write(w http.ResponseWriter, r *http.Request) {
+	var write commons.MemoryWriteRequest
+
+	time.Sleep(time.Duration(globals.Config.DelayResponse) * time.Millisecond)
+
+	err := commons.DecodificarJSON(r.Body, &write)
+	if err != nil {
+		http.Error(w, "Error al decodificar JSON", http.StatusBadRequest)
+		return
+	}
+
+	globals.MutexMemory.Lock()
+	utils.PutContent(write.Pid, write.DF, write.Value) //********falta error
+	globals.MutexMemory.Unlock()
+
+	log.Printf("Acceso a espacio de usuario PID: %d - Acción: Escibir - DF: %d - Tamaño: %d", write.Pid, write.DF, len([]byte(write.Value)))
+
+	commons.EscribirRespuesta(w, http.StatusOK, []byte("OK"))
+
+}
