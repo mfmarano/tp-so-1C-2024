@@ -49,6 +49,7 @@ type IoDispatch struct {
 	Io string `json:"reason"`
 	Instruction string `json:"instruction"`
 	Params []string `json:"params"`
+	Dfs []string `json:"dfs"`
 }
 
 type GetInstructionRequest struct {
@@ -87,13 +88,13 @@ type MemoryReadRequest struct {
 }
 
 type MemoryReadResponse struct {
-	Value string `json:"value"`
+	Value uint8 `json:"value"`
 }
 
 type MemoryWriteRequest struct {
 	Pid int `json:"pid"`
 	Frame int `json:"frame"`
-	Value string `json:"value"`
+	Value uint8 `json:"value"`
 }
 
 func RecibirMensaje(w http.ResponseWriter, r *http.Request) {

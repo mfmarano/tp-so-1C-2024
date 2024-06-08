@@ -1,8 +1,6 @@
 package instructions
 
 import (
-	"strconv"
-
 	"github.com/sisoputnfrba/tp-golang/cpu/globals"
 	"github.com/sisoputnfrba/tp-golang/cpu/mmu"
 	"github.com/sisoputnfrba/tp-golang/cpu/requests"
@@ -46,32 +44,33 @@ func Set() {
 }
 
 func MovIn() {
-	value := mmu.Read(Instruction.Operands[1])
-	applySet(Instruction.Operands[0], utils.ConvertStrToUInt32(value))
+	size := utils.GetRegSize(Instruction.Operands[1])
+	values := mmu.ReadFromRegisterAddress(Instruction.Operands[1], size)
+	applySet(Instruction.Operands[0], utils.JoinBytes(values))
 }
 
 func MovOut() {
-	value := getRegValue(Instruction.Operands[1])
-	address := mmu.CalculateRegAddress(Instruction.Operands[0])
-	mmu.Write(address, utils.ConvertUInt32ToString(value))
+	addressRegister := Instruction.Operands[0]
+	valueRegister := Instruction.Operands[1]
+	mmu.WriteValueFromRegisterAddress(addressRegister, valueRegister)
 }
 
 func Sum() {
-	destValue := getRegValue(Instruction.Operands[0])
-	originValue := getRegValue(Instruction.Operands[1])
+	destValue := utils.GetRegValue(Instruction.Operands[0])
+	originValue := utils.GetRegValue(Instruction.Operands[1])
 
 	applySet(Instruction.Operands[0], destValue + originValue)
 }
 
 func Sub() {
-	destValue := getRegValue(Instruction.Operands[0])
-	originValue := getRegValue(Instruction.Operands[1])
+	destValue := utils.GetRegValue(Instruction.Operands[0])
+	originValue := utils.GetRegValue(Instruction.Operands[1])
 
 	applySet(Instruction.Operands[0], destValue - originValue)
 }
 
 func Jnz() bool {
-	regValue := getRegValue(Instruction.Operands[0])
+	regValue := utils.GetRegValue(Instruction.Operands[0])
 
 	if regValue != 0 {
 		applySet("PC", utils.ConvertStrToUInt32((Instruction.Operands[1])))
@@ -95,9 +94,8 @@ func Resize(response *commons.DispatchResponse) bool {
 }
 
 func CopyString() {
-	siValue := mmu.Read("SI")
-	size, _ := strconv.Atoi(Instruction.Operands[0])
-	mmu.Write(mmu.CalculateRegAddress("DI"), siValue[:size])
+	values := mmu.ReadFromRegisterAddress("SI", utils.ConvertStringToInt(Instruction.Operands[0]))
+	mmu.WriteValues("DI", values)
 }
 
 func Wait(response *commons.DispatchResponse) bool {
@@ -120,24 +118,22 @@ func IoSleepFsFilesCommon(response *commons.DispatchResponse) bool {
 
 func IoStdCommon(response *commons.DispatchResponse) bool {
 	setIoBaseParams(response)
-	response.Io.Params = append(response.Io.Params, utils.ConvertIntToString(mmu.CalculateRegAddress(Instruction.Operands[1])))
-	response.Io.Params = append(response.Io.Params, utils.ConvertUInt32ToString(getRegValue(Instruction.Operands[2])))
+	response.Io.Dfs = append(response.Io.Dfs, mmu.GetMultipleDfs(Instruction.Operands[1], Instruction.Operands[2])...)
 	return false
 }
 
 func IoFsSeekTruncateCommon(response *commons.DispatchResponse) bool {
 	setIoBaseParams(response)
 	response.Io.Params = append(response.Io.Params, Instruction.Operands[1])
-	response.Io.Params = append(response.Io.Params, utils.ConvertUInt32ToString(getRegValue(Instruction.Operands[2])))
+	response.Io.Params = append(response.Io.Params, utils.ConvertUInt32ToString(utils.GetRegValue(Instruction.Operands[2])))
 	return false
 }
 
 func IoFsReadWriteCommon(response *commons.DispatchResponse) bool {
 	setIoBaseParams(response)
+	response.Io.Dfs = append(response.Io.Dfs, mmu.GetMultipleDfs(Instruction.Operands[2], Instruction.Operands[3])...)
 	response.Io.Params = append(response.Io.Params, Instruction.Operands[1])
-	response.Io.Params = append(response.Io.Params, utils.ConvertIntToString(mmu.CalculateRegAddress(Instruction.Operands[2])))
-	response.Io.Params = append(response.Io.Params, utils.ConvertUInt32ToString(getRegValue(Instruction.Operands[3])))
-	response.Io.Params = append(response.Io.Params, utils.ConvertUInt32ToString(getRegValue(Instruction.Operands[4])))
+	response.Io.Params = append(response.Io.Params, utils.ConvertUInt32ToString(utils.GetRegValue(Instruction.Operands[4])))
 	return false
 }
 
@@ -155,15 +151,4 @@ func applySet(regName string, value uint32) {
 	case *uint32:
 		*v = value
 	}
-}
-
-func getRegValue(regName string) uint32 {
-	var value uint32
-	switch v := globals.RegMap[regName].(type) {
-	case *uint32:
-		value = *v
-	case *uint8:
-		value = uint32(*v)
-	}
-	return value
 }
