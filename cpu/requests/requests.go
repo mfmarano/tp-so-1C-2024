@@ -32,13 +32,22 @@ func Resize(value string) (*http.Response, error) {
 	return client.Post(globals.Config.IpMemory, globals.Config.PortMemory, "resize", requestBody)
 }
 
-func Read(address int) (*http.Response, error) {
-	requestBody, err := commons.CodificarJSON(commons.MemoryReadRequest{Pid: *globals.Pid, Frame: address})
+func Read(df int) (*http.Response, error) {
+	requestBody, err := commons.CodificarJSON(commons.MemoryReadRequest{Pid: *globals.Pid, DF: df})
 	if err != nil {
 		return nil, err
 	}
 
 	return client.Post(globals.Config.IpMemory, globals.Config.PortMemory, "read", requestBody)
+}
+
+func Write(df int, value uint8) (*http.Response, error) {
+	requestBody, err := commons.CodificarJSON(commons.MemoryWriteRequest{Pid: *globals.Pid, DF: df, Value: value})
+	if err != nil {
+		return nil, err
+	}
+
+	return client.Post(globals.Config.IpMemory, globals.Config.PortMemory, "write", requestBody)
 }
 
 func GetFrame(page int) (*http.Response, error) {
@@ -48,13 +57,4 @@ func GetFrame(page int) (*http.Response, error) {
 	}
 
 	return client.Post(globals.Config.IpMemory, globals.Config.PortMemory, "frame", requestBody)
-}
-
-func Write(frame int, value uint8) (*http.Response, error) {
-	requestBody, err := commons.CodificarJSON(commons.MemoryWriteRequest{Pid: *globals.Pid, Frame: frame, Value: value})
-	if err != nil {
-		return nil, err
-	}
-
-	return client.Post(globals.Config.IpMemory, globals.Config.PortMemory, "write", requestBody)
 }

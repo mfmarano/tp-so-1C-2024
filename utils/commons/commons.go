@@ -84,7 +84,7 @@ type GetFrameResponse struct {
 
 type MemoryReadRequest struct {
 	Pid int `json:"pid"`
-	Frame int `json:"frame"`
+	DF  int `json:"df"`
 }
 
 type MemoryReadResponse struct {
@@ -92,8 +92,8 @@ type MemoryReadResponse struct {
 }
 
 type MemoryWriteRequest struct {
-	Pid int `json:"pid"`
-	Frame int `json:"frame"`
+	Pid   int `json:"pid"`
+	DF	  int `json:"df"`
 	Value uint8 `json:"value"`
 }
 
