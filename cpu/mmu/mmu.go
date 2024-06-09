@@ -48,9 +48,10 @@ func ReadFromRegisterAddress(addressRegister string, size int) []uint8 {
 func WriteValueFromRegisterAddress(addressRegister string, valueRegister string) {
 	logicalAddress := utils.GetRegValue(addressRegister)
 	size := utils.GetRegSize(valueRegister)
+	numBytes := int(size / 8)
 	value := utils.GetRegValue(valueRegister)
 	page, offset := getStartingPageAndOffset(logicalAddress)
-	for i := 0; i < size; i++ {
+	for i := 0; i < numBytes; i++ {
 		address := getPhysicalAddress(page, offset)
 		byteValue := uint8((value >> (8 * i)) & 0xFF)
 		write(address, byteValue)

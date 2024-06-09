@@ -53,9 +53,9 @@ func GetRegSize(regName string) int {
 	var size int
 	switch globals.RegMap[regName].(type) {
 	case *uint32:
-		size = 4
+		size = 32
 	case *uint8:
-		size =  1
+		size =  8
 	}
 	return size
 }
