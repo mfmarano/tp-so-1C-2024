@@ -13,85 +13,90 @@ import (
 
 var TLB *tlb.TLBType
 
-func WriteValues(addressRegister string, values []uint8) {
+func WriteValues(addressRegister string, values []byte, isString bool) {
 	logicalAddress := utils.GetRegValue(addressRegister)
 	page, offset := getStartingPageAndOffset(logicalAddress)
-	for _, value := range values {
-		address := getPhysicalAddress(page, offset)
-		write(address, value)
-		offset += 1
-		if offset >= *globals.PageSize {
-			page++
-			offset = 0
+	remainingValues := values
+
+	for len(remainingValues) > 0 {
+		availableSpace := *globals.PageSize - offset
+		if availableSpace > len(remainingValues) {
+			availableSpace = len(remainingValues)
 		}
+		batch := remainingValues[:availableSpace]
+		address := getPhysicalAddress(page, offset)
+		write(address, batch, isString)
+		remainingValues = remainingValues[availableSpace:]
+		page++
+		offset = 0
 	}
 }
 
-func ReadFromRegisterAddress(addressRegister string, size int) []uint8 {
+func ReadValues(addressRegister string, size int, isString bool) []byte {
 	var values []uint8
 	logicalAddress := utils.GetRegValue(addressRegister)
-	numBytes := int(size / 8)
 	page, offset := getStartingPageAndOffset(logicalAddress)
-	for i := 0; i < numBytes; i++ {
-		address := getPhysicalAddress(page, offset)
-		value := read(address)
-		values = append(values, value)
-		offset += 1
-		if offset >= *globals.PageSize {
-			page++
-			offset = 0
-		}
+	numPages :=  int(math.Ceil(float64(size) / float64(*globals.PageSize)))
+	if offset > 0 {
+		numPages++
 	}
+
+	for i := 0; i < numPages; i++ {
+		address := getPhysicalAddress(page, offset)
+		bytesToRead := *globals.PageSize - offset
+		if bytesToRead > size {
+			bytesToRead = size
+		}
+		readValues := read(address, bytesToRead, isString)
+		values = append(values, readValues...)
+		size -= bytesToRead
+		page++
+		offset = 0
+	}
+
 	return values
 }
 
-func WriteValueFromRegisterAddress(addressRegister string, valueRegister string) {
-	logicalAddress := utils.GetRegValue(addressRegister)
+func GetValuesAndWrite(addressRegister string, valueRegister string, isString bool) {
 	size := utils.GetRegSize(valueRegister)
-	numBytes := int(size / 8)
 	value := utils.GetRegValue(valueRegister)
-	page, offset := getStartingPageAndOffset(logicalAddress)
-	for i := 0; i < numBytes; i++ {
-		address := getPhysicalAddress(page, offset)
-		byteValue := uint8((value >> (8 * i)) & 0xFF)
-		write(address, byteValue)
-		offset += 1
-		if offset >= *globals.PageSize {
-			page++
-			offset = 0
-		}
-	}
+	bytes := utils.GetBytesFromNum(value, size)
+	WriteValues(addressRegister, bytes, isString)
 }
 
-func GetMultipleDfs(addressRegister string, sizeRegister string) []string {
-	var dfs []string
+func GetPhysicalAddresses(addressRegister string, sizeRegister string) []commons.PhysicalAddress {
+	var dfs []commons.PhysicalAddress
 	logicalAddress := utils.GetRegValue(addressRegister)
-	size := utils.GetRegValue(sizeRegister)
-	numBytes := int(size / 8)
+	size := int(utils.GetRegValue(sizeRegister))
+	numPages :=  int(math.Ceil(float64(size) / float64(*globals.PageSize)))
 	page, offset := getStartingPageAndOffset(logicalAddress)
-	for i := 0; i < numBytes; i++ {
-		address := getPhysicalAddress(page, offset)
-		dfs = append(dfs, utils.ConvertIntToString(address))
-		offset += 1
-		if offset >= *globals.PageSize {
-			page++
-			offset = 0
+
+	for i := 0; i < numPages; i++ {
+		pageBytes := *globals.PageSize - offset
+		if pageBytes > size {
+			pageBytes = size
 		}
+		address := getPhysicalAddress(page, offset)
+		dfs = append(dfs, commons.PhysicalAddress{Df: utils.ConvertIntToString(address), Size: pageBytes})
+		size -= pageBytes
+		page++
+		offset = 0
 	}
+
 	return dfs
 }
 
-func write(address int, value uint8) {
-	requests.Write(address, value)
-	log.Printf("PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %d", *globals.Pid, address, value)
+func write(address int, values []byte, isString bool) {
+	requests.Write(address, values)
+	log.Printf("PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %s", *globals.Pid, address, utils.GetValueFromBytes(values, isString))
 }
 
-func read(address int) uint8 {
-	response, _ := requests.Read(address)
+func read(address int, size int, isString bool) []byte {
+	response, _ := requests.Read(address, size)
 	var resp commons.MemoryReadResponse
 	commons.DecodificarJSON(response.Body, &resp)
-	log.Printf("PID: %d - Acción: LEER - Dirección Física: %d - Valor: %d", *globals.Pid, address, resp.Value)
-	return resp.Value
+	log.Printf("PID: %d - Acción: LEER - Dirección Física: %d - Valor: %s", *globals.Pid, address, utils.GetValueFromBytes(resp.Values, isString))
+	return resp.Values
 }
 
 func getFrame(page int) int {

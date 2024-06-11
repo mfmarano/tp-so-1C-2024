@@ -32,8 +32,8 @@ func Resize(value string) (*http.Response, error) {
 	return client.Post(globals.Config.IpMemory, globals.Config.PortMemory, "resize", requestBody)
 }
 
-func Read(df int) (*http.Response, error) {
-	requestBody, err := commons.CodificarJSON(commons.MemoryReadRequest{Pid: *globals.Pid, DF: df})
+func Read(df int, size int) (*http.Response, error) {
+	requestBody, err := commons.CodificarJSON(commons.MemoryReadRequest{Pid: *globals.Pid, DF: df, Size: size})
 	if err != nil {
 		return nil, err
 	}
@@ -41,8 +41,8 @@ func Read(df int) (*http.Response, error) {
 	return client.Post(globals.Config.IpMemory, globals.Config.PortMemory, "read", requestBody)
 }
 
-func Write(df int, value uint8) (*http.Response, error) {
-	requestBody, err := commons.CodificarJSON(commons.MemoryWriteRequest{Pid: *globals.Pid, DF: df, Value: value})
+func Write(df int, values []byte) (*http.Response, error) {
+	requestBody, err := commons.CodificarJSON(commons.MemoryWriteRequest{Pid: *globals.Pid, DF: df, Values: values})
 	if err != nil {
 		return nil, err
 	}

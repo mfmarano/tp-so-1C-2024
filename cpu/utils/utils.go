@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/binary"
 	"strconv"
 
 	"github.com/sisoputnfrba/tp-golang/cpu/globals"
@@ -53,17 +54,41 @@ func GetRegSize(regName string) int {
 	var size int
 	switch globals.RegMap[regName].(type) {
 	case *uint32:
-		size = 32
+		size = 4
 	case *uint8:
-		size =  8
+		size =  1
 	}
 	return size
 }
 
-func JoinBytes(bytes []uint8) uint32 {
-	var result uint32
-    for i := 0; i < len(bytes); i++ {
-        result |= uint32(bytes[i]) << uint(8*i)
+func GetNumFromBytes(bytes []byte) uint32 {
+	size := len(bytes)
+    var num uint32
+    for i := 0; i < size; i++ {
+        num |= uint32(bytes[i]) << uint(8 * (size - 1 - i))
     }
-	return result
+    return num
+}
+
+func GetBytesFromNum(num uint32, size int) []byte {
+	values := make([]byte, size)
+	if size == 8 {
+		values = []byte{uint8(num)}
+	} else {
+		binary.BigEndian.PutUint32(values, num)
+	}
+
+	return values
+}
+
+func GetStrFromBytes(bytes []byte) string {
+	return string(bytes)
+}
+
+func GetValueFromBytes(bytes []byte, isString bool) string {
+	if isString {
+		return GetStrFromBytes(bytes)
+	} else {
+		return ConvertUInt32ToString(GetNumFromBytes(bytes))
+	}
 }

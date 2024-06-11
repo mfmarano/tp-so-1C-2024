@@ -45,14 +45,14 @@ func Set() {
 
 func MovIn() {
 	size := utils.GetRegSize(Instruction.Operands[1])
-	values := mmu.ReadFromRegisterAddress(Instruction.Operands[1], size)
-	applySet(Instruction.Operands[0], utils.JoinBytes(values))
+	values := mmu.ReadValues(Instruction.Operands[1], size, false)
+	applySet(Instruction.Operands[0], utils.GetNumFromBytes(values))
 }
 
 func MovOut() {
 	addressRegister := Instruction.Operands[0]
 	valueRegister := Instruction.Operands[1]
-	mmu.WriteValueFromRegisterAddress(addressRegister, valueRegister)
+	mmu.GetValuesAndWrite(addressRegister, valueRegister, false)
 }
 
 func Sum() {
@@ -94,8 +94,8 @@ func Resize(response *commons.DispatchResponse) bool {
 }
 
 func CopyString() {
-	values := mmu.ReadFromRegisterAddress("SI", utils.ConvertStringToInt(Instruction.Operands[0]))
-	mmu.WriteValues("DI", values)
+	values := mmu.ReadValues("SI", utils.ConvertStringToInt(Instruction.Operands[0]), true)
+	mmu.WriteValues("DI", values, true)
 }
 
 func Wait(response *commons.DispatchResponse) bool {
@@ -118,7 +118,7 @@ func IoSleepFsFilesCommon(response *commons.DispatchResponse) bool {
 
 func IoStdCommon(response *commons.DispatchResponse) bool {
 	setIoBaseParams(response)
-	response.Io.Dfs = append(response.Io.Dfs, mmu.GetMultipleDfs(Instruction.Operands[1], Instruction.Operands[2])...)
+	response.Io.Dfs = append(response.Io.Dfs, mmu.GetPhysicalAddresses(Instruction.Operands[1], Instruction.Operands[2])...)
 	return false
 }
 
@@ -131,7 +131,7 @@ func IoFsSeekTruncateCommon(response *commons.DispatchResponse) bool {
 
 func IoFsReadWriteCommon(response *commons.DispatchResponse) bool {
 	setIoBaseParams(response)
-	response.Io.Dfs = append(response.Io.Dfs, mmu.GetMultipleDfs(Instruction.Operands[2], Instruction.Operands[3])...)
+	response.Io.Dfs = append(response.Io.Dfs, mmu.GetPhysicalAddresses(Instruction.Operands[2], Instruction.Operands[3])...)
 	response.Io.Params = append(response.Io.Params, Instruction.Operands[1])
 	response.Io.Params = append(response.Io.Params, utils.ConvertUInt32ToString(utils.GetRegValue(Instruction.Operands[4])))
 	return false
