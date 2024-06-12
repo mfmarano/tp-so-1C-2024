@@ -13,6 +13,8 @@ import (
 func NewProcess(w http.ResponseWriter, r *http.Request) {
 	var nuevoProceso globals.NewProcessRequest
 
+	time.Sleep(time.Duration(globals.Config.DelayResponse) * time.Millisecond)
+
 	err := commons.DecodificarJSON(r.Body, &nuevoProceso)
 	if err != nil {
 		http.Error(w, "Error al decodificar JSON", http.StatusBadRequest)
@@ -36,6 +38,8 @@ func NewProcess(w http.ResponseWriter, r *http.Request) {
 func EndProcess(w http.ResponseWriter, r *http.Request) {
 	var finProceso globals.FinProceso
 
+	time.Sleep(time.Duration(globals.Config.DelayResponse) * time.Millisecond)
+
 	err := commons.DecodificarJSON(r.Body, &finProceso)
 	if err != nil {
 		http.Error(w, "Error al decodificar JSON", http.StatusBadRequest)
@@ -45,7 +49,7 @@ func EndProcess(w http.ResponseWriter, r *http.Request) {
 	size := utils.CountPages(globals.PageTables.Data[finProceso.Pid-1])
 
 	globals.MutexFrame.Lock()
-	utils.FinalizeProcess(finProceso.Pid) //********falta error
+	utils.FinalizeProcess(finProceso.Pid)
 	globals.MutexFrame.Unlock()
 
 	log.Printf("Destrucción Tabla de Páginas: PID: %d - Tamaño: %d", finProceso.Pid, size)
@@ -72,7 +76,7 @@ func GetInstruction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("File with PID %d, Line %d: %s\n", instruccion.Pid, instruccion.PC, line) //
+	log.Printf("File with PID %d, Line %d: %s\n", instruccion.Pid, instruccion.PC, line)
 
 	response, err := commons.CodificarJSON(commons.GetInstructionResponse{Instruction: line})
 	if err != nil {
@@ -126,7 +130,6 @@ func GetFrame(w http.ResponseWriter, r *http.Request) {
 
 func Resize(w http.ResponseWriter, r *http.Request) {
 	var resize commons.ResizeRequest
-	var pages int
 
 	time.Sleep(time.Duration(globals.Config.DelayResponse) * time.Millisecond)
 
@@ -136,22 +139,24 @@ func Resize(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pages = utils.CountPages(globals.PageTables.Data[resize.Pid-1])
+	pagesProcess := utils.CountPages(globals.PageTables.Data[resize.Pid-1])
+	pagesResize := resize.Size / globals.Config.PageSize
 
 	globals.MutexFrame.Lock()
-	if pages < resize.Size && resize.Size-pages > utils.CountFramesFree() {
+	if pagesProcess < pagesResize && pagesResize-pagesProcess > utils.CountFramesFree() {
 		commons.EscribirRespuesta(w, http.StatusNotFound, []byte("OUT_OF_MEMORY"))
-		log.Printf("Ampliación PID: %d - Tamaño actual: %d - Tamaño a ampliar: %d - OUT_OF_MEMORY", resize.Pid, pages, resize.Size)
-	} else if pages < resize.Size {
-		utils.ResizeFrames(resize.Size, globals.PageTables.Data[resize.Pid-1])
+		log.Printf("Ampliación PID: %d - Tamaño actual: %d - Tamaño a ampliar: %d - OUT_OF_MEMORY", resize.Pid, pagesProcess, resize.Size)
+	} else if pagesProcess < pagesResize {
+		utils.ResizeFrames(pagesResize, globals.PageTables.Data[resize.Pid-1])
 		commons.EscribirRespuesta(w, http.StatusOK, []byte("resize ejecutado"))
-		log.Printf("Ampliación PID: %d - Tamaño actual: %d - Tamaño a ampliar: %d", resize.Pid, pages, resize.Size)
+		log.Printf("Ampliación PID: %d - Tamaño actual: %d - Tamaño a ampliar: %d", resize.Pid, pagesProcess, pagesResize)
 	} else {
-		utils.ResizeFrames(resize.Size, globals.PageTables.Data[resize.Pid-1])
+		utils.ResizeFrames(pagesResize, globals.PageTables.Data[resize.Pid-1])
 		commons.EscribirRespuesta(w, http.StatusOK, []byte("resize ejecutado"))
-		log.Printf("Reducción PID: %d - Tamaño actual: %d - Tamaño a reducir: %d", resize.Pid, pages, resize.Size)
+		log.Printf("Reducción PID: %d - Tamaño actual: %d - Tamaño a reducir: %d", resize.Pid, pagesProcess, pagesResize)
 	}
 	globals.MutexFrame.Unlock()
+
 }
 
 func Read(w http.ResponseWriter, r *http.Request) {
@@ -166,20 +171,19 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	}
 
 	globals.MutexMemory.Lock()
-	content := utils.GetContent(read.DF, read.Qty, read.Pid) //********falta error
+	content := utils.GetContent(read.DF, read.Size, read.Pid)
 	globals.MutexMemory.Unlock()
 
-	response, err := commons.CodificarJSON(commons.MemoryReadResponse{Value: content})
+	response, err := commons.CodificarJSON(commons.MemoryReadResponse{Values: content})
 
 	if err != nil {
 		http.Error(w, "Error al codificar la respuesta como JSON", http.StatusInternalServerError)
 		return
 	}
 
-	log.Printf("Acceso a espacio de usuario PID: %d - Acción: Leer - DF: %d - Tamaño: %d", read.Pid, read.DF, read.Qty)
+	log.Printf("Acceso a espacio de usuario PID: %d - Acción: Leer - DF: %d - Tamaño: %d", read.Pid, read.DF, read.Size)
 
 	commons.EscribirRespuesta(w, http.StatusOK, response)
-
 }
 
 func Write(w http.ResponseWriter, r *http.Request) {
@@ -194,10 +198,10 @@ func Write(w http.ResponseWriter, r *http.Request) {
 	}
 
 	globals.MutexMemory.Lock()
-	utils.PutContent(write.Pid, write.DF, write.Value) //********falta error
+	utils.PutContent(write.Pid, write.DF, write.Values)
 	globals.MutexMemory.Unlock()
 
-	log.Printf("Acceso a espacio de usuario PID: %d - Acción: Escibir - DF: %d - Tamaño: %d", write.Pid, write.DF, len([]byte(write.Value)))
+	log.Printf("Acceso a espacio de usuario PID: %d - Acción: Escibir - DF: %d - Tamaño: %d", write.Pid, write.DF, len([]byte(write.Values)))
 
 	commons.EscribirRespuesta(w, http.StatusOK, []byte("OK"))
 
