@@ -32,7 +32,11 @@ func CreateProcess(pid int) commons.PCB {
 }
 
 func PrepareProcess(pcb commons.PCB) {
-	ChangeState(pcb, queues.ReadyProcesses, "READY")
+	if pcb.Quantum > 0 {
+		ChangeState(pcb, queues.PrioritizedReadyProcesses, "READY")
+	} else {
+		ChangeState(pcb, queues.ReadyProcesses, "READY")
+	}
 
 	log.Printf("Cola Ready: [%s]",
 		logs.IntArrayToString(queues.ReadyProcesses.GetPids(), ", "))
@@ -64,6 +68,8 @@ func GetAllProcesses() []commons.PCB {
 		queues.NewProcesses.Processes,
 		queues.ReadyProcesses.Processes,
 		queues.RunningProcesses.Processes,
+		queues.PrioritizedReadyProcesses.Processes,
+		queues.BlockedProcesses.Processes,
 	)
 }
 
@@ -82,11 +88,10 @@ func SetProcessToRunning() {
 
 		pcb := GetNextProcess()
 		ChangeState(pcb, queues.RunningProcesses, "EXEC")
+		go sendEndOfQuantum(pcb)
 
-		response, err := requests.Dispatch(pcb)
-		if err != nil || response == nil {
+		if _, err := requests.Dispatch(pcb); err != nil {
 			log.Printf("Error al enviar el PCB %d al CPU.", pcb.Pid)
-
 			queues.RunningProcesses.PopProcess()
 			FinalizeProcess(pcb, "ERROR_DISPATCH")
 			<-globals.Multiprogramming
@@ -96,19 +101,27 @@ func SetProcessToRunning() {
 }
 
 func GetNextProcess() commons.PCB {
-	pcb := queues.ReadyProcesses.PopProcess()
-	switch globals.Config.PlanningAlgorithm {
-	case "FIFO":
-		return pcb
-	case "RR":
-		go sendEndOfQuantum(pcb.Pid)
-		return pcb
-	default:
-		return pcb
+	var pcb commons.PCB
+
+	if globals.Config.PlanningAlgorithm == "VRR" && queues.PrioritizedReadyProcesses.IsNotEmpty() {
+		pcb = queues.PrioritizedReadyProcesses.PopProcess()
+	} else {
+		pcb = queues.ReadyProcesses.PopProcess()
 	}
+
+	return pcb
 }
 
-func sendEndOfQuantum(pid int) {
-	time.Sleep(time.Duration(globals.Config.Quantum) * time.Millisecond)
-	_, _ = requests.Interrupt("END_OF_QUANTUM", pid)
+func sendEndOfQuantum(pcb commons.PCB) {
+	if globals.Config.PlanningAlgorithm != "RR" && globals.Config.PlanningAlgorithm != "VRR" {
+		return
+	}
+
+	quantum := globals.Config.Quantum
+	if globals.Config.PlanningAlgorithm == "VRR" {
+		quantum = pcb.Quantum
+	}
+
+	time.Sleep(time.Duration(quantum) * time.Millisecond)
+	_, _ = requests.Interrupt("END_OF_QUANTUM", pcb.Pid)
 }

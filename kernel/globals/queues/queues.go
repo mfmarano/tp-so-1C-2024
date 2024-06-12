@@ -12,6 +12,7 @@ type ProcessQueue struct {
 
 var NewProcesses *ProcessQueue
 var ReadyProcesses *ProcessQueue
+var PrioritizedReadyProcesses *ProcessQueue
 var RunningProcesses *ProcessQueue
 var BlockedProcesses *ProcessQueue
 
@@ -55,9 +56,17 @@ func (q *ProcessQueue) RemoveProcess(pid int) commons.PCB {
 	return removedProcess
 }
 
+func (q *ProcessQueue) IsNotEmpty() bool {
+	q.mutex.Lock()
+	notEmpty := len(q.Processes) > 0
+	q.mutex.Unlock()
+	return notEmpty
+}
+
 func InitializeQueues() {
 	NewProcesses = &ProcessQueue{Processes: make([]commons.PCB, 0)}
 	ReadyProcesses = &ProcessQueue{Processes: make([]commons.PCB, 0)}
+	PrioritizedReadyProcesses = &ProcessQueue{Processes: make([]commons.PCB, 0)}
 	RunningProcesses = &ProcessQueue{Processes: make([]commons.PCB, 0)}
 	BlockedProcesses = &ProcessQueue{Processes: make([]commons.PCB, 0)}
 }
