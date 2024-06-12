@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/globals"
-	"github.com/sisoputnfrba/tp-golang/kernel/globals/io"
 	"github.com/sisoputnfrba/tp-golang/utils/client"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 )
@@ -49,7 +48,7 @@ func IoRequest(pid int, ioRequest commons.IoDispatch) (*http.Response, error) {
 		return nil, err
 	}
 
-	config, ok := io.IosMap.GetConfig(ioRequest.Io)
+	config, ok := globals.Interfaces.GetInterface(ioRequest.Io)
 	if !ok {
 		return nil, err
 	}

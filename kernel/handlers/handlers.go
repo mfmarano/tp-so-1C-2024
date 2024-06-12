@@ -7,7 +7,6 @@ import (
 	"strconv"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/globals"
-	"github.com/sisoputnfrba/tp-golang/kernel/globals/io"
 	"github.com/sisoputnfrba/tp-golang/kernel/globals/processes"
 	"github.com/sisoputnfrba/tp-golang/kernel/globals/queues"
 	"github.com/sisoputnfrba/tp-golang/kernel/handlers/requests"
@@ -153,11 +152,9 @@ func RecibirConexion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	config := io.IoConfig{Ip: req.Ip, Port: req.Port}
+	globals.Interfaces.AddInterface(req)
 
-	io.IosMap.AddConfig(req.Name, config)
-
-	log.Printf("IO %s - Conexion aceptada: ip %s, port %d", req.Name, config.Ip, config.Port)
+	log.Printf("IO %s - Conexion aceptada: ip %s, port %d", req.Name, req.Ip, req.Port)
 }
 
 func DesbloquearProceso(w http.ResponseWriter, r *http.Request) {

@@ -54,3 +54,10 @@ func (q *ProcessQueue) RemoveProcess(pid int) commons.PCB {
 	q.mutex.Unlock()
 	return removedProcess
 }
+
+func InitializeQueues() {
+	NewProcesses = &ProcessQueue{Processes: make([]commons.PCB, 0)}
+	ReadyProcesses = &ProcessQueue{Processes: make([]commons.PCB, 0)}
+	RunningProcesses = &ProcessQueue{Processes: make([]commons.PCB, 0)}
+	BlockedProcesses = &ProcessQueue{Processes: make([]commons.PCB, 0)}
+}

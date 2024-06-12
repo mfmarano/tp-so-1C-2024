@@ -48,7 +48,12 @@ func BlockProcess(pcb commons.PCB, ioRequest commons.IoDispatch) {
 	ChangeState(pcb, queues.BlockedProcesses, "BLOCKED")
 
 	if ioRequest.Io != "" {
-		sendIoRequest(pcb, ioRequest)
+		resp, err := requests.IoRequest(pcb.Pid, ioRequest)
+
+		if err != nil || resp == nil {
+			log.Printf("Error al enviar instruccion %s del PCB %d a la IO %s.", ioRequest.Instruction, pcb.Pid, ioRequest.Io)
+			FinalizeProcess(pcb, "ERROR_IO")
+		}
 	}
 
 	log.Printf("PID: %d - Bloqueado por: %s", pcb.Pid, ioRequest.Io)
@@ -106,13 +111,4 @@ func GetNextProcess() commons.PCB {
 func sendEndOfQuantum(pid int) {
 	time.Sleep(time.Duration(globals.Config.Quantum) * time.Millisecond)
 	_, _ = requests.Interrupt("END_OF_QUANTUM", pid)
-}
-
-func sendIoRequest(pcb commons.PCB, ioRequest commons.IoDispatch) {
-	resp, err := requests.IoRequest(pcb.Pid, ioRequest)
-
-	if err != nil || resp == nil {
-		log.Printf("Error al enviar instruccion %s del PCB %d a la IO %s.", ioRequest.Instruction, pcb.Pid, ioRequest.Io)
-		FinalizeProcess(pcb, "ERROR_IO")
-	}
 }

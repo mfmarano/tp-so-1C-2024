@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/globals"
-	"github.com/sisoputnfrba/tp-golang/kernel/globals/io"
 	"github.com/sisoputnfrba/tp-golang/kernel/globals/processes"
 	"github.com/sisoputnfrba/tp-golang/kernel/globals/queues"
 	"github.com/sisoputnfrba/tp-golang/kernel/handlers"
@@ -35,16 +34,8 @@ func main() {
 		log.Fatalln("Error al cargar la configuración de kernel")
 	}
 
-	globals.Multiprogramming = make(chan int, globals.Config.Multiprogramming)
-	globals.CpuIsFree = make(chan int, 1)
-	globals.New = make(chan int)
-	globals.Ready = make(chan int)
-	globals.PidCounter = &globals.Counter{Value: 0}
-	queues.NewProcesses = &queues.ProcessQueue{Processes: make([]commons.PCB, 0)}
-	queues.ReadyProcesses = &queues.ProcessQueue{Processes: make([]commons.PCB, 0)}
-	queues.RunningProcesses = &queues.ProcessQueue{Processes: make([]commons.PCB, 0)}
-	queues.BlockedProcesses = &queues.ProcessQueue{Processes: make([]commons.PCB, 0)}
-	io.IosMap = &io.IoMap{Ios: make(map[string]io.IoConfig)}
+	globals.InitializeGlobals()
+	queues.InitializeQueues()
 
 	// ========
 	// Interfaz
