@@ -36,10 +36,7 @@ func ReadValues(addressRegister string, size int, isString bool) []byte {
 	var values []uint8
 	logicalAddress := utils.GetRegValue(addressRegister)
 	page, offset := getStartingPageAndOffset(logicalAddress)
-	numPages :=  int(math.Ceil(float64(size) / float64(*globals.PageSize)))
-	if offset > 0 {
-		numPages++
-	}
+	numPages :=  calculateTotalPages(offset, size)
 
 	for i := 0; i < numPages; i++ {
 		address := getPhysicalAddress(page, offset)
@@ -107,7 +104,7 @@ func getFrame(page int) int {
 		var resp commons.GetFrameResponse
 		commons.DecodificarJSON(response.Body, &resp)
 		frame = resp.Frame
-		log.Printf("PID: %d - OBTENER MARCO - Página: %d - Marco: %d", globals.Pid, page, frame)
+		log.Printf("PID: %d - OBTENER MARCO - Página: %d - Marco: %d", *globals.Pid, page, frame)
 		TLB.Put(page, frame)
 	}
 
@@ -125,4 +122,16 @@ func getStartingPageAndOffset(logicalAddress uint32) (int, int) {
 	offset := int(logicalAddress) - page * (int(*globals.PageSize))
 
 	return page, offset
+}
+
+func calculateTotalPages(offset int, size int) int {
+	var numPages int
+	remainingBytesInFirstPage := *globals.PageSize - offset
+    if size <= remainingBytesInFirstPage {
+        numPages = 1
+    } else {
+        sizeLeft := float64(size - remainingBytesInFirstPage)
+        numPages = 1 + int(math.Ceil(sizeLeft / float64(*globals.PageSize)))
+    }
+	return numPages
 }

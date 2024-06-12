@@ -103,6 +103,10 @@ type MemoryWriteRequest struct {
 	Values []byte `json:"values"`
 }
 
+type PageSizeResponse struct {
+	Size int `json:"size"`
+}
+
 func RecibirMensaje(w http.ResponseWriter, r *http.Request) {
 	var mensaje Mensaje
 

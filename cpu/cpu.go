@@ -27,6 +27,7 @@ func main() {
 	globals.Registers = new(commons.Registers)
 	globals.Interruption = new(interruption.Interruption)
 	globals.Pid = new(int)
+	globals.PageSize = new(int)
 	instructions.Instruction = new(instructions.InstructionStruct)
 
 	globals.LoadRegistersMap()

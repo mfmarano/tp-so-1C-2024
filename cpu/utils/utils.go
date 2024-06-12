@@ -72,7 +72,7 @@ func GetNumFromBytes(bytes []byte) uint32 {
 
 func GetBytesFromNum(num uint32, size int) []byte {
 	values := make([]byte, size)
-	if size == 8 {
+	if size == 1 {
 		values = []byte{uint8(num)}
 	} else {
 		binary.BigEndian.PutUint32(values, num)

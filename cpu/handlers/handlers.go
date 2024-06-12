@@ -163,7 +163,8 @@ func GetPageSize() {
 		log.Printf("Error al conectarse a memoria")
 		return
 	}
-
-	commons.DecodificarJSON(resp.Body, &globals.PageSize)
+	var pageSize commons.PageSizeResponse
+	commons.DecodificarJSON(resp.Body, &pageSize)
+	*globals.PageSize = pageSize.Size
 	log.Printf("MEMORY - SIZE PAGE - SIZE: %d", *globals.PageSize)
 }

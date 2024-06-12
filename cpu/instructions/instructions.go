@@ -44,7 +44,7 @@ func Set() {
 }
 
 func MovIn() {
-	size := utils.GetRegSize(Instruction.Operands[1])
+	size := utils.GetRegSize(Instruction.Operands[0])
 	values := mmu.ReadValues(Instruction.Operands[1], size, false)
 	applySet(Instruction.Operands[0], utils.GetNumFromBytes(values))
 }
