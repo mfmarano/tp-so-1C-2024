@@ -140,7 +140,7 @@ func Resize(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pagesProcess := utils.CountPages(globals.PageTables.Data[resize.Pid-1])
-	pagesResize := resize.Size / globals.Config.PageSize
+	pagesResize := utils.NextIntegerAfterDivision(resize.Size, globals.Config.PageSize)
 
 	globals.MutexFrame.Lock()
 	if pagesProcess < pagesResize && pagesResize-pagesProcess > utils.CountFramesFree() {
@@ -150,10 +150,13 @@ func Resize(w http.ResponseWriter, r *http.Request) {
 		utils.ResizeFrames(pagesResize, globals.PageTables.Data[resize.Pid-1])
 		commons.EscribirRespuesta(w, http.StatusOK, []byte("resize ejecutado"))
 		log.Printf("Ampliación PID: %d - Tamaño actual: %d - Tamaño a ampliar: %d", resize.Pid, pagesProcess, pagesResize)
-	} else {
+	} else if pagesProcess > pagesResize {
 		utils.ResizeFrames(pagesResize, globals.PageTables.Data[resize.Pid-1])
 		commons.EscribirRespuesta(w, http.StatusOK, []byte("resize ejecutado"))
 		log.Printf("Reducción PID: %d - Tamaño actual: %d - Tamaño a reducir: %d", resize.Pid, pagesProcess, pagesResize)
+	} else {
+		commons.EscribirRespuesta(w, http.StatusOK, []byte("resize ejecutado"))
+		log.Printf("Resize PID: %d - Tamaño actual: %d - Sin modificacion en cantidad de frames", resize.Pid, pagesProcess)
 	}
 	globals.MutexFrame.Unlock()
 

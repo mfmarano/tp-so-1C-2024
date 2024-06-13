@@ -98,6 +98,17 @@ func CountPages(data []globals.Page) int {
 	return count
 }
 
+func NextIntegerAfterDivision(dividend, divisor int) int {
+	quotient := dividend / divisor
+	remainder := dividend % divisor
+
+	if remainder > 0 {
+		quotient++
+	}
+
+	return quotient
+}
+
 func ResizeFrames(size int, data []globals.Page) {
 	pages := CountPages(data)
 
@@ -131,8 +142,8 @@ func GetContent(df int, size int, pid int) []byte {
 
 func PutContent(pid int, df int, values []byte) {
 
-	for i := 0; i < len(values); i++ {
-		globals.Memory[df] = values[i]
+	for _, value := range values {
+		globals.Memory[df] = value
 		df++
 	}
 }
