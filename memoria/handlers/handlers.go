@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"log"
+	"math"
 	"net/http"
 	"time"
 
@@ -140,7 +141,7 @@ func Resize(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pagesProcess := utils.CountPages(globals.PageTables.Data[resize.Pid-1])
-	pagesResize := utils.NextIntegerAfterDivision(resize.Size, globals.Config.PageSize)
+	pagesResize := int(math.Ceil(float64(resize.Size) / float64(globals.Config.PageSize)))
 
 	globals.MutexFrame.Lock()
 	if pagesProcess < pagesResize && pagesResize-pagesProcess > utils.CountFramesFree() {

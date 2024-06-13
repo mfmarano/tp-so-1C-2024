@@ -98,17 +98,6 @@ func CountPages(data []globals.Page) int {
 	return count
 }
 
-func NextIntegerAfterDivision(dividend, divisor int) int {
-	quotient := dividend / divisor
-	remainder := dividend % divisor
-
-	if remainder > 0 {
-		quotient++
-	}
-
-	return quotient
-}
-
 func ResizeFrames(size int, data []globals.Page) {
 	pages := CountPages(data)
 
