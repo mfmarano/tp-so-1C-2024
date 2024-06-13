@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/sisoputnfrba/tp-golang/cpu/globals/interruption"
 
@@ -50,6 +51,8 @@ func ExecuteProcess(request commons.PCB) {
 	*globals.Pid = request.Pid
 	globals.Registers.PC = uint32(request.ProgramCounter)
 
+	start := time.Now()
+
 	for {
 		Fetch()
 
@@ -70,6 +73,7 @@ func ExecuteProcess(request commons.PCB) {
 	dispatchResponse.Pcb = request
 	dispatchResponse.Pcb.Registros = *globals.Registers
 	dispatchResponse.Pcb.ProgramCounter = int(globals.Registers.PC)
+	dispatchResponse.Pcb.Quantum -= int(time.Since(start).Milliseconds())
 
 	resp, err := commons.CodificarJSON(dispatchResponse)
 	if err != nil {
