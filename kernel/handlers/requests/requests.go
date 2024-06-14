@@ -44,7 +44,7 @@ func Interrupt(interruption string, pid int) (*http.Response, error) {
 }
 
 func IoRequest(pid int, ioRequest commons.IoDispatch) (*http.Response, error) {
-	requestBody, err := commons.CodificarJSON(commons.InstructionRequest{Pid: pid, Instruction: ioRequest.Instruction, Params: ioRequest.Params})
+	requestBody, err := commons.CodificarJSON(commons.InstructionRequest{Pid: pid, Instruction: ioRequest.Instruction, Params: ioRequest.Params, Dfs: ioRequest.Dfs})
 	if err != nil {
 		return nil, err
 	}

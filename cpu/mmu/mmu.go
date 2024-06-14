@@ -65,8 +65,8 @@ func GetPhysicalAddresses(addressRegister string, sizeRegister string) []commons
 	var dfs []commons.PhysicalAddress
 	logicalAddress := utils.GetRegValue(addressRegister)
 	size := int(utils.GetRegValue(sizeRegister))
-	numPages :=  int(math.Ceil(float64(size) / float64(*globals.PageSize)))
 	page, offset := getStartingPageAndOffset(logicalAddress)
+	numPages :=  calculateTotalPages(offset, size)
 
 	for i := 0; i < numPages; i++ {
 		pageBytes := *globals.PageSize - offset
@@ -74,7 +74,7 @@ func GetPhysicalAddresses(addressRegister string, sizeRegister string) []commons
 			pageBytes = size
 		}
 		address := getPhysicalAddress(page, offset)
-		dfs = append(dfs, commons.PhysicalAddress{Df: utils.ConvertIntToString(address), Size: pageBytes})
+		dfs = append(dfs, commons.PhysicalAddress{Df: address, Size: pageBytes})
 		size -= pageBytes
 		page++
 		offset = 0

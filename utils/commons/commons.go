@@ -53,7 +53,7 @@ type IoDispatch struct {
 }
 
 type PhysicalAddress struct {
-	Df   string `json:"df"`
+	Df   int    `json:"df"`
 	Size int    `json:"size"`
 }
 
@@ -73,9 +73,10 @@ type IoConnectRequest struct {
 }
 
 type InstructionRequest struct {
-	Pid         int      `json:"pid"`
-	Instruction string   `json:"instruction"`
-	Params      []string `json:"params"`
+	Pid         int               `json:"pid"`
+	Instruction string            `json:"instruction"`
+	Params      []string          `json:"params"`
+	Dfs         []PhysicalAddress `json:"dfs"`
 }
 
 type GetFrameRequest struct {
