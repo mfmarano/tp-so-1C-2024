@@ -3,28 +3,28 @@ package interruption
 import "sync"
 
 type Interruption struct {
-	Mutex  sync.Mutex
-	Pid    int    `json:"pid"`
-	Status bool   `json:"status"`
-	Reason string `json:"reason"`
+	mutex  sync.Mutex
+	pid    int
+	status bool
+	reason string
 }
 
 func (i *Interruption) Set(status bool, reason string, pid int) {
-	i.Mutex.Lock()
-	i.Status = status
-	i.Reason = reason
-	i.Pid = pid
-	i.Mutex.Unlock()
+	i.mutex.Lock()
+	i.status = status
+	i.reason = reason
+	i.pid = pid
+	i.mutex.Unlock()
 }
 
 func (i *Interruption) GetAndReset() (bool, string, int) {
-	i.Mutex.Lock()
-	status := i.Status
-	reason := i.Reason
-	pid := i.Pid
-	i.Status = false
-	i.Reason = ""
-	i.Pid = 0
-	i.Mutex.Unlock()
+	i.mutex.Lock()
+	status := i.status
+	reason := i.reason
+	pid := i.pid
+	i.status = false
+	i.reason = ""
+	i.pid = 0
+	i.mutex.Unlock()
 	return status, reason, pid
 }

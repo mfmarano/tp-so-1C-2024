@@ -28,7 +28,7 @@ const (
 )
 
 func (l *TLBType) Put(page int, frame int) {
-	key := Key{Pid: *globals.Pid, Page: page}
+	key := Key{Pid: globals.ProcessContext.GetPid(), Page: page}
 	if l.Capacity == len(l.Entries) {
 		back := l.Queue.Back()
 		l.Queue.Remove(back)
@@ -38,14 +38,14 @@ func (l *TLBType) Put(page int, frame int) {
 }
 
 func (l *TLBType) Get(page int) (int, bool) {
-	key := Key{Pid: *globals.Pid, Page: page}
+	key := Key{Pid: globals.ProcessContext.GetPid(), Page: page}
 	if item, ok := l.Entries[key]; ok {
 		if globals.Config.AlgorithmTlb == LRU {
 			l.Queue.MoveToFront(item.KeyPtr)
 		}
-		log.Printf("PID: %d - TLB HIT - Pagina: %d", *globals.Pid, page)
+		log.Printf("PID: %d - TLB HIT - Pagina: %d", globals.ProcessContext.GetPid(), page)
 		return item.Frame, true
 	}
-	log.Printf("PID: %d - TLB MISS - Pagina: %d", *globals.Pid, page)
+	log.Printf("PID: %d - TLB MISS - Pagina: %d", globals.ProcessContext.GetPid(), page)
 	return -1, false
 }

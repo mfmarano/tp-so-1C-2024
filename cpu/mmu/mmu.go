@@ -85,14 +85,14 @@ func GetPhysicalAddresses(addressRegister string, sizeRegister string) []commons
 
 func write(address int, values []byte, isString bool) {
 	requests.Write(address, values)
-	log.Printf("PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %s", *globals.Pid, address, utils.GetValueFromBytes(values, isString))
+	log.Printf("PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %s", globals.ProcessContext.GetPid(), address, utils.GetValueFromBytes(values, isString))
 }
 
 func read(address int, size int, isString bool) []byte {
 	response, _ := requests.Read(address, size)
 	var resp commons.MemoryReadResponse
 	commons.DecodificarJSON(response.Body, &resp)
-	log.Printf("PID: %d - Acción: LEER - Dirección Física: %d - Valor: %s", *globals.Pid, address, utils.GetValueFromBytes(resp.Values, isString))
+	log.Printf("PID: %d - Acción: LEER - Dirección Física: %d - Valor: %s", globals.ProcessContext.GetPid(), address, utils.GetValueFromBytes(resp.Values, isString))
 	return resp.Values
 }
 
@@ -104,7 +104,7 @@ func getFrame(page int) int {
 		var resp commons.GetFrameResponse
 		commons.DecodificarJSON(response.Body, &resp)
 		frame = resp.Frame
-		log.Printf("PID: %d - OBTENER MARCO - Página: %d - Marco: %d", *globals.Pid, page, frame)
+		log.Printf("PID: %d - OBTENER MARCO - Página: %d - Marco: %d", globals.ProcessContext.GetPid(), page, frame)
 		TLB.Put(page, frame)
 	}
 

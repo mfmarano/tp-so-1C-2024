@@ -10,6 +10,7 @@ import (
 
 	"github.com/sisoputnfrba/tp-golang/cpu/globals"
 	"github.com/sisoputnfrba/tp-golang/cpu/globals/interruption"
+	"github.com/sisoputnfrba/tp-golang/cpu/globals/process"
 	"github.com/sisoputnfrba/tp-golang/cpu/handlers"
 	"github.com/sisoputnfrba/tp-golang/cpu/instructions"
 	"github.com/sisoputnfrba/tp-golang/cpu/mmu"
@@ -26,7 +27,7 @@ func main() {
 	// =============
 	globals.Registers = new(commons.Registers)
 	globals.Interruption = new(interruption.Interruption)
-	globals.Pid = new(int)
+	globals.ProcessContext = new(process.ProcessContext)
 	globals.PageSize = new(int)
 	instructions.Instruction = new(instructions.InstructionStruct)
 

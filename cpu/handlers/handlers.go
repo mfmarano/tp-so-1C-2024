@@ -6,8 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sisoputnfrba/tp-golang/cpu/globals/interruption"
-
 	"github.com/sisoputnfrba/tp-golang/cpu/globals"
 	"github.com/sisoputnfrba/tp-golang/cpu/instructions"
 	"github.com/sisoputnfrba/tp-golang/cpu/requests"
@@ -16,15 +14,16 @@ import (
 )
 
 func ReceiveInterruption(w http.ResponseWriter, r *http.Request) {
-	var i interruption.Interruption
-	err := commons.DecodificarJSON(r.Body, &i)
+	var req requests.InterruptRequest
+	err := commons.DecodificarJSON(r.Body, &req)
 	if err != nil {
 		return
 	}
 
-	globals.Interruption.Set(true, i.Reason, i.Pid)
-
-	log.Printf("PID: %d - Interrupcion Kernel - %s", *globals.Pid, i.Reason)
+	if req.Pid == globals.ProcessContext.GetPid() {
+		globals.Interruption.Set(true, req.Reason, req.Pid)
+		log.Printf("PID: %d - Interrupcion Kernel - %s", globals.ProcessContext.GetPid(), req.Reason)
+	}
 
 	commons.EscribirRespuesta(w, http.StatusOK, []byte("Interrupcion recibida"))
 }
@@ -48,7 +47,7 @@ func ExecuteProcess(request commons.PCB) {
 
 	//Cargar contexto
 	*globals.Registers = request.Registros
-	*globals.Pid = request.Pid
+	globals.ProcessContext.SetPid(request.Pid)
 	globals.Registers.PC = uint32(request.ProgramCounter)
 
 	start := time.Now()
@@ -65,10 +64,12 @@ func ExecuteProcess(request commons.PCB) {
 		}
 
 		if !keepRunning || Interruption(&dispatchResponse) {
-			log.Printf("PID: %d - Se devuelve PCB - Motivo: %s - PC: %d", *globals.Pid, dispatchResponse.Reason, globals.Registers.PC)
+			log.Printf("PID: %d - Se devuelve PCB - Motivo: %s - PC: %d", globals.ProcessContext.GetPid(), dispatchResponse.Reason, globals.Registers.PC)
 			break
 		}
 	}
+
+	globals.ProcessContext.SetPid(0)
 
 	dispatchResponse.Pcb = request
 	dispatchResponse.Pcb.Registros = *globals.Registers
@@ -96,7 +97,7 @@ func Fetch() {
 
 	instructions.Instruction.Parts = strings.Split(instResp.Instruction, " ")
 
-	log.Printf("PID: %d - FETCH - Program Counter: %d", *globals.Pid, globals.Registers.PC)
+	log.Printf("PID: %d - FETCH - Program Counter: %d", globals.ProcessContext.GetPid(), globals.Registers.PC)
 }
 
 func Decode() {
@@ -105,7 +106,7 @@ func Decode() {
 }
 
 func Execute(response *commons.DispatchResponse) (bool, bool) {
-	log.Printf("PID: %d - Ejecutando: %s - %s", *globals.Pid, instructions.Instruction.OpCode, GetParams())
+	log.Printf("PID: %d - Ejecutando: %s - %s", globals.ProcessContext.GetPid(), instructions.Instruction.OpCode, GetParams())
 
 	keepRunning := true
 	jump := false
@@ -150,11 +151,11 @@ func Execute(response *commons.DispatchResponse) (bool, bool) {
 func Interruption(response *commons.DispatchResponse) bool {
 	status, reason, pid := globals.Interruption.GetAndReset()
 
-	if status && pid == *globals.Pid {
+	if status && pid == globals.ProcessContext.GetPid() {
 		response.Reason = reason
 	}
 
-	return status && pid == *globals.Pid
+	return status && pid == globals.ProcessContext.GetPid()
 }
 
 func GetParams() string {

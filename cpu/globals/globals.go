@@ -2,6 +2,7 @@ package globals
 
 import (
 	"github.com/sisoputnfrba/tp-golang/cpu/globals/interruption"
+	"github.com/sisoputnfrba/tp-golang/cpu/globals/process"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 )
 
@@ -19,7 +20,7 @@ var Config *ModuleConfig
 var Registers *commons.Registers
 var Interruption *interruption.Interruption
 var PageSize *int
-var Pid *int
+var ProcessContext *process.ProcessContext
 var RegMap map[string]interface{}
 
 func LoadRegistersMap() {
