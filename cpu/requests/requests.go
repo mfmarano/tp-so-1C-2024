@@ -9,6 +9,14 @@ import (
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 )
 
+type PCBRequest struct {
+	Pid            int               `json:"pid"`
+	State          string            `json:"state"`
+	ProgramCounter int               `json:"program_counter"`
+	Quantum        int               `json:"quantum"`
+	Registros      commons.Registers `json:"registros"`
+}
+
 type InterruptRequest struct {
 	Pid    int    `json:"pid"`
 	Reason string `json:"reason"`

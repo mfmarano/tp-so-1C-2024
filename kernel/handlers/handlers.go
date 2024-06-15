@@ -129,7 +129,7 @@ func ListarProcesos(w http.ResponseWriter, r *http.Request) {
 }
 
 func RecibirPcb(w http.ResponseWriter, r *http.Request) {
-	var recibirPcbRequest commons.DispatchResponse
+	var recibirPcbRequest requests.DispatchRequest
 	err := commons.DecodificarJSON(r.Body, &recibirPcbRequest)
 	if err != nil {
 		log.Printf("Error al decodificar el PCB actualizado del CPU.")

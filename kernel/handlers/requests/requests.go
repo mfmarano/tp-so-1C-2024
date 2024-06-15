@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/globals"
+	"github.com/sisoputnfrba/tp-golang/kernel/globals/queues"
 	"github.com/sisoputnfrba/tp-golang/utils/client"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 )
@@ -19,6 +20,13 @@ type InterruptRequest struct {
 	Reason string `json:"reason"`
 }
 
+type DispatchRequest struct {
+	Pcb      queues.PCB `json:"pcb"`
+	Reason   string              `json:"reason"`
+	Io       commons.IoDispatch  `json:"io"`
+	Resource string              `json:"resource"`
+}
+
 func IniciarProcesoMemoria(filePath string, pid int) (*http.Response, error) {
 	requestBody, _ := commons.CodificarJSON(IniciarProcesoRequest{Path: filePath, Pid: pid})
 
@@ -29,7 +37,7 @@ func FinalizarProcesoMemoria(pid int) (*http.Response, error) {
 	return client.Delete(globals.Config.IpMemory, globals.Config.PortMemory, fmt.Sprintf("process/%d", pid))
 }
 
-func Dispatch(pcb commons.PCB) (*http.Response, error) {
+func Dispatch(pcb queues.PCB) (*http.Response, error) {
 	requestBody, err := commons.CodificarJSON(pcb)
 	if err != nil {
 		return nil, err

@@ -6,6 +6,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sisoputnfrba/tp-golang/cpu/globals/interruption"
+	"github.com/sisoputnfrba/tp-golang/cpu/responses"
+
 	"github.com/sisoputnfrba/tp-golang/cpu/globals"
 	"github.com/sisoputnfrba/tp-golang/cpu/instructions"
 	"github.com/sisoputnfrba/tp-golang/cpu/requests"
@@ -29,7 +32,7 @@ func ReceiveInterruption(w http.ResponseWriter, r *http.Request) {
 }
 
 func RunProcess(w http.ResponseWriter, r *http.Request) {
-	var pcbRequest commons.PCB
+	var pcbRequest requests.PCBRequest
 
 	err := commons.DecodificarJSON(r.Body, &pcbRequest)
 	if err != nil {
@@ -42,8 +45,8 @@ func RunProcess(w http.ResponseWriter, r *http.Request) {
 	go ExecuteProcess(pcbRequest)
 }
 
-func ExecuteProcess(request commons.PCB) {
-	var dispatchResponse commons.DispatchResponse
+func ExecuteProcess(request requests.PCBRequest) {
+	var dispatchResponse responses.DispatchResponse
 
 	//Cargar contexto
 	*globals.Registers = request.Registros
@@ -105,7 +108,7 @@ func Decode() {
 	instructions.Instruction.Operands = instructions.Instruction.Parts[1:]
 }
 
-func Execute(response *commons.DispatchResponse) (bool, bool) {
+func Execute(response *responses.DispatchResponse) (bool, bool) {
 	log.Printf("PID: %d - Ejecutando: %s - %s", globals.ProcessContext.GetPid(), instructions.Instruction.OpCode, GetParams())
 
 	keepRunning := true
@@ -148,7 +151,7 @@ func Execute(response *commons.DispatchResponse) (bool, bool) {
 	return keepRunning, jump
 }
 
-func Interruption(response *commons.DispatchResponse) bool {
+func Interruption(response *responses.DispatchResponse) bool {
 	status, reason, pid := globals.Interruption.GetAndReset()
 
 	if status && pid == globals.ProcessContext.GetPid() {

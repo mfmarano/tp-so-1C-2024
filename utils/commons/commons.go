@@ -2,7 +2,6 @@ package commons
 
 import (
 	"encoding/json"
-	"github.com/sisoputnfrba/tp-golang/kernel/globals/queues"
 	"io"
 	"log"
 	"net/http"
@@ -10,15 +9,6 @@ import (
 
 type Mensaje struct {
 	Mensaje string `json:"mensaje"`
-}
-
-type PCB struct {
-	Pid            int       `json:"pid"`
-	State          string    `json:"state"`
-	ProgramCounter int       `json:"program_counter"`
-	Quantum        int       `json:"quantum"`
-	Registros      Registers `json:"registros"`
-	Queue          *queues.ProcessQueue
 }
 
 type Registers struct {
@@ -33,13 +23,6 @@ type Registers struct {
 	EDX uint32 `json:"edx"`
 	SI  uint32 `json:"si"`
 	DI  uint32 `json:"di"`
-}
-
-type DispatchResponse struct {
-	Pcb      PCB        `json:"pcb"`
-	Reason   string     `json:"reason"`
-	Io       IoDispatch `json:"io"`
-	Resource string     `json:"resource"`
 }
 
 type ResizeRequest struct {

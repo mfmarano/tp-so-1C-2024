@@ -4,8 +4,8 @@ import (
 	"github.com/sisoputnfrba/tp-golang/cpu/globals"
 	"github.com/sisoputnfrba/tp-golang/cpu/mmu"
 	"github.com/sisoputnfrba/tp-golang/cpu/requests"
+	"github.com/sisoputnfrba/tp-golang/cpu/responses"
 	"github.com/sisoputnfrba/tp-golang/cpu/utils"
-	"github.com/sisoputnfrba/tp-golang/utils/commons"
 )
 
 const (
@@ -78,7 +78,7 @@ func Jnz() bool {
 	return regValue != 0
 }
 
-func Resize(response *commons.DispatchResponse) bool {
+func Resize(response *responses.DispatchResponse) bool {
 	resp, err := requests.Resize(Instruction.Operands[0])
 	if (err != nil) {
 		response.Reason = "ERROR"
@@ -98,38 +98,38 @@ func CopyString() {
 	mmu.WriteValues("DI", values, true)
 }
 
-func Wait(response *commons.DispatchResponse) bool {
+func Wait(response *responses.DispatchResponse) bool {
 	response.Reason = "WAIT"
 	response.Resource = Instruction.Operands[0]
 	return false
 }
 
-func Signal(response *commons.DispatchResponse) bool {
+func Signal(response *responses.DispatchResponse) bool {
 	response.Reason = "SIGNAL"
 	response.Resource = Instruction.Operands[0]
 	return false
 }
 
-func IoSleepFsFilesCommon(response *commons.DispatchResponse) bool {
+func IoSleepFsFilesCommon(response *responses.DispatchResponse) bool {
 	setIoBaseParams(response)
 	response.Io.Params = append(response.Io.Params, Instruction.Operands[1])
 	return false
 }
 
-func IoStdCommon(response *commons.DispatchResponse) bool {
+func IoStdCommon(response *responses.DispatchResponse) bool {
 	setIoBaseParams(response)
 	response.Io.Dfs = append(response.Io.Dfs, mmu.GetPhysicalAddresses(Instruction.Operands[1], Instruction.Operands[2])...)
 	return false
 }
 
-func IoFsSeekTruncateCommon(response *commons.DispatchResponse) bool {
+func IoFsSeekTruncateCommon(response *responses.DispatchResponse) bool {
 	setIoBaseParams(response)
 	response.Io.Params = append(response.Io.Params, Instruction.Operands[1])
 	response.Io.Params = append(response.Io.Params, utils.ConvertUInt32ToString(utils.GetRegValue(Instruction.Operands[2])))
 	return false
 }
 
-func IoFsReadWriteCommon(response *commons.DispatchResponse) bool {
+func IoFsReadWriteCommon(response *responses.DispatchResponse) bool {
 	setIoBaseParams(response)
 	response.Io.Dfs = append(response.Io.Dfs, mmu.GetPhysicalAddresses(Instruction.Operands[2], Instruction.Operands[3])...)
 	response.Io.Params = append(response.Io.Params, Instruction.Operands[1])
@@ -137,7 +137,7 @@ func IoFsReadWriteCommon(response *commons.DispatchResponse) bool {
 	return false
 }
 
-func setIoBaseParams(response *commons.DispatchResponse) {
+func setIoBaseParams(response *responses.DispatchResponse) {
 	response.Reason = "BLOCKED"
 	response.Io.Io = Instruction.Operands[0]
 	response.Io.Instruction = Instruction.OpCode

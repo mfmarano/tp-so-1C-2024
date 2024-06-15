@@ -14,15 +14,15 @@ import (
 	"github.com/sisoputnfrba/tp-golang/utils/logs"
 )
 
-func ChangeState(pcb commons.PCB, newStateProcesses *queues.ProcessQueue, state string) {
+func ChangeState(pcb queues.PCB, newStateProcesses *queues.ProcessQueue, state string) {
 	previousState := pcb.State
 	pcb.State = state
 	newStateProcesses.AddProcess(pcb)
 	log.Printf("PID: %d - Estado Anterior: %s - Estado Actual: %s", pcb.Pid, previousState, state)
 }
 
-func CreateProcess(pid int) commons.PCB {
-	pcb := commons.PCB{
+func CreateProcess(pid int) queues.PCB {
+	pcb := queues.PCB{
 		Pid:     pid,
 		State:   "NEW",
 		Quantum: globals.Config.Quantum,
@@ -33,7 +33,7 @@ func CreateProcess(pid int) commons.PCB {
 	return pcb
 }
 
-func PrepareProcess(pcb commons.PCB) {
+func PrepareProcess(pcb queues.PCB) {
 	if pcb.Quantum > 0 && pcb.Quantum < globals.Config.Quantum && globals.Config.PlanningAlgorithm == "VRR" {
 		ChangeState(pcb, queues.PrioritizedReadyProcesses, "READY")
 	} else {
@@ -46,7 +46,7 @@ func PrepareProcess(pcb commons.PCB) {
 	<-globals.Ready
 }
 
-func FinalizeProcess(pcb commons.PCB, reason string) {
+func FinalizeProcess(pcb queues.PCB, reason string) {
 	if pcb.State == "EXEC" && reason == "INTERRUPTED_BY_USER" {
 		_, _ = requests.Interrupt(reason, pcb.Pid)
 		// TODO: semaforo que espera que CPU devuelva el proceso en RecibirPcb
@@ -58,7 +58,7 @@ func FinalizeProcess(pcb commons.PCB, reason string) {
 	log.Printf("Finaliza el proceso %d - Motivo: %s", pcb.Pid, reason)
 }
 
-func BlockProcessInIoQueue(pcb commons.PCB, ioRequest commons.IoDispatch) {
+func BlockProcessInIoQueue(pcb queues.PCB, ioRequest commons.IoDispatch) {
 	ChangeState(pcb, queues.BlockedProcesses, "BLOCKED")
 
 	if ioRequest.Io != "" {
@@ -74,13 +74,13 @@ func BlockProcessInIoQueue(pcb commons.PCB, ioRequest commons.IoDispatch) {
 	log.Printf("PID: %d - Bloqueado por: %s", pcb.Pid, ioRequest.Io)
 }
 
-func BlockProcessInResourceQueue(pcb commons.PCB, resource string) {
+func BlockProcessInResourceQueue(pcb queues.PCB, resource string) {
 	ChangeState(pcb, resources.Resources[resource].ProcessQueue, "BLOCKED")
 
 	log.Printf("PID: %d - Bloqueado por: %s", pcb.Pid, resource)
 }
 
-func GetAllProcesses() []commons.PCB {
+func GetAllProcesses() []queues.PCB {
 	return slices.Concat(
 		queues.NewProcesses.GetProcesses(),
 		queues.ReadyProcesses.GetProcesses(),
@@ -91,13 +91,13 @@ func GetAllProcesses() []commons.PCB {
 	)
 }
 
-func GetProcessByPid(pid int) (commons.PCB, error) {
+func GetProcessByPid(pid int) (queues.PCB, error) {
 	for _, pcb := range GetAllProcesses() {
 		if pcb.Pid == pid {
 			return pcb, nil
 		}
 	}
-	return commons.PCB{}, fmt.Errorf("process with PID %d not found", pid)
+	return queues.PCB{}, fmt.Errorf("process with PID %d not found", pid)
 }
 
 func SetProcessToReady() {
@@ -127,8 +127,8 @@ func SetProcessToRunning() {
 	}
 }
 
-func GetNextProcess() commons.PCB {
-	var pcb commons.PCB
+func GetNextProcess() queues.PCB {
+	var pcb queues.PCB
 
 	if queues.RunningProcesses.IsNotEmpty() {
 		pcb = queues.RunningProcesses.PopProcess()
@@ -141,7 +141,7 @@ func GetNextProcess() commons.PCB {
 	return pcb
 }
 
-func sendEndOfQuantum(pcb commons.PCB) {
+func sendEndOfQuantum(pcb queues.PCB) {
 	if !globals.IsRoundRobinOrVirtualRoundRobin() {
 		return
 	}
