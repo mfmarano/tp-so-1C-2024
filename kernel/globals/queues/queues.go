@@ -20,6 +20,7 @@ var BlockedProcesses *ProcessQueue
 func (q *ProcessQueue) AddProcess(pcb commons.PCB) {
 	q.mutex.Lock()
 	q.Processes = append(q.Processes, pcb)
+	pcb.Queue = q
 	q.mutex.Unlock()
 }
 
@@ -61,6 +62,7 @@ func (q *ProcessQueue) RemoveProcess(pid int) commons.PCB {
 		}
 	}
 	q.Processes = newProcesses
+	removedProcess.Queue = nil
 	q.mutex.Unlock()
 	return removedProcess
 }
