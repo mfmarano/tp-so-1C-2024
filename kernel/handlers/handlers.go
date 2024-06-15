@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/globals"
+	"github.com/sisoputnfrba/tp-golang/kernel/globals/interfaces"
 	"github.com/sisoputnfrba/tp-golang/kernel/globals/processes"
 	"github.com/sisoputnfrba/tp-golang/kernel/globals/queues"
 	"github.com/sisoputnfrba/tp-golang/kernel/globals/resources"
@@ -193,17 +194,23 @@ func RecibirConexion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	globals.Interfaces.AddInterface(req)
+	interfaces.Interfaces.AddInterface(req)
 
 	log.Printf("IO %s - Conexion aceptada: ip %s, port %d", req.Name, req.Ip, req.Port)
 }
 
 func DesbloquearProceso(w http.ResponseWriter, r *http.Request) {
-	pid, _ := strconv.Atoi(r.PathValue("pid"))
+	var req commons.UnblockProcessRequest
+	err := commons.DecodificarJSON(r.Body, &req)
+	if err != nil {
+		log.Printf("Error al decodificar la conexion de Io.")
+		commons.EscribirRespuesta(w, http.StatusBadRequest, []byte("Error al decodificar la conexion de Io."))
+		return
+	}
 
-	log.Printf("PID: %d - Se desbloquea proceso", pid)
+	log.Printf("PID: %d - Se desbloquea proceso", req.Pid)
 
-	processes.PrepareProcess(queues.BlockedProcesses.RemoveProcess(pid))
+	processes.PrepareProcess(interfaces.Interfaces.PopProcess(req.Io))
 
 	commons.EscribirRespuesta(w, http.StatusOK, nil)
 }

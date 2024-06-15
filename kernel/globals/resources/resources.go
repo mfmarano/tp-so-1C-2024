@@ -5,7 +5,6 @@ import (
 	"github.com/sisoputnfrba/tp-golang/kernel/globals/queues"
 )
 
-
 type Resource struct {
 	ProcessQueue *queues.ProcessQueue
 	instances  int

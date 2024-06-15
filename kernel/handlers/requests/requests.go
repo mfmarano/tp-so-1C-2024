@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/globals"
+	"github.com/sisoputnfrba/tp-golang/kernel/globals/interfaces"
 	"github.com/sisoputnfrba/tp-golang/kernel/globals/queues"
 	"github.com/sisoputnfrba/tp-golang/utils/client"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
@@ -61,7 +62,7 @@ func IoRequest(pid int, ioRequest commons.IoDispatch) (*http.Response, error) {
 		return nil, err
 	}
 
-	config, ok := globals.Interfaces.GetInterface(ioRequest.Io)
+	config, ok := interfaces.Interfaces.GetInterface(ioRequest.Io)
 	if !ok {
 		return nil, err
 	}

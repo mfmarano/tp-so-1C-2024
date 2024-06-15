@@ -57,6 +57,11 @@ type IoConnectRequest struct {
 	Port int    `json:"port"`
 }
 
+type UnblockProcessRequest struct {
+	Io string `json:"io"`
+	Pid  int `json:"pid"`
+}
+
 type InstructionRequest struct {
 	Pid         int               `json:"pid"`
 	Instruction string            `json:"instruction"`

@@ -17,3 +17,13 @@ func Connect() (*http.Response, error) {
 
 	return client.Post(globals.Config.IpKernel, globals.Config.PortKernel, "connect", requestBody)
 }
+
+func UnblockProcess(pid int) (*http.Response, error) {
+	req := commons.UnblockProcessRequest { Io: globals.Config.Name, Pid: pid}
+	requestBody, err := commons.CodificarJSON(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return client.Post(globals.Config.IpKernel, globals.Config.PortKernel, "unlock-process", requestBody)
+}

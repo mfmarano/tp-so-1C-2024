@@ -24,7 +24,6 @@ var NewProcesses *ProcessQueue
 var ReadyProcesses *ProcessQueue
 var PrioritizedReadyProcesses *ProcessQueue
 var RunningProcesses *ProcessQueue
-var BlockedProcesses *ProcessQueue
 
 func (q *ProcessQueue) AddProcess(pcb PCB) {
 	q.mutex.Lock()
@@ -88,5 +87,4 @@ func InitializeQueues() {
 	ReadyProcesses = &ProcessQueue{Processes: make([]PCB, 0)}
 	PrioritizedReadyProcesses = &ProcessQueue{Processes: make([]PCB, 0)}
 	RunningProcesses = &ProcessQueue{Processes: make([]PCB, 0)}
-	BlockedProcesses = &ProcessQueue{Processes: make([]PCB, 0)}
 }

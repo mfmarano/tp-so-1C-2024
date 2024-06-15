@@ -8,8 +8,10 @@ import (
 	"path/filepath"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/globals"
+	"github.com/sisoputnfrba/tp-golang/kernel/globals/interfaces"
 	"github.com/sisoputnfrba/tp-golang/kernel/globals/processes"
 	"github.com/sisoputnfrba/tp-golang/kernel/globals/queues"
+	"github.com/sisoputnfrba/tp-golang/kernel/globals/resources"
 	"github.com/sisoputnfrba/tp-golang/kernel/handlers"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 	"github.com/sisoputnfrba/tp-golang/utils/configs"
@@ -36,6 +38,8 @@ func main() {
 
 	globals.InitializeGlobals()
 	queues.InitializeQueues()
+	resources.InitializeResources()
+	interfaces.InitializeInterfaces()
 
 	// ========
 	// Interfaz
@@ -50,7 +54,7 @@ func main() {
 	mux.HandleFunc("GET /process", handlers.ListarProcesos)
 	mux.HandleFunc("POST /pcb", handlers.RecibirPcb)
 	mux.HandleFunc("POST /connect", handlers.RecibirConexion)
-	mux.HandleFunc("PUT /unlock-process/{pid}", handlers.DesbloquearProceso)
+	mux.HandleFunc("POST /unlock-process", handlers.DesbloquearProceso)
 
 	// =======
 	// Rutinas

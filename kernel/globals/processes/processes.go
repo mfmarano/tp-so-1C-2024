@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/globals"
+	"github.com/sisoputnfrba/tp-golang/kernel/globals/interfaces"
 	"github.com/sisoputnfrba/tp-golang/kernel/globals/queues"
 	"github.com/sisoputnfrba/tp-golang/kernel/globals/resources"
 	"github.com/sisoputnfrba/tp-golang/kernel/handlers/requests"
@@ -59,7 +60,7 @@ func FinalizeProcess(pcb queues.PCB, reason string) {
 }
 
 func BlockProcessInIoQueue(pcb queues.PCB, ioRequest commons.IoDispatch) {
-	ChangeState(pcb, queues.BlockedProcesses, "BLOCKED")
+	ChangeState(pcb, interfaces.Interfaces.GetQueue(ioRequest.Io), "BLOCKED")
 
 	if ioRequest.Io != "" {
 		resp, err := requests.IoRequest(pcb.Pid, ioRequest)
@@ -86,7 +87,7 @@ func GetAllProcesses() []queues.PCB {
 		queues.ReadyProcesses.GetProcesses(),
 		queues.RunningProcesses.GetProcesses(),
 		queues.PrioritizedReadyProcesses.GetProcesses(),
-		queues.BlockedProcesses.GetProcesses(),
+		interfaces.GetAllProcesses(),
 		resources.GetAllProcesses(),
 	)
 }

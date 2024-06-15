@@ -11,7 +11,7 @@ import (
 	"github.com/sisoputnfrba/tp-golang/entradasalida/globals/instructions"
 	"github.com/sisoputnfrba/tp-golang/entradasalida/globals/queues"
 	"github.com/sisoputnfrba/tp-golang/entradasalida/handlers"
-	"github.com/sisoputnfrba/tp-golang/entradasalida/handlers/requests"
+	"github.com/sisoputnfrba/tp-golang/entradasalida/requests"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 	"github.com/sisoputnfrba/tp-golang/utils/configs"
 	"github.com/sisoputnfrba/tp-golang/utils/logs"
