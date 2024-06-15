@@ -47,12 +47,23 @@ func IniciarProceso(w http.ResponseWriter, r *http.Request) {
 
 func FinalizarProceso(w http.ResponseWriter, r *http.Request) {
 	queryParams := r.URL.Query()
-	pid := queryParams.Get("pid")
-	fmt.Println(pid)
+	pid, err := strconv.Atoi(queryParams.Get("pid"))
+	if err != nil {
+		commons.EscribirRespuesta(w, http.StatusBadRequest, []byte("El parámetro pid debe ser un número"))
+		return
+	}
 
-	// finalizar proceso con pid
+	pcb, err := processes.GetProcessByPid(pid)
+	if err != nil {
+		processes.FinalizeProcess(pcb, "INTERRUPTED_BY_USER")
+		commons.EscribirRespuesta(w, http.StatusOK, nil)
+		return
+	}
 
-	commons.EscribirRespuesta(w, http.StatusOK, nil)
+	commons.EscribirRespuesta(
+		w,
+		http.StatusNotFound,
+		[]byte(fmt.Sprintf("El proceso %d no ha sido encontrado", pid)))
 }
 
 func EstadoProceso(w http.ResponseWriter, r *http.Request) {
@@ -63,21 +74,21 @@ func EstadoProceso(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, process := range processes.GetAllProcesses() {
-		if process.Pid == pid {
-			var estadoProcesoResponse = responses.EstadoProcesoResponse{
-				State: process.State, // retornar el estado del proceso con pid
-			}
+	pcb, err := processes.GetProcessByPid(pid)
 
-			response, err := commons.CodificarJSON(estadoProcesoResponse)
-			if err != nil {
-				http.Error(w, "Error al codificar la respuesta como JSON", http.StatusInternalServerError)
-				return
-			}
+	if err != nil {
+		var estadoProcesoResponse = responses.EstadoProcesoResponse{
+			State: pcb.State,
+		}
 
-			commons.EscribirRespuesta(w, http.StatusOK, response)
+		response, err := commons.CodificarJSON(estadoProcesoResponse)
+		if err != nil {
+			http.Error(w, "Error al codificar la respuesta como JSON", http.StatusInternalServerError)
 			return
 		}
+
+		commons.EscribirRespuesta(w, http.StatusOK, response)
+		return
 	}
 
 	commons.EscribirRespuesta(

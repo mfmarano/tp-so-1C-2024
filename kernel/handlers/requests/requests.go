@@ -1,6 +1,7 @@
 package requests
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/globals"
@@ -22,6 +23,10 @@ func IniciarProcesoMemoria(filePath string, pid int) (*http.Response, error) {
 	requestBody, _ := commons.CodificarJSON(IniciarProcesoRequest{Path: filePath, Pid: pid})
 
 	return client.Post(globals.Config.IpMemory, globals.Config.PortMemory, "process", requestBody)
+}
+
+func FinalizarProcesoMemoria(pid int) (*http.Response, error) {
+	return client.Delete(globals.Config.IpMemory, globals.Config.PortMemory, fmt.Sprintf("process/%d", pid))
 }
 
 func Dispatch(pcb commons.PCB) (*http.Response, error) {

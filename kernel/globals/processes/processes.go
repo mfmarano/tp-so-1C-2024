@@ -1,6 +1,7 @@
 package processes
 
 import (
+	"fmt"
 	"log"
 	"slices"
 	"time"
@@ -45,6 +46,12 @@ func PrepareProcess(pcb commons.PCB) {
 }
 
 func FinalizeProcess(pcb commons.PCB, reason string) {
+	if pcb.State == "EXEC" {
+		requests.Interrupt(reason, pcb.Pid)
+		return
+	}
+
+	requests.FinalizarProcesoMemoria(pcb.Pid)
 	log.Printf("Finaliza el proceso %d - Motivo: %s", pcb.Pid, reason)
 }
 
@@ -56,7 +63,7 @@ func BlockProcess(pcb commons.PCB, ioRequest commons.IoDispatch) {
 
 		if err != nil || resp == nil {
 			log.Printf("Error al enviar instruccion %s del PCB %d a la IO %s.", ioRequest.Instruction, pcb.Pid, ioRequest.Io)
-			FinalizeProcess(pcb, "ERROR_IO")
+			FinalizeProcess(pcb, "INVALID_INTERFACE")
 		}
 	}
 
@@ -71,6 +78,15 @@ func GetAllProcesses() []commons.PCB {
 		queues.PrioritizedReadyProcesses.Processes,
 		queues.BlockedProcesses.Processes,
 	)
+}
+
+func GetProcessByPid(pid int) (commons.PCB, error) {
+	for _, pcb := range GetAllProcesses() {
+		if pcb.Pid == pid {
+			return pcb, nil
+		}
+	}
+	return commons.PCB{}, fmt.Errorf("process with PID %d not found", pid)
 }
 
 func SetProcessToReady() {
