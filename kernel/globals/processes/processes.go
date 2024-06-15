@@ -50,8 +50,7 @@ func PrepareProcess(pcb queues.PCB) {
 func FinalizeProcess(pcb queues.PCB, reason string) {
 	if pcb.State == "EXEC" && reason == "INTERRUPTED_BY_USER" {
 		_, _ = requests.Interrupt(reason, pcb.Pid)
-		// TODO: semaforo que espera que CPU devuelva el proceso en RecibirPcb
-		// <-globals.InterruptedByUser
+		<-globals.InterruptedByUser
 	}
 
 	_, _ = requests.FinalizarProcesoMemoria(pcb.Pid)

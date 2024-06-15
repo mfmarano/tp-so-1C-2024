@@ -179,7 +179,9 @@ func RecibirPcb(w http.ResponseWriter, r *http.Request) {
 		processes.FinalizeProcess(recibirPcbRequest.Pcb, "SUCCESS")
 		<-globals.Multiprogramming
 	case "INTERRUPTED_BY_USER":
-		// globals.InterruptedByUser <- 0
+		queues.RunningProcesses.PopProcess()
+		globals.InterruptedByUser <- 0
+		<-globals.CpuIsFree
 	}
 
 	commons.EscribirRespuesta(w, http.StatusOK, nil)

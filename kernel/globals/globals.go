@@ -29,6 +29,7 @@ var CpuIsFree chan int
 var ResetTimer chan int
 var New chan int
 var Ready chan int
+var InterruptedByUser chan int
 
 func (c *Counter) Increment() int {
 	c.mutex.Lock()
@@ -43,6 +44,7 @@ func InitializeGlobals() {
 	ResetTimer = make(chan int)
 	New = make(chan int)
 	Ready = make(chan int)
+	InterruptedByUser = make(chan int)
 	PidCounter = &Counter{Value: 0}
 }
 
