@@ -9,6 +9,7 @@ import (
 	"github.com/sisoputnfrba/tp-golang/kernel/globals"
 	"github.com/sisoputnfrba/tp-golang/kernel/globals/processes"
 	"github.com/sisoputnfrba/tp-golang/kernel/globals/queues"
+	"github.com/sisoputnfrba/tp-golang/kernel/globals/resources"
 	"github.com/sisoputnfrba/tp-golang/kernel/handlers/requests"
 	"github.com/sisoputnfrba/tp-golang/kernel/handlers/responses"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
@@ -136,21 +137,44 @@ func RecibirPcb(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	queues.RunningProcesses.PopProcess()
-
 	if globals.IsRoundRobinOrVirtualRoundRobin() {
 		globals.ResetTimer <- 0
 	}
 
-	<-globals.CpuIsFree
-
 	switch recibirPcbRequest.Reason {
 	case "END_OF_QUANTUM":
+		queues.RunningProcesses.PopProcess()
+		<-globals.CpuIsFree
 		log.Printf("PID: %d - Desalojado por fin de Quantum", recibirPcbRequest.Pcb.Pid)
 		processes.PrepareProcess(recibirPcbRequest.Pcb)
 	case "BLOCKED":
-		processes.BlockProcess(recibirPcbRequest.Pcb, recibirPcbRequest.Io)
+		queues.RunningProcesses.PopProcess()
+		<-globals.CpuIsFree
+		processes.BlockProcessInIoQueue(recibirPcbRequest.Pcb, recibirPcbRequest.Io)
+	case "WAIT", "SIGNAL":
+		name := recibirPcbRequest.Resource
+		if resource, exists := resources.Resources[name]; exists {
+			switch recibirPcbRequest.Reason {
+				case "WAIT":
+					blockProcess := resource.Wait(recibirPcbRequest.Pcb)
+					if blockProcess {
+						queues.RunningProcesses.PopProcess()
+						processes.BlockProcessInResourceQueue(recibirPcbRequest.Pcb, name)
+					}
+				case "SIGNAL":
+					unblockProcess := resource.Signal()
+					if unblockProcess {
+						processes.PrepareProcess(resource.ProcessQueue.PopProcess())
+					}
+			}
+		} else {
+			queues.RunningProcesses.PopProcess()
+			processes.FinalizeProcess(recibirPcbRequest.Pcb, "RESOURCE_ERROR")
+		}
+		<-globals.CpuIsFree
 	case "FINISHED":
+		queues.RunningProcesses.PopProcess()
+		<-globals.CpuIsFree
 		processes.FinalizeProcess(recibirPcbRequest.Pcb, "SUCCESS")
 		<-globals.Multiprogramming
 	}

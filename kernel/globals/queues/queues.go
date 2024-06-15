@@ -1,8 +1,9 @@
 package queues
 
 import (
-	"github.com/sisoputnfrba/tp-golang/utils/commons"
 	"sync"
+
+	"github.com/sisoputnfrba/tp-golang/utils/commons"
 )
 
 type ProcessQueue struct {
@@ -38,6 +39,14 @@ func (q *ProcessQueue) GetPids() []int {
 	}
 	q.mutex.Unlock()
 	return pids
+}
+
+func (q *ProcessQueue) GetProcesses() []commons.PCB {
+	q.mutex.Lock()
+	var processes []commons.PCB
+	processes = append(processes, q.Processes...)
+	q.mutex.Unlock()
+	return processes
 }
 
 func (q *ProcessQueue) RemoveProcess(pid int) commons.PCB {

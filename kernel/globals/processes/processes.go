@@ -8,6 +8,7 @@ import (
 
 	"github.com/sisoputnfrba/tp-golang/kernel/globals"
 	"github.com/sisoputnfrba/tp-golang/kernel/globals/queues"
+	"github.com/sisoputnfrba/tp-golang/kernel/globals/resources"
 	"github.com/sisoputnfrba/tp-golang/kernel/handlers/requests"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 	"github.com/sisoputnfrba/tp-golang/utils/logs"
@@ -55,7 +56,7 @@ func FinalizeProcess(pcb commons.PCB, reason string) {
 	log.Printf("Finaliza el proceso %d - Motivo: %s", pcb.Pid, reason)
 }
 
-func BlockProcess(pcb commons.PCB, ioRequest commons.IoDispatch) {
+func BlockProcessInIoQueue(pcb commons.PCB, ioRequest commons.IoDispatch) {
 	ChangeState(pcb, queues.BlockedProcesses, "BLOCKED")
 
 	if ioRequest.Io != "" {
@@ -71,13 +72,20 @@ func BlockProcess(pcb commons.PCB, ioRequest commons.IoDispatch) {
 	log.Printf("PID: %d - Bloqueado por: %s", pcb.Pid, ioRequest.Io)
 }
 
+func BlockProcessInResourceQueue(pcb commons.PCB, resource string) {
+	ChangeState(pcb, resources.Resources[resource].ProcessQueue, "BLOCKED")
+
+	log.Printf("PID: %d - Bloqueado por: %s", pcb.Pid, resource)
+}
+
 func GetAllProcesses() []commons.PCB {
 	return slices.Concat(
-		queues.NewProcesses.Processes,
-		queues.ReadyProcesses.Processes,
-		queues.RunningProcesses.Processes,
-		queues.PrioritizedReadyProcesses.Processes,
-		queues.BlockedProcesses.Processes,
+		queues.NewProcesses.GetProcesses(),
+		queues.ReadyProcesses.GetProcesses(),
+		queues.RunningProcesses.GetProcesses(),
+		queues.PrioritizedReadyProcesses.GetProcesses(),
+		queues.BlockedProcesses.GetProcesses(),
+		resources.GetAllProcesses(),
 	)
 }
 
@@ -120,7 +128,9 @@ func SetProcessToRunning() {
 func GetNextProcess() commons.PCB {
 	var pcb commons.PCB
 
-	if globals.Config.PlanningAlgorithm == "VRR" && queues.PrioritizedReadyProcesses.IsNotEmpty() {
+	if queues.RunningProcesses.IsNotEmpty() {
+		pcb = queues.RunningProcesses.PopProcess()
+	} else if globals.Config.PlanningAlgorithm == "VRR" && queues.PrioritizedReadyProcesses.IsNotEmpty() {
 		pcb = queues.PrioritizedReadyProcesses.PopProcess()
 	} else {
 		pcb = queues.ReadyProcesses.PopProcess()

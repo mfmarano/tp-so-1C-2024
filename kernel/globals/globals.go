@@ -1,8 +1,9 @@
 package globals
 
 import (
-	"github.com/sisoputnfrba/tp-golang/utils/commons"
 	"sync"
+
+	"github.com/sisoputnfrba/tp-golang/utils/commons"
 )
 
 type ModuleConfig struct {
