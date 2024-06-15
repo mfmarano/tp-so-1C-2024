@@ -34,7 +34,7 @@ func CreateProcess(pid int) commons.PCB {
 }
 
 func PrepareProcess(pcb commons.PCB) {
-	if pcb.Quantum > 0 {
+	if pcb.Quantum > 0 && pcb.Quantum < globals.Config.Quantum && globals.Config.PlanningAlgorithm == "VRR" {
 		ChangeState(pcb, queues.PrioritizedReadyProcesses, "READY")
 	} else {
 		ChangeState(pcb, queues.ReadyProcesses, "READY")
@@ -48,11 +48,11 @@ func PrepareProcess(pcb commons.PCB) {
 
 func FinalizeProcess(pcb commons.PCB, reason string) {
 	if pcb.State == "EXEC" {
-		requests.Interrupt(reason, pcb.Pid)
+		_, _ = requests.Interrupt(reason, pcb.Pid)
 		return
 	}
 
-	requests.FinalizarProcesoMemoria(pcb.Pid)
+	_, _ = requests.FinalizarProcesoMemoria(pcb.Pid)
 	log.Printf("Finaliza el proceso %d - Motivo: %s", pcb.Pid, reason)
 }
 
@@ -153,12 +153,12 @@ func sendEndOfQuantum(pcb commons.PCB) {
 	defer timer.Stop()
 
 	select {
-		case <-timer.C:
-			_, _ = requests.Interrupt("END_OF_QUANTUM", pcb.Pid)
-			<-globals.ResetTimer
-		case <-globals.ResetTimer:
-			if (!timer.Stop()) {
-				<-timer.C
-			}
+	case <-timer.C:
+		_, _ = requests.Interrupt("END_OF_QUANTUM", pcb.Pid)
+		<-globals.ResetTimer
+	case <-globals.ResetTimer:
+		if !timer.Stop() {
+			<-timer.C
+		}
 	}
 }
