@@ -44,7 +44,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /mensaje", commons.RecibirMensaje)
 	mux.HandleFunc("POST /process", handlers.NewProcess)
-	mux.HandleFunc("POST /endProcess", handlers.EndProcess) //************* EN DESARROLLO ******//
+	mux.HandleFunc("DELETE /process/{pid}", handlers.EndProcess)
 	mux.HandleFunc("POST /instruction", handlers.GetInstruction)
 	mux.HandleFunc("GET /config", handlers.PageSize)
 	mux.HandleFunc("POST /resize", handlers.Resize)

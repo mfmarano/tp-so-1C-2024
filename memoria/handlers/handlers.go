@@ -4,6 +4,7 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/sisoputnfrba/tp-golang/memoria/globals"
@@ -35,30 +36,26 @@ func NewProcess(w http.ResponseWriter, r *http.Request) {
 	commons.EscribirRespuesta(w, http.StatusOK, []byte("proceso creado sin espacio reservado"))
 }
 
-// ************************************** EN DESARROLLO *************************************************//
 func EndProcess(w http.ResponseWriter, r *http.Request) {
-	var finProceso globals.FinProceso
-
-	time.Sleep(time.Duration(globals.Config.DelayResponse) * time.Millisecond)
-
-	err := commons.DecodificarJSON(r.Body, &finProceso)
+	queryParams := r.URL.Query()
+	pid, err := strconv.Atoi(queryParams.Get("pid"))
 	if err != nil {
-		http.Error(w, "Error al decodificar JSON", http.StatusBadRequest)
+		commons.EscribirRespuesta(w, http.StatusBadRequest, []byte("El parámetro pid debe ser un número"))
 		return
 	}
 
-	size := utils.CountPages(globals.PageTables.Data[finProceso.Pid-1])
+	time.Sleep(time.Duration(globals.Config.DelayResponse) * time.Millisecond)
+
+	size := utils.CountPages(globals.PageTables.Data[pid-1])
 
 	globals.MutexFrame.Lock()
-	utils.FinalizeProcess(finProceso.Pid)
+	utils.FinalizeProcess(pid)
 	globals.MutexFrame.Unlock()
 
-	log.Printf("Destrucción Tabla de Páginas: PID: %d - Tamaño: %d", finProceso.Pid, size)
+	log.Printf("Destrucción Tabla de Páginas: PID: %d - Tamaño: %d", pid, size)
 
 	commons.EscribirRespuesta(w, http.StatusOK, []byte("proceso finalizado"))
 }
-
-//***************************** EN DESARROLLO *****************************************************//
 
 func GetInstruction(w http.ResponseWriter, r *http.Request) {
 	var instruccion commons.GetInstructionRequest
