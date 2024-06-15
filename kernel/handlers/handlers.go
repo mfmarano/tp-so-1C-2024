@@ -135,9 +135,15 @@ func RecibirPcb(w http.ResponseWriter, r *http.Request) {
 		processes.PrepareProcess(recibirPcbRequest.Pcb)
 	case "BLOCKED":
 		processes.BlockProcess(recibirPcbRequest.Pcb, recibirPcbRequest.Io)
+		if globals.IsRoundRobinOrVirtualRoundRobin() {
+			globals.ResetTimer <- 0
+		}
 	case "FINISHED":
 		processes.FinalizeProcess(recibirPcbRequest.Pcb, "SUCCESS")
 		<-globals.Multiprogramming
+		if globals.IsRoundRobinOrVirtualRoundRobin() {
+			globals.ResetTimer <- 0
+		}
 	}
 
 	commons.EscribirRespuesta(w, http.StatusOK, nil)

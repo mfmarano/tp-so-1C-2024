@@ -113,7 +113,7 @@ func GetNextProcess() commons.PCB {
 }
 
 func sendEndOfQuantum(pcb commons.PCB) {
-	if globals.Config.PlanningAlgorithm != "RR" && globals.Config.PlanningAlgorithm != "VRR" {
+	if !globals.IsRoundRobinOrVirtualRoundRobin() {
 		return
 	}
 
@@ -122,6 +122,12 @@ func sendEndOfQuantum(pcb commons.PCB) {
 		quantum = pcb.Quantum
 	}
 
-	time.Sleep(time.Duration(quantum) * time.Millisecond)
-	_, _ = requests.Interrupt("END_OF_QUANTUM", pcb.Pid)
+	timer := time.NewTimer(time.Duration(quantum) * time.Millisecond)
+
+	select {
+	case <-timer.C:
+		_, _ = requests.Interrupt("END_OF_QUANTUM", pcb.Pid)
+	case <-globals.ResetTimer:
+		timer.Stop()
+	}
 }

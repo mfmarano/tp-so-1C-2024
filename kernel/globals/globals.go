@@ -37,6 +37,7 @@ var Config *ModuleConfig
 var PidCounter *Counter
 var Multiprogramming chan int
 var CpuIsFree chan int
+var ResetTimer chan int
 var New chan int
 var Ready chan int
 
@@ -66,8 +67,13 @@ func (interfaces *InterfaceMap) GetInterface(name string) (InterfaceConfig, bool
 func InitializeGlobals() {
 	Multiprogramming = make(chan int, Config.Multiprogramming)
 	CpuIsFree = make(chan int, 1)
+	ResetTimer = make(chan int)
 	New = make(chan int)
 	Ready = make(chan int)
 	PidCounter = &Counter{Value: 0}
 	Interfaces = &InterfaceMap{Interfaces: make(map[string]InterfaceConfig)}
+}
+
+func IsRoundRobinOrVirtualRoundRobin() bool {
+	return Config.PlanningAlgorithm == "RR" || Config.PlanningAlgorithm == "VRR"
 }
