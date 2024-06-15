@@ -56,15 +56,15 @@ func FinalizarProceso(w http.ResponseWriter, r *http.Request) {
 
 	pcb, err := processes.GetProcessByPid(pid)
 	if err != nil {
-		processes.FinalizeProcess(pcb, "INTERRUPTED_BY_USER")
-		commons.EscribirRespuesta(w, http.StatusOK, nil)
+		commons.EscribirRespuesta(
+			w,
+			http.StatusNotFound,
+			[]byte(fmt.Sprintf("El proceso %d no ha sido encontrado", pid)))
 		return
 	}
 
-	commons.EscribirRespuesta(
-		w,
-		http.StatusNotFound,
-		[]byte(fmt.Sprintf("El proceso %d no ha sido encontrado", pid)))
+	processes.FinalizeProcess(pcb, "INTERRUPTED_BY_USER")
+	commons.EscribirRespuesta(w, http.StatusOK, nil)
 }
 
 func EstadoProceso(w http.ResponseWriter, r *http.Request) {
@@ -155,17 +155,17 @@ func RecibirPcb(w http.ResponseWriter, r *http.Request) {
 		name := recibirPcbRequest.Resource
 		if resource, exists := resources.Resources[name]; exists {
 			switch recibirPcbRequest.Reason {
-				case "WAIT":
-					blockProcess := resource.Wait(recibirPcbRequest.Pcb)
-					if blockProcess {
-						queues.RunningProcesses.PopProcess()
-						processes.BlockProcessInResourceQueue(recibirPcbRequest.Pcb, name)
-					}
-				case "SIGNAL":
-					unblockProcess := resource.Signal()
-					if unblockProcess {
-						processes.PrepareProcess(resource.ProcessQueue.PopProcess())
-					}
+			case "WAIT":
+				blockProcess := resource.Wait(recibirPcbRequest.Pcb)
+				if blockProcess {
+					queues.RunningProcesses.PopProcess()
+					processes.BlockProcessInResourceQueue(recibirPcbRequest.Pcb, name)
+				}
+			case "SIGNAL":
+				unblockProcess := resource.Signal()
+				if unblockProcess {
+					processes.PrepareProcess(resource.ProcessQueue.PopProcess())
+				}
 			}
 		} else {
 			queues.RunningProcesses.PopProcess()
@@ -177,6 +177,8 @@ func RecibirPcb(w http.ResponseWriter, r *http.Request) {
 		<-globals.CpuIsFree
 		processes.FinalizeProcess(recibirPcbRequest.Pcb, "SUCCESS")
 		<-globals.Multiprogramming
+	case "INTERRUPTED_BY_USER":
+		// globals.InterruptedByUser <- 0
 	}
 
 	commons.EscribirRespuesta(w, http.StatusOK, nil)
