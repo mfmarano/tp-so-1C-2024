@@ -61,9 +61,10 @@ func BlockProcess(pcb commons.PCB, ioRequest commons.IoDispatch) {
 	if ioRequest.Io != "" {
 		resp, err := requests.IoRequest(pcb.Pid, ioRequest)
 
-		if err != nil || resp == nil {
+		if err != nil || resp == nil || resp.StatusCode != 200 {
 			log.Printf("Error al enviar instruccion %s del PCB %d a la IO %s.", ioRequest.Instruction, pcb.Pid, ioRequest.Io)
 			FinalizeProcess(pcb, "INVALID_INTERFACE")
+			return
 		}
 	}
 
@@ -139,11 +140,15 @@ func sendEndOfQuantum(pcb commons.PCB) {
 	}
 
 	timer := time.NewTimer(time.Duration(quantum) * time.Millisecond)
+	defer timer.Stop()
 
 	select {
-	case <-timer.C:
-		_, _ = requests.Interrupt("END_OF_QUANTUM", pcb.Pid)
-	case <-globals.ResetTimer:
-		timer.Stop()
+		case <-timer.C:
+			_, _ = requests.Interrupt("END_OF_QUANTUM", pcb.Pid)
+			<-globals.ResetTimer
+		case <-globals.ResetTimer:
+			if (!timer.Stop()) {
+				<-timer.C
+			}
 	}
 }
