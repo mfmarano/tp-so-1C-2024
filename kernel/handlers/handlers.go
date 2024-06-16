@@ -167,17 +167,17 @@ func RecibirPcb(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		} else {
-			queues.RunningProcesses.PopProcess()
+			recibirPcbRequest.Pcb.Queue = queues.RunningProcesses
 			processes.FinalizeProcess(recibirPcbRequest.Pcb, "RESOURCE_ERROR")
 		}
 		<-globals.CpuIsFree
 	case "FINISHED":
-		queues.RunningProcesses.PopProcess()
+		recibirPcbRequest.Pcb.Queue = queues.RunningProcesses
 		<-globals.CpuIsFree
 		processes.FinalizeProcess(recibirPcbRequest.Pcb, "SUCCESS")
 		<-globals.Multiprogramming
 	case "INTERRUPTED_BY_USER":
-		queues.RunningProcesses.PopProcess()
+		recibirPcbRequest.Pcb.Queue = queues.RunningProcesses
 		globals.InterruptedByUser <- 0
 		<-globals.CpuIsFree
 	}

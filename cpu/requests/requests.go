@@ -2,7 +2,6 @@ package requests
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/sisoputnfrba/tp-golang/cpu/globals"
 	"github.com/sisoputnfrba/tp-golang/utils/client"
@@ -22,6 +21,13 @@ type InterruptRequest struct {
 	Reason string `json:"reason"`
 }
 
+type DispatchRequest struct {
+	Pcb      PCBRequest                    `json:"pcb"`
+	Reason   string                        `json:"reason"`
+	Io       commons.IoInstructionRequest  `json:"io"`
+	Resource string                        `json:"resource"`
+}
+
 func GetMemoryConfig() (*http.Response, error) {
 	return client.Get(globals.Config.IpMemory, globals.Config.PortMemory, "config")
 }
@@ -35,8 +41,7 @@ func GetInstruction() (*http.Response, error) {
 	return client.Post(globals.Config.IpMemory, globals.Config.PortMemory, "instruction", requestBody)
 }
 
-func Resize(value string) (*http.Response, error) {
-	size, _ := strconv.Atoi(value)
+func Resize(size int) (*http.Response, error) {
 	requestBody, err := commons.CodificarJSON(commons.ResizeRequest{Pid: globals.ProcessContext.GetPid(), Size: size})
 	if err != nil {
 		return nil, err

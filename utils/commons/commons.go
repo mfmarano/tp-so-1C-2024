@@ -32,11 +32,15 @@ type ResizeRequest struct {
 	Size int `json:"size"`
 }
 
-type IoDispatch struct {
-	Io          string            `json:"reason"`
-	Instruction string            `json:"instruction"`
-	Params      []string          `json:"params"`
-	Dfs         []PhysicalAddress `json:"dfs"`
+type IoInstructionRequest struct {
+	Pid               int               `json:"pid"`
+	Name              string            `json:"name"`
+	Instruction       string            `json:"instruction"`
+	FileName          string            `json:"file_name"`
+	PhysicalAddresses []PhysicalAddress `json:"physical_addresses"`
+	FilePointer       int               `json:"file_pointer"`
+	FileSize          int               `json:"file_size"`
+	Value             int               `json:"value"`
 }
 
 type PhysicalAddress struct {
@@ -62,13 +66,6 @@ type IoConnectRequest struct {
 type UnblockProcessRequest struct {
 	Io string `json:"io"`
 	Pid  int `json:"pid"`
-}
-
-type InstructionRequest struct {
-	Pid         int               `json:"pid"`
-	Instruction string            `json:"instruction"`
-	Params      []string          `json:"params"`
-	Dfs         []PhysicalAddress `json:"dfs"`
 }
 
 type GetFrameRequest struct {

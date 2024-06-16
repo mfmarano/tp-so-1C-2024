@@ -3,7 +3,6 @@ package instructions
 import (
 	"fmt"
 	"log"
-	"strconv"
 	"time"
 
 	"github.com/sisoputnfrba/tp-golang/entradasalida/globals"
@@ -19,37 +18,34 @@ func RunExecution() {
 
 		req := queues.InstructionRequests.PopRequest()
 		
+		log.Printf("PID: %d - Operacion: %s", req.Pid, req.Instruction)
+
         switch req.Instruction {
 			case globals.IO_GEN_SLEEP:
-				num, _ := strconv.Atoi(req.Params[0])
-				log.Printf("PID: %d - Operacion: %s", req.Pid, req.Instruction)
-				time.Sleep(time.Duration(num) * time.Millisecond)
-				log.Printf("PID: %d - Termine Operacion: %s", req.Pid, req.Instruction)
+				time.Sleep(time.Duration(req.Value) * time.Millisecond)
 				requests.UnblockProcess(req.Pid)
 			case globals.IO_STDIN_READ:
-				log.Printf("PID: %d - Operacion: %s", req.Pid, req.Instruction)
 				fmt.Print("Ingrese un texto: ")
 				var text string
     			fmt.Scanln(&text)
 				bytes := []byte(text)
-				for _, addressAndSize := range req.Dfs {
+				for _, addressAndSize := range req.PhysicalAddresses {
 					valuesToWrite := bytes[:addressAndSize.Size]
 					requests.Write(req.Pid, addressAndSize.Df, valuesToWrite)
 				}
-				log.Printf("PID: %d - Termine Operacion: %s", req.Pid, req.Instruction)
 				requests.UnblockProcess(req.Pid)
 			case globals.IO_STDOUT_WRITE:
 				var values []byte
-				log.Printf("PID: %d - Operacion: %s", req.Pid, req.Instruction)
-				for _, addressAndSize := range req.Dfs {					
-					bytesRead := read(req.Pid, addressAndSize.Df, addressAndSize.Size, true)
+				for _, addressAndSize := range req.PhysicalAddresses {					
+					bytesRead := read(req.Pid, addressAndSize.Df, addressAndSize.Size, false)
 					values = append(values, bytesRead...)
 				}
-				fmt.Printf("Valor leido: %s", string(values))
-				log.Printf("PID: %d - Termine Operacion: %s", req.Pid, req.Instruction)
+				log.Printf("Valor leido: %s\n", commons.GetValueFromBytes(values, false))
 				requests.UnblockProcess(req.Pid)
 			default:
 		}
+		
+		log.Printf("PID: %d - Termine Operacion: %s", req.Pid, req.Instruction)
 	}
 }
 

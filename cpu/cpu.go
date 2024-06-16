@@ -29,7 +29,8 @@ func main() {
 	globals.Interruption = new(interruption.Interruption)
 	globals.ProcessContext = new(process.ProcessContext)
 	globals.PageSize = new(int)
-	instructions.Instruction = new(instructions.InstructionStruct)
+	
+	instructions.InitializeInstruction()
 
 	globals.LoadRegistersMap()
 

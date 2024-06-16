@@ -35,7 +35,7 @@ func Read(pid int, df int, size int) (*http.Response, error) {
 		return nil, err
 	}
 
-	return client.Post(globals.Config.IpMemory, globals.Config.PortMemory, "write", requestBody)
+	return client.Post(globals.Config.IpMemory, globals.Config.PortMemory, "read", requestBody)
 }
 
 func UnblockProcess(pid int) (*http.Response, error) {

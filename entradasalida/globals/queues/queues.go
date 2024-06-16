@@ -8,19 +8,19 @@ import (
 
 type RequestQueue struct {
 	mutex     sync.Mutex
-	Requests  []commons.InstructionRequest
+	Requests  []commons.IoInstructionRequest
 	SemProductos chan int
 }
 
 var InstructionRequests *RequestQueue
 
-func (q *RequestQueue) AddRequest(req commons.InstructionRequest) {
+func (q *RequestQueue) AddRequest(req commons.IoInstructionRequest) {
 	q.mutex.Lock()
 	q.Requests = append(q.Requests, req)
 	q.mutex.Unlock()
 }
 
-func (q *RequestQueue) PopRequest() commons.InstructionRequest {
+func (q *RequestQueue) PopRequest() commons.IoInstructionRequest {
 	q.mutex.Lock()
 	firstRequest := q.Requests[0]
 	q.Requests = q.Requests[1:]	

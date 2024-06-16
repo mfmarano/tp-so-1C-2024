@@ -58,19 +58,18 @@ func FinalizeProcess(pcb queues.PCB, reason string) {
 	log.Printf("Finaliza el proceso %d - Motivo: %s", pcb.Pid, reason)
 }
 
-func BlockProcessInIoQueue(pcb queues.PCB, ioRequest commons.IoDispatch) {
-	ChangeState(&pcb, interfaces.Interfaces.GetQueue(ioRequest.Io), "BLOCKED")
-	if ioRequest.Io != "" {
-		resp, err := requests.IoRequest(pcb.Pid, ioRequest)
+func BlockProcessInIoQueue(pcb queues.PCB, ioRequest commons.IoInstructionRequest) {
+	ChangeState(&pcb, interfaces.Interfaces.GetQueue(ioRequest.Name), "BLOCKED")
+	
+	resp, err := requests.IoRequest(pcb.Pid, ioRequest)
 
-		if err != nil || resp == nil || resp.StatusCode != 200 {
-			log.Printf("Error al enviar instruccion %s del PCB %d a la IO %s.", ioRequest.Instruction, pcb.Pid, ioRequest.Io)
-			FinalizeProcess(pcb, "INVALID_INTERFACE")
-			return
-		}
+	if err != nil || resp == nil || resp.StatusCode != 200 {
+		log.Printf("Error al enviar instruccion %s del PCB %d a la IO %s.", ioRequest.Instruction, pcb.Pid, ioRequest.Name)
+		FinalizeProcess(pcb, "INVALID_INTERFACE")
+		return
 	}
 
-	log.Printf("PID: %d - Bloqueado por: %s", pcb.Pid, ioRequest.Io)
+	log.Printf("PID: %d - Bloqueado por: %s", pcb.Pid, ioRequest.Name)
 }
 
 func BlockProcessInResourceQueue(pcb queues.PCB, resource string) {

@@ -54,13 +54,6 @@ func ReadValues(addressRegister string, size int, isString bool) []byte {
 	return values
 }
 
-func GetValuesAndWrite(addressRegister string, valueRegister string, isString bool) {
-	size := utils.GetRegSize(valueRegister)
-	value := utils.GetRegValue(valueRegister)
-	bytes := commons.GetBytesFromNum(value, size)
-	WriteValues(addressRegister, bytes, isString)
-}
-
 func GetPhysicalAddresses(addressRegister string, sizeRegister string) []commons.PhysicalAddress {
 	var dfs []commons.PhysicalAddress
 	logicalAddress := utils.GetRegValue(addressRegister)

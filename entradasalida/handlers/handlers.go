@@ -20,7 +20,7 @@ type GenericIO struct {
 }
 
 func RecibirInstruccion(w http.ResponseWriter, r *http.Request) {
-	var req commons.InstructionRequest
+	var req commons.IoInstructionRequest
 	err := commons.DecodificarJSON(r.Body, &req)
 	if err != nil {
 		return
@@ -35,7 +35,7 @@ func RecibirInstruccion(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func canExecuteTypeInstruction(req commons.InstructionRequest) bool {
+func canExecuteTypeInstruction(req commons.IoInstructionRequest) bool {
 	switch globals.Config.Type {
 		case globals.GENERIC_TYPE:
 			return canExecuteInstruction(globals.GENERIC_INSTRUCTIONS, req)
@@ -48,11 +48,11 @@ func canExecuteTypeInstruction(req commons.InstructionRequest) bool {
 	}
 }
 
-func canExecuteInstruction(instructions []string, req commons.InstructionRequest) bool {
+func canExecuteInstruction(instructions []string, req commons.IoInstructionRequest) bool {
 	return slices.Contains(instructions, req.Instruction)
 }
 
-func waitToProduce(req commons.InstructionRequest) {
+func waitToProduce(req commons.IoInstructionRequest) {
     waitGroup := &sync.WaitGroup{}
 	waitGroup.Add(1)
 	go addRequest(req, waitGroup)
@@ -61,7 +61,7 @@ func waitToProduce(req commons.InstructionRequest) {
 	log.Printf("PID: %d - Terminó produceAndWait", req.Pid)
 }
 
-func addRequest(req commons.InstructionRequest, waitGroup *sync.WaitGroup) {
+func addRequest(req commons.IoInstructionRequest, waitGroup *sync.WaitGroup) {
 	defer waitGroup.Done()
 
 	// Entramos en la sección critica
