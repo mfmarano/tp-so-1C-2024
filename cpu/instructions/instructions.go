@@ -6,6 +6,7 @@ import (
 	"github.com/sisoputnfrba/tp-golang/cpu/requests"
 	"github.com/sisoputnfrba/tp-golang/cpu/responses"
 	"github.com/sisoputnfrba/tp-golang/cpu/utils"
+	"github.com/sisoputnfrba/tp-golang/utils/commons"
 )
 
 const (
@@ -46,7 +47,7 @@ func Set() {
 func MovIn() {
 	size := utils.GetRegSize(Instruction.Operands[0])
 	values := mmu.ReadValues(Instruction.Operands[1], size, false)
-	applySet(Instruction.Operands[0], utils.GetNumFromBytes(values))
+	applySet(Instruction.Operands[0], commons.GetNumFromBytes(values))
 }
 
 func MovOut() {
@@ -125,7 +126,7 @@ func IoStdCommon(response *responses.DispatchResponse) bool {
 func IoFsSeekTruncateCommon(response *responses.DispatchResponse) bool {
 	setIoBaseParams(response)
 	response.Io.Params = append(response.Io.Params, Instruction.Operands[1])
-	response.Io.Params = append(response.Io.Params, utils.ConvertUInt32ToString(utils.GetRegValue(Instruction.Operands[2])))
+	response.Io.Params = append(response.Io.Params, commons.ConvertUInt32ToString(utils.GetRegValue(Instruction.Operands[2])))
 	return false
 }
 
@@ -133,7 +134,7 @@ func IoFsReadWriteCommon(response *responses.DispatchResponse) bool {
 	setIoBaseParams(response)
 	response.Io.Dfs = append(response.Io.Dfs, mmu.GetPhysicalAddresses(Instruction.Operands[2], Instruction.Operands[3])...)
 	response.Io.Params = append(response.Io.Params, Instruction.Operands[1])
-	response.Io.Params = append(response.Io.Params, utils.ConvertUInt32ToString(utils.GetRegValue(Instruction.Operands[4])))
+	response.Io.Params = append(response.Io.Params, commons.ConvertUInt32ToString(utils.GetRegValue(Instruction.Operands[4])))
 	return false
 }
 

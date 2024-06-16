@@ -26,7 +26,7 @@ func RecibirInstruccion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if canExecuteInstruction(req) {
+	if canExecuteTypeInstruction(req) {
 		go waitToProduce(req)
 		commons.EscribirRespuesta(w, http.StatusOK, []byte("Instruccion recibida"))
 	} else {
@@ -35,17 +35,21 @@ func RecibirInstruccion(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func canExecuteInstruction(req commons.InstructionRequest) bool {
+func canExecuteTypeInstruction(req commons.InstructionRequest) bool {
 	switch globals.Config.Type {
 		case globals.GENERIC_TYPE:
-			return canExecuteGenericInstruction(req)
+			return canExecuteInstruction(globals.GENERIC_INSTRUCTIONS, req)
+		case globals.STDIN:
+			return canExecuteInstruction(globals.STDIN_INSTRUCTIONS, req)
+		case globals.STDOUT:
+			return canExecuteInstruction(globals.STDOUT_INSTRUCTIONS, req)
 		default:
 			return false
 	}
 }
 
-func canExecuteGenericInstruction(req commons.InstructionRequest) bool {
-	return slices.Contains(globals.GENERIC_INSTRUCTIONS, req.Instruction)
+func canExecuteInstruction(instructions []string, req commons.InstructionRequest) bool {
+	return slices.Contains(instructions, req.Instruction)
 }
 
 func waitToProduce(req commons.InstructionRequest) {

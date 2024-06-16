@@ -57,7 +57,7 @@ func ReadValues(addressRegister string, size int, isString bool) []byte {
 func GetValuesAndWrite(addressRegister string, valueRegister string, isString bool) {
 	size := utils.GetRegSize(valueRegister)
 	value := utils.GetRegValue(valueRegister)
-	bytes := utils.GetBytesFromNum(value, size)
+	bytes := commons.GetBytesFromNum(value, size)
 	WriteValues(addressRegister, bytes, isString)
 }
 
@@ -85,14 +85,14 @@ func GetPhysicalAddresses(addressRegister string, sizeRegister string) []commons
 
 func write(address int, values []byte, isString bool) {
 	requests.Write(address, values)
-	log.Printf("PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %s", globals.ProcessContext.GetPid(), address, utils.GetValueFromBytes(values, isString))
+	log.Printf("PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %s", globals.ProcessContext.GetPid(), address, commons.GetValueFromBytes(values, isString))
 }
 
 func read(address int, size int, isString bool) []byte {
 	response, _ := requests.Read(address, size)
 	var resp commons.MemoryReadResponse
 	commons.DecodificarJSON(response.Body, &resp)
-	log.Printf("PID: %d - Acción: LEER - Dirección Física: %d - Valor: %s", globals.ProcessContext.GetPid(), address, utils.GetValueFromBytes(resp.Values, isString))
+	log.Printf("PID: %d - Acción: LEER - Dirección Física: %d - Valor: %s", globals.ProcessContext.GetPid(), address, commons.GetValueFromBytes(resp.Values, isString))
 	return resp.Values
 }
 

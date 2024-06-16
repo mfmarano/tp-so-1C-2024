@@ -30,9 +30,13 @@ const (
 
 const (
 	GENERIC_TYPE    = "GENERICA"
+	STDIN           = "STDIN"
+	STDOUT          = "STDOUT"
 )
 
 var GENERIC_INSTRUCTIONS = []string{IO_GEN_SLEEP}
+var STDIN_INSTRUCTIONS = []string{IO_STDIN_READ}
+var STDOUT_INSTRUCTIONS = []string{IO_STDOUT_WRITE}
 
 // Config es una variable global que almacena la configuración del módulo I/O.
 var Config *ModuleConfig

@@ -1,10 +1,12 @@
 package commons
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 type Mensaje struct {
@@ -133,4 +135,40 @@ func EscribirRespuesta(w http.ResponseWriter, statusCode int, response []byte) {
 	if response != nil {
 		_, _ = w.Write(response)
 	}
+}
+
+func GetNumFromBytes(bytes []byte) uint32 {
+	size := len(bytes)
+	var num uint32
+	for i := 0; i < size; i++ {
+		num |= uint32(bytes[i]) << uint(8*(size-1-i))
+	}
+	return num
+}
+
+func GetBytesFromNum(num uint32, size int) []byte {
+	values := make([]byte, size)
+	if size == 1 {
+		values = []byte{uint8(num)}
+	} else {
+		binary.BigEndian.PutUint32(values, num)
+	}
+
+	return values
+}
+
+func GetStrFromBytes(bytes []byte) string {
+	return string(bytes)
+}
+
+func GetValueFromBytes(bytes []byte, isString bool) string {
+	if isString {
+		return GetStrFromBytes(bytes)
+	} else {
+		return ConvertUInt32ToString(GetNumFromBytes(bytes))
+	}
+}
+
+func ConvertUInt32ToString(num uint32) string {
+	return strconv.FormatUint(uint64(num), 10)
 }
