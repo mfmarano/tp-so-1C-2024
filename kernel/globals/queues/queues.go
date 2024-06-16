@@ -25,9 +25,9 @@ var ReadyProcesses *ProcessQueue
 var PrioritizedReadyProcesses *ProcessQueue
 var RunningProcesses *ProcessQueue
 
-func (q *ProcessQueue) AddProcess(pcb PCB) {
+func (q *ProcessQueue) AddProcess(pcb *PCB) {
 	q.mutex.Lock()
-	q.Processes = append(q.Processes, pcb)
+	q.Processes = append(q.Processes, *pcb)
 	pcb.Queue = q
 	q.mutex.Unlock()
 }

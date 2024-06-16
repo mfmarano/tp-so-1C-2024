@@ -48,8 +48,7 @@ func IniciarProceso(w http.ResponseWriter, r *http.Request) {
 }
 
 func FinalizarProceso(w http.ResponseWriter, r *http.Request) {
-	queryParams := r.URL.Query()
-	pid, err := strconv.Atoi(queryParams.Get("pid"))
+	pid, err := strconv.Atoi(r.PathValue("pid"))
 	if err != nil {
 		commons.EscribirRespuesta(w, http.StatusBadRequest, []byte("El parámetro pid debe ser un número"))
 		return
@@ -69,8 +68,7 @@ func FinalizarProceso(w http.ResponseWriter, r *http.Request) {
 }
 
 func EstadoProceso(w http.ResponseWriter, r *http.Request) {
-	queryParams := r.URL.Query()
-	pid, err := strconv.Atoi(queryParams.Get("pid"))
+	pid, err := strconv.Atoi(r.PathValue("pid"))
 	if err != nil {
 		commons.EscribirRespuesta(w, http.StatusBadRequest, []byte("El parámetro pid debe ser un número"))
 		return

@@ -15,7 +15,7 @@ import (
 	"github.com/sisoputnfrba/tp-golang/utils/logs"
 )
 
-func ChangeState(pcb queues.PCB, newStateProcesses *queues.ProcessQueue, state string) {
+func ChangeState(pcb *queues.PCB, newStateProcesses *queues.ProcessQueue, state string) {
 	previousState := pcb.State
 	pcb.State = state
 	newStateProcesses.AddProcess(pcb)
@@ -28,7 +28,7 @@ func CreateProcess(pid int) queues.PCB {
 		State:   "NEW",
 		Quantum: globals.Config.Quantum,
 	}
-	queues.NewProcesses.AddProcess(pcb)
+	queues.NewProcesses.AddProcess(&pcb)
 	log.Printf("Se crea el proceso %d en NEW", pcb.Pid)
 	<-globals.New
 	return pcb
@@ -36,9 +36,9 @@ func CreateProcess(pid int) queues.PCB {
 
 func PrepareProcess(pcb queues.PCB) {
 	if pcb.Quantum > 0 && pcb.Quantum < globals.Config.Quantum && globals.Config.PlanningAlgorithm == "VRR" {
-		ChangeState(pcb, queues.PrioritizedReadyProcesses, "READY")
+		ChangeState(&pcb, queues.PrioritizedReadyProcesses, "READY")
 	} else {
-		ChangeState(pcb, queues.ReadyProcesses, "READY")
+		ChangeState(&pcb, queues.ReadyProcesses, "READY")
 	}
 
 	log.Printf("Cola Ready: [%s]",
@@ -59,8 +59,7 @@ func FinalizeProcess(pcb queues.PCB, reason string) {
 }
 
 func BlockProcessInIoQueue(pcb queues.PCB, ioRequest commons.IoDispatch) {
-	ChangeState(pcb, interfaces.Interfaces.GetQueue(ioRequest.Io), "BLOCKED")
-
+	ChangeState(&pcb, interfaces.Interfaces.GetQueue(ioRequest.Io), "BLOCKED")
 	if ioRequest.Io != "" {
 		resp, err := requests.IoRequest(pcb.Pid, ioRequest)
 
@@ -75,7 +74,7 @@ func BlockProcessInIoQueue(pcb queues.PCB, ioRequest commons.IoDispatch) {
 }
 
 func BlockProcessInResourceQueue(pcb queues.PCB, resource string) {
-	ChangeState(pcb, resources.Resources[resource].ProcessQueue, "BLOCKED")
+	ChangeState(&pcb, resources.Resources[resource].ProcessQueue, "BLOCKED")
 
 	log.Printf("PID: %d - Bloqueado por: %s", pcb.Pid, resource)
 }
@@ -114,7 +113,7 @@ func SetProcessToRunning() {
 		globals.CpuIsFree <- 0
 
 		pcb := GetNextProcess()
-		ChangeState(pcb, queues.RunningProcesses, "EXEC")
+		ChangeState(&pcb, queues.RunningProcesses, "EXEC")
 		go sendEndOfQuantum(pcb)
 
 		if _, err := requests.Dispatch(pcb); err != nil {

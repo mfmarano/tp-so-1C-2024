@@ -31,6 +31,7 @@ func (resource *Resource) Signal() bool {
 }
 
 func InitializeResources() {
+	Resources = make(map[string]*Resource)
 	for index, resource := range globals.Config.Resources {
         Resources[resource] = &Resource{ProcessQueue: &queues.ProcessQueue{Processes: make([]queues.PCB, 0)}, instances: globals.Config.ResourcesInstances[index]}
     }

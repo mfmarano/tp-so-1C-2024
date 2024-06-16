@@ -21,7 +21,7 @@ type InterfaceConfig struct {
 var Interfaces *InterfaceMap
 
 func (interfaces *InterfaceMap) AddInterface(request commons.IoConnectRequest) {
-	config := InterfaceConfig{Ip: request.Ip, Port: request.Port}
+	config := InterfaceConfig{Ip: request.Ip, Port: request.Port, ProcessQueue: &queues.ProcessQueue{Processes: make([]queues.PCB, 0)}}
 	interfaces.mutex.Lock()
 	interfaces.Interfaces[request.Name] = config
 	interfaces.mutex.Unlock()
@@ -36,7 +36,7 @@ func (interfaces *InterfaceMap) GetInterface(name string) (InterfaceConfig, bool
 
 func (interfaces *InterfaceMap) AddProcess(name string, pcb queues.PCB) {
 	interfaces.mutex.Lock()
-	Interfaces.Interfaces[name].ProcessQueue.AddProcess(pcb)
+	Interfaces.Interfaces[name].ProcessQueue.AddProcess(&pcb)
 	Interfaces.mutex.Unlock()
 }
 
