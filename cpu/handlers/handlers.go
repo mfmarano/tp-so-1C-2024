@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sisoputnfrba/tp-golang/cpu/globals/interruption"
 	"github.com/sisoputnfrba/tp-golang/cpu/responses"
 
 	"github.com/sisoputnfrba/tp-golang/cpu/globals"
