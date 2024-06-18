@@ -33,7 +33,7 @@ func main() {
 		log.Fatalln("Error al cargar la configuración")
 	}
 
-	queues.InstructionRequests = &queues.RequestQueue{Requests: make([]commons.IoInstructionRequest, 0), SemProductos: make(chan int, 10)} //cantidad maxima de requests en queue, adaptable
+	queues.InstructionRequests = &queues.RequestQueue{Requests: make([]commons.IoInstructionRequest, 0), Sem: make(chan int, 10)} //cantidad maxima de requests en queue, adaptable
 	
 	// Conectarse al Kernel cuando levanta modulo i/o, le tiene que hacer request a kernel para "conectarse" (le manda nombre de i/o y en qué puerto e ip escucha)
 	_, err = requests.Connect()

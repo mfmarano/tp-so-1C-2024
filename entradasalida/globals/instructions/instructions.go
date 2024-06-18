@@ -13,8 +13,8 @@ import (
 
 func RunExecution() {
 	for {
-		// Tomo un recurso del mercado
-		<-queues.InstructionRequests.SemProductos
+		// Tomo una request de la queue
+		<-queues.InstructionRequests.Sem
 
 		req := queues.InstructionRequests.PopRequest()
 		
@@ -22,7 +22,7 @@ func RunExecution() {
 
         switch req.Instruction {
 			case globals.IO_GEN_SLEEP:
-				time.Sleep(time.Duration(req.Value) * time.Millisecond)
+				time.Sleep(time.Duration(req.Value * globals.Config.UnitWorkTime) * time.Millisecond)
 				requests.UnblockProcess(req.Pid)
 			case globals.IO_STDIN_READ:
 				fmt.Print("Ingrese un texto: ")
@@ -35,6 +35,7 @@ func RunExecution() {
 				}
 				requests.UnblockProcess(req.Pid)
 			case globals.IO_STDOUT_WRITE:
+				time.Sleep(time.Duration(globals.Config.UnitWorkTime) * time.Millisecond)
 				var values []byte
 				for _, addressAndSize := range req.PhysicalAddresses {					
 					bytesRead := read(req.Pid, addressAndSize.Df, addressAndSize.Size, false)

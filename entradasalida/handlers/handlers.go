@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 	"slices"
-	"sync"
 
 	"github.com/sisoputnfrba/tp-golang/entradasalida/globals"
 	"github.com/sisoputnfrba/tp-golang/entradasalida/globals/queues"
@@ -27,7 +26,7 @@ func RecibirInstruccion(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if canExecuteTypeInstruction(req) {
-		go waitToProduce(req)
+		go addRequest(req)
 		commons.EscribirRespuesta(w, http.StatusOK, []byte("Instruccion recibida"))
 	} else {
 		log.Printf("PID: %d - No se puede ejecutar instruccion %s", req.Pid, req.Instruction)
@@ -52,20 +51,9 @@ func canExecuteInstruction(instructions []string, req commons.IoInstructionReque
 	return slices.Contains(instructions, req.Instruction)
 }
 
-func waitToProduce(req commons.IoInstructionRequest) {
-    waitGroup := &sync.WaitGroup{}
-	waitGroup.Add(1)
-	go addRequest(req, waitGroup)
-
-	waitGroup.Wait()
-	log.Printf("PID: %d - Terminó produceAndWait", req.Pid)
-}
-
-func addRequest(req commons.IoInstructionRequest, waitGroup *sync.WaitGroup) {
-	defer waitGroup.Done()
-
+func addRequest(req commons.IoInstructionRequest) {
 	// Entramos en la sección critica
 	queues.InstructionRequests.AddRequest(req)	
-	// Informamos a consumidor que tiene un recurso en el mercado
-	queues.InstructionRequests.SemProductos <- 1
+	// Informamos a consumidor que tiene una request pendiente
+	queues.InstructionRequests.Sem <- 1
 }
