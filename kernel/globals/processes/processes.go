@@ -60,7 +60,7 @@ func FinalizeProcess(pcb queues.PCB, reason string) {
 
 func BlockProcessInIoQueue(pcb queues.PCB, ioRequest commons.IoInstructionRequest) {
 	ChangeState(&pcb, interfaces.Interfaces.GetQueue(ioRequest.Name), "BLOCKED")
-	
+
 	resp, err := requests.IoRequest(pcb.Pid, ioRequest)
 
 	if err != nil || resp == nil || resp.StatusCode != 200 {
@@ -113,7 +113,7 @@ func SetProcessToRunning() {
 
 		pcb := GetNextProcess()
 		ChangeState(&pcb, queues.RunningProcesses, "EXEC")
-		go sendEndOfQuantum(pcb)
+		go sendEndOfQuantum(pcb, globals.ExecutionId.Increment())
 
 		if _, err := requests.Dispatch(pcb); err != nil {
 			log.Printf("Error al enviar el PCB %d al CPU.", pcb.Pid)
@@ -139,7 +139,7 @@ func GetNextProcess() queues.PCB {
 	return pcb
 }
 
-func sendEndOfQuantum(pcb queues.PCB) {
+func sendEndOfQuantum(pcb queues.PCB, executionId int) {
 	if !globals.IsRoundRobinOrVirtualRoundRobin() {
 		return
 	}
@@ -149,16 +149,8 @@ func sendEndOfQuantum(pcb queues.PCB) {
 		quantum = pcb.Quantum
 	}
 
-	timer := time.NewTimer(time.Duration(quantum) * time.Millisecond)
-	defer timer.Stop()
-
-	select {
-	case <-timer.C:
+	time.Sleep(time.Duration(quantum) * time.Millisecond)
+	if executionId == globals.ExecutionId.GetValue() {
 		_, _ = requests.Interrupt("END_OF_QUANTUM", pcb.Pid)
-		<-globals.ResetTimer
-	case <-globals.ResetTimer:
-		if !timer.Stop() {
-			<-timer.C
-		}
 	}
 }

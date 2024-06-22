@@ -24,9 +24,9 @@ type Counter struct {
 
 var Config *ModuleConfig
 var PidCounter *Counter
+var ExecutionId *Counter
 var Multiprogramming chan int
 var CpuIsFree chan int
-var ResetTimer chan int
 var New chan int
 var Ready chan int
 var InterruptedByUser chan int
@@ -38,14 +38,21 @@ func (c *Counter) Increment() int {
 	return c.Value
 }
 
+func (c *Counter) GetValue() int {
+	c.mutex.Lock()
+	value := c.Value
+	c.mutex.Unlock()
+	return value
+}
+
 func InitializeGlobals() {
 	Multiprogramming = make(chan int, Config.Multiprogramming)
 	CpuIsFree = make(chan int, 1)
-	ResetTimer = make(chan int)
 	New = make(chan int)
 	Ready = make(chan int)
 	InterruptedByUser = make(chan int)
 	PidCounter = &Counter{Value: 0}
+	ExecutionId = &Counter{Value: 0}
 }
 
 func IsRoundRobinOrVirtualRoundRobin() bool {

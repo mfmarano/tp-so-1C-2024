@@ -136,10 +136,6 @@ func RecibirPcb(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if globals.IsRoundRobinOrVirtualRoundRobin() {
-		globals.ResetTimer <- 0
-	}
-
 	switch recibirPcbRequest.Reason {
 	case "END_OF_QUANTUM":
 		queues.RunningProcesses.PopProcess()
