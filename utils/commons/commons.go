@@ -1,7 +1,6 @@
 package commons
 
 import (
-	"encoding/binary"
 	"encoding/json"
 	"io"
 	"log"
@@ -148,7 +147,9 @@ func GetBytesFromNum(num uint32, size int) []byte {
 	if size == 1 {
 		values = []byte{uint8(num)}
 	} else {
-		binary.BigEndian.PutUint32(values, num)
+    	for i := 0; i < 4; i++ {
+			values[3-i] = byte(num >> (8 * i))
+    	}
 	}
 
 	return values

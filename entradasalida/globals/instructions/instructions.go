@@ -1,8 +1,10 @@
 package instructions
 
 import (
+	"bufio"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/sisoputnfrba/tp-golang/entradasalida/globals"
@@ -25,23 +27,28 @@ func RunExecution() {
 				time.Sleep(time.Duration(req.Value * globals.Config.UnitWorkTime) * time.Millisecond)
 				requests.UnblockProcess(req.Pid)
 			case globals.IO_STDIN_READ:
-				fmt.Print("Ingrese un texto: ")
+				fmt.Println("Ingrese un texto: ")
 				var text string
-    			fmt.Scanln(&text)
+    			scanner := bufio.NewScanner(os.Stdin)
+				if scanner.Scan() {
+					text = scanner.Text()
+				}
 				bytes := []byte(text)
+				writtenBytes := 0
 				for _, addressAndSize := range req.PhysicalAddresses {
-					valuesToWrite := bytes[:addressAndSize.Size]
+					valuesToWrite := bytes[writtenBytes : writtenBytes + addressAndSize.Size]
 					requests.Write(req.Pid, addressAndSize.Df, valuesToWrite)
+					writtenBytes += addressAndSize.Size
 				}
 				requests.UnblockProcess(req.Pid)
 			case globals.IO_STDOUT_WRITE:
 				time.Sleep(time.Duration(globals.Config.UnitWorkTime) * time.Millisecond)
 				var values []byte
 				for _, addressAndSize := range req.PhysicalAddresses {					
-					bytesRead := read(req.Pid, addressAndSize.Df, addressAndSize.Size, false)
+					bytesRead := read(req.Pid, addressAndSize.Df, addressAndSize.Size, true)
 					values = append(values, bytesRead...)
 				}
-				log.Printf("Valor leido: %s\n", commons.GetValueFromBytes(values, false))
+				log.Printf("Valor leido: %s\n", commons.GetValueFromBytes(values, true))
 				requests.UnblockProcess(req.Pid)
 			default:
 		}

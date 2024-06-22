@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/sisoputnfrba/tp-golang/entradasalida/globals"
 	"github.com/sisoputnfrba/tp-golang/entradasalida/globals/instructions"
@@ -28,10 +29,12 @@ func main() {
 
 	logs.ConfigurarLogger(filepath.Join(path, "entradasalida.log"))
 
-	globals.Config = configs.IniciarConfiguracion(filepath.Join(path, "config.json"), &globals.ModuleConfig{}).(*globals.ModuleConfig)
+	globals.Config = configs.IniciarConfiguracion(filepath.Join(path, os.Args[1]), &globals.ModuleConfig{}).(*globals.ModuleConfig)
 	if globals.Config == nil {
 		log.Fatalln("Error al cargar la configuración")
 	}
+
+	globals.Config.Name = strings.Split(os.Args[1], ".")[0]
 
 	queues.InstructionRequests = &queues.RequestQueue{Requests: make([]commons.IoInstructionRequest, 0), Sem: make(chan int, 10)} //cantidad maxima de requests en queue, adaptable
 	

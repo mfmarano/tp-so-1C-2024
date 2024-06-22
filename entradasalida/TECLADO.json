@@ -1,7 +1,7 @@
 {
   "ip": "localhost",
-  "port": 8005,
-  "type": "GENERICA",
+  "port": 8004,
+  "type": "STDIN",
   "unit_work_time": 100,
   "ip_kernel": "localhost",
   "port_kernel": 8001,
@@ -9,6 +9,5 @@
   "port_memory": 8002,
   "dialfs_path": "/home/utnso/dialfs",
   "dialfs_block_size": 64,
-  "dialfs_block_count": 1024,
-  "name": "IO1"
+  "dialfs_block_count": 1024
 }

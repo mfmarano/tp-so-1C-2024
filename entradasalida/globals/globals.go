@@ -13,7 +13,7 @@ type ModuleConfig struct {
 	DialFSPath       string `json:"dialfs_path"`
 	DialFSBlockSize  int    `json:"dialfs_block_size"`
 	DialFSBlockCount int    `json:"dialfs_block_count"`
-	Name			 string `json:"name"`
+	Name			 string
 }
 
 // Constantes que representan los diferentes tipos de instrucciones de I/O.
