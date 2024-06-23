@@ -29,8 +29,14 @@ func main() {
 
 	logFilePath := filepath.Join(path, "kernel.log")
 	logs.ConfigurarLogger(logFilePath)
+	
+	configFile := "config.json"
 
-	configFilePath := filepath.Join(path, "config.json")
+	if len(os.Args) > 1 {
+		configFile = os.Args[1]
+	}
+
+	configFilePath := filepath.Join(path, configFile)
 	globals.Config = configs.IniciarConfiguracion(configFilePath, &globals.ModuleConfig{}).(*globals.ModuleConfig)
 	if globals.Config == nil {
 		log.Fatalln("Error al cargar la configuración de kernel")
@@ -61,6 +67,8 @@ func main() {
 	// =======
 	go processes.SetProcessToReady()
 	go processes.SetProcessToRunning()
+
+	<-globals.CpuIsFree
 
 	// ======
 	// Inicio

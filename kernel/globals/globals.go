@@ -47,7 +47,7 @@ func (c *Counter) GetValue() int {
 
 func InitializeGlobals() {
 	Multiprogramming = make(chan int, Config.Multiprogramming)
-	CpuIsFree = make(chan int, 1)
+	CpuIsFree = make(chan int)
 	New = make(chan int)
 	Ready = make(chan int)
 	InterruptedByUser = make(chan int)

@@ -41,7 +41,13 @@ func main() {
 
 	logs.ConfigurarLogger(filepath.Join(path, "cpu.log"))
 
-	globals.Config = configs.IniciarConfiguracion(filepath.Join(path, "config.json"), &globals.ModuleConfig{}).(*globals.ModuleConfig)
+	configFile := "config.json"
+
+	if len(os.Args) > 1 {
+		configFile = os.Args[1]
+	}
+
+	globals.Config = configs.IniciarConfiguracion(filepath.Join(path, configFile), &globals.ModuleConfig{}).(*globals.ModuleConfig)
 	if globals.Config == nil {
 		log.Fatalln("Error al cargar la configuración")
 	}

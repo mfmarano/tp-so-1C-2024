@@ -37,18 +37,22 @@ func CreateProcess(pid int) queues.PCB {
 func PrepareProcess(pcb queues.PCB) {
 	if pcb.Quantum > 0 && pcb.Quantum < globals.Config.Quantum && globals.Config.PlanningAlgorithm == "VRR" {
 		ChangeState(&pcb, queues.PrioritizedReadyProcesses, "READY")
+
+		log.Printf("Cola Ready+: [%s]",
+		logs.IntArrayToString(queues.PrioritizedReadyProcesses.GetPids(), ", "))
 	} else {
 		ChangeState(&pcb, queues.ReadyProcesses, "READY")
-	}
-
-	log.Printf("Cola Ready: [%s]",
+		
+		log.Printf("Cola Ready: [%s]",
 		logs.IntArrayToString(queues.ReadyProcesses.GetPids(), ", "))
+	}
 
 	<-globals.Ready
 }
 
 func FinalizeProcess(pcb queues.PCB, reason string) {
 	if pcb.State == "EXEC" && reason == "INTERRUPTED_BY_USER" {
+		pcb.Queue = queues.RunningProcesses
 		_, _ = requests.Interrupt(reason, pcb.Pid)
 		<-globals.InterruptedByUser
 	}
@@ -108,9 +112,8 @@ func SetProcessToReady() {
 
 func SetProcessToRunning() {
 	for {
-		globals.Ready <- 0
 		globals.CpuIsFree <- 0
-
+		globals.Ready <- 0
 		pcb := GetNextProcess()
 		ChangeState(&pcb, queues.RunningProcesses, "EXEC")
 		go sendEndOfQuantum(pcb, globals.ExecutionId.Increment())

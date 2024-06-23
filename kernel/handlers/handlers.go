@@ -63,7 +63,7 @@ func FinalizarProceso(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	processes.FinalizeProcess(pcb, "INTERRUPTED_BY_USER")
+	go processes.FinalizeProcess(pcb, "INTERRUPTED_BY_USER")
 	commons.EscribirRespuesta(w, http.StatusOK, nil)
 }
 
@@ -154,26 +154,35 @@ func RecibirPcb(w http.ResponseWriter, r *http.Request) {
 				blockProcess := resource.Wait(recibirPcbRequest.Pcb)
 				if blockProcess {
 					queues.RunningProcesses.PopProcess()
+					<-globals.CpuIsFree
 					processes.BlockProcessInResourceQueue(recibirPcbRequest.Pcb, name)
+				} else {
+					<-globals.CpuIsFree
+					<-globals.Ready
 				}
 			case "SIGNAL":
 				unblockProcess := resource.Signal()
+				<-globals.CpuIsFree
+				<-globals.Ready
 				if unblockProcess {
 					processes.PrepareProcess(resource.ProcessQueue.PopProcess())
 				}
 			}
 		} else {
 			recibirPcbRequest.Pcb.Queue = queues.RunningProcesses
+			queues.RunningProcesses.PopProcess()
+			<-globals.CpuIsFree
 			processes.FinalizeProcess(recibirPcbRequest.Pcb, "RESOURCE_ERROR")
 		}
-		<-globals.CpuIsFree
 	case "FINISHED":
 		recibirPcbRequest.Pcb.Queue = queues.RunningProcesses
+		queues.RunningProcesses.PopProcess()
 		<-globals.CpuIsFree
 		processes.FinalizeProcess(recibirPcbRequest.Pcb, "SUCCESS")
 		<-globals.Multiprogramming
 	case "INTERRUPTED_BY_USER":
 		recibirPcbRequest.Pcb.Queue = queues.RunningProcesses
+		queues.RunningProcesses.PopProcess()
 		globals.InterruptedByUser <- 0
 		<-globals.CpuIsFree
 	}
@@ -206,7 +215,7 @@ func DesbloquearProceso(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("PID: %d - Se desbloquea proceso", req.Pid)
 
-	processes.PrepareProcess(interfaces.Interfaces.PopProcess(req.Io))
+	go processes.PrepareProcess(interfaces.Interfaces.PopProcess(req.Io))
 
 	commons.EscribirRespuesta(w, http.StatusOK, nil)
 }
