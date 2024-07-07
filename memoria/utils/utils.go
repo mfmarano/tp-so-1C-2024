@@ -119,7 +119,7 @@ func ResizeFrames(size int, data []globals.Page) {
 	}
 }
 
-func GetContent(df int, size int, pid int) []byte {
+func GetContent(df int, size int) []byte {
 	var content []byte
 
 	for i := 1; i <= size; i++ {
@@ -129,7 +129,7 @@ func GetContent(df int, size int, pid int) []byte {
 	return content
 }
 
-func PutContent(pid int, df int, values []byte) {
+func PutContent(df int, values []byte) {
 
 	for _, value := range values {
 		globals.Memory[df] = value

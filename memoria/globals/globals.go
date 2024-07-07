@@ -12,15 +12,6 @@ type ModuleConfig struct {
 
 var Config *ModuleConfig
 
-type NewProcessRequest struct {
-	Path string `json:"path"`
-	Pid  int    `json:"pid"`
-}
-
-type PageSizeResponse struct {
-	Size int `json:"size"`
-}
-
 type FileContent struct {
 	mutex              sync.Mutex
 	InstructionsPerPcb map[int][]string
@@ -59,10 +50,3 @@ func (f *FileContent) GetFile(PID int) ([]string, bool) {
 	f.mutex.Unlock()
 	return lines, ok
 }
-
-// ************* EN DESARROLLO ******//
-type FinProceso struct {
-	Pid int `json:"pid"`
-}
-
-// ************* EN DESARROLLO ******//

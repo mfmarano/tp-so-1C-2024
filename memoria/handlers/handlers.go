@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"github.com/sisoputnfrba/tp-golang/memoria/handlers/requests"
+	"github.com/sisoputnfrba/tp-golang/memoria/handlers/responses"
 	"log"
 	"math"
 	"net/http"
@@ -13,7 +15,7 @@ import (
 )
 
 func NewProcess(w http.ResponseWriter, r *http.Request) {
-	var nuevoProceso globals.NewProcessRequest
+	var nuevoProceso requests.NewProcessRequest
 
 	time.Sleep(time.Duration(globals.Config.DelayResponse) * time.Millisecond)
 
@@ -86,7 +88,7 @@ func GetInstruction(w http.ResponseWriter, r *http.Request) {
 
 func PageSize(w http.ResponseWriter, r *http.Request) {
 
-	response, err := commons.CodificarJSON(globals.PageSizeResponse{Size: globals.Config.PageSize})
+	response, err := commons.CodificarJSON(responses.PageSizeResponse{Size: globals.Config.PageSize})
 
 	if err != nil {
 		http.Error(w, "Error al codificar la respuesta como JSON", http.StatusInternalServerError)
@@ -171,7 +173,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	}
 
 	globals.MutexMemory.Lock()
-	content := utils.GetContent(read.DF, read.Size, read.Pid)
+	content := utils.GetContent(read.DF, read.Size)
 	globals.MutexMemory.Unlock()
 
 	response, err := commons.CodificarJSON(commons.MemoryReadResponse{Values: content})
@@ -198,10 +200,10 @@ func Write(w http.ResponseWriter, r *http.Request) {
 	}
 
 	globals.MutexMemory.Lock()
-	utils.PutContent(write.Pid, write.DF, write.Values)
+	utils.PutContent(write.DF, write.Values)
 	globals.MutexMemory.Unlock()
 
-	log.Printf("Acceso a espacio de usuario PID: %d - Acción: Escibir - DF: %d - Tamaño: %d", write.Pid, write.DF, len([]byte(write.Values)))
+	log.Printf("Acceso a espacio de usuario PID: %d - Acción: Escibir - DF: %d - Tamaño: %d", write.Pid, write.DF, len(write.Values))
 
 	commons.EscribirRespuesta(w, http.StatusOK, []byte("OK"))
 
