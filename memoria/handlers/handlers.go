@@ -31,9 +31,9 @@ func NewProcess(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	globals.PageTables.Data[nuevoProceso.Pid-1] = make([]globals.Page, len(globals.BitMapMemory))
+	globals.PageTables[nuevoProceso.Pid] = make([]globals.Page, len(globals.BitMapMemory))
 
-	log.Printf("Creacion Tabla de Páginas: PID: %d - Tamaño: %d", nuevoProceso.Pid, utils.CountPages(globals.PageTables.Data[nuevoProceso.Pid-1]))
+	log.Printf("Creacion Tabla de Páginas: PID: %d - Tamaño: %d", nuevoProceso.Pid, utils.CountPages(globals.PageTables[nuevoProceso.Pid]))
 
 	commons.EscribirRespuesta(w, http.StatusOK, []byte("proceso creado sin espacio reservado"))
 }
@@ -47,7 +47,7 @@ func EndProcess(w http.ResponseWriter, r *http.Request) {
 
 	time.Sleep(time.Duration(globals.Config.DelayResponse) * time.Millisecond)
 
-	size := utils.CountPages(globals.PageTables.Data[pid-1])
+	size := utils.CountPages(globals.PageTables[pid])
 
 	globals.MutexFrame.Lock()
 	utils.FinalizeProcess(pid)
@@ -122,7 +122,7 @@ func GetFrame(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Acceso a tabla de páginas PID: %d - Página: %d - Marco: %d", frame.Pid, frame.Page, globals.PageTables.Data[frame.Pid-1][frame.Page].Frame)
+	log.Printf("Acceso a tabla de páginas PID: %d - Página: %d - Marco: %d", frame.Pid, frame.Page, globals.PageTables[frame.Pid][frame.Page].Frame)
 
 	commons.EscribirRespuesta(w, http.StatusOK, response)
 }
@@ -138,7 +138,7 @@ func Resize(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pagesProcess := utils.CountPages(globals.PageTables.Data[resize.Pid-1])
+	pagesProcess := utils.CountPages(globals.PageTables[resize.Pid])
 	pagesResize := int(math.Ceil(float64(resize.Size) / float64(globals.Config.PageSize)))
 
 	globals.MutexFrame.Lock()
@@ -146,11 +146,11 @@ func Resize(w http.ResponseWriter, r *http.Request) {
 		commons.EscribirRespuesta(w, http.StatusNotFound, []byte("OUT_OF_MEMORY"))
 		log.Printf("Ampliación PID: %d - Tamaño actual: %d - Tamaño a ampliar: %d - OUT_OF_MEMORY", resize.Pid, pagesProcess, resize.Size)
 	} else if pagesProcess < pagesResize {
-		utils.ResizeFrames(pagesResize, globals.PageTables.Data[resize.Pid-1])
+		utils.ResizeFrames(pagesResize, globals.PageTables[resize.Pid])
 		commons.EscribirRespuesta(w, http.StatusOK, []byte("resize ejecutado"))
 		log.Printf("Ampliación PID: %d - Tamaño actual: %d - Tamaño a ampliar: %d", resize.Pid, pagesProcess, pagesResize)
 	} else if pagesProcess > pagesResize {
-		utils.ResizeFrames(pagesResize, globals.PageTables.Data[resize.Pid-1])
+		utils.ResizeFrames(pagesResize, globals.PageTables[resize.Pid])
 		commons.EscribirRespuesta(w, http.StatusOK, []byte("resize ejecutado"))
 		log.Printf("Reducción PID: %d - Tamaño actual: %d - Tamaño a reducir: %d", resize.Pid, pagesProcess, pagesResize)
 	} else {

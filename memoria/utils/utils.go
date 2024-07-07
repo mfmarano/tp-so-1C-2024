@@ -61,19 +61,19 @@ func GetFileLine(PID int, lineIndex uint32) (string, error) {
 func FinalizeProcess(pid int) {
 	page := 0
 
-	for globals.PageTables.Data[pid-1][page].IsValid {
-		globals.PageTables.Data[pid-1][page].IsValid = false
-		globals.BitMapMemory[globals.PageTables.Data[pid-1][page].Frame] = 0
+	for globals.PageTables[pid][page].IsValid {
+		globals.PageTables[pid][page].IsValid = false
+		globals.BitMapMemory[globals.PageTables[pid][page].Frame] = 0
 		page++
 	}
 }
 
 func FrameNumber(pid int, page int) (int, error) {
-	if !globals.PageTables.Data[pid-1][page].IsValid {
+	if !globals.PageTables[pid][page].IsValid {
 		return 0, errors.New("page fault")
 	}
 
-	return globals.PageTables.Data[pid-1][page].Frame, nil
+	return globals.PageTables[pid][page].Frame, nil
 }
 
 func CountFramesFree() int {
@@ -112,8 +112,8 @@ func ResizeFrames(size int, data []globals.Page) {
 		}
 	} else {
 		for pages > size {
-			data[pages-1].IsValid = false
-			globals.BitMapMemory[data[pages-1].Frame] = 0
+			data[pages].IsValid = false
+			globals.BitMapMemory[data[pages].Frame] = 0
 			pages--
 		}
 	}

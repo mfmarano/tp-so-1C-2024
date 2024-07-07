@@ -28,11 +28,7 @@ type Page struct {
 	IsValid bool
 }
 
-type PageTable struct {
-	Data map[int][]Page
-}
-
-var PageTables PageTable
+var PageTables map[int][]Page
 
 var MutexFrame sync.Mutex
 

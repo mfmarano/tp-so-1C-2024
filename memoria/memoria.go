@@ -41,7 +41,7 @@ func main() {
 	globals.FileContents = globals.FileContent{InstructionsPerPcb: make(map[int][]string)}
 	globals.BitMapMemory = make([]int, globals.Config.MemorySize/globals.Config.PageSize)
 	globals.Memory = make([]byte, globals.Config.MemorySize)
-	globals.PageTables = globals.PageTable{Data: make(map[int][]globals.Page)}
+	globals.PageTables = make(map[int][]globals.Page)
 
 	// ========
 	// Interfaz
