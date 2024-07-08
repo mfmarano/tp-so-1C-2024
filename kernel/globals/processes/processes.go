@@ -70,8 +70,7 @@ func ReleaseResourcesFromPid(pid int) {
 
 		qtyToUnblock := resource.RemoveProcessFromAssigned(pid)
 		for (qtyToUnblock > 0) {
-			pcb := resource.BlockedProcesses.PopProcess()
-			go PrepareProcess(pcb)
+			go PrepareProcess(resource.BlockedProcesses.PopProcess())
 			qtyToUnblock--
 		}
 	}

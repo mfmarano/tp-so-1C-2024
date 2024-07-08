@@ -46,7 +46,6 @@ func (resource *Resource) Signal(pid int) bool {
 }
 
 func (resource *Resource) RemoveProcessFromAssigned(pid int) int {
-	qtyToUnblock := 0
 	qtyFound := 0
 	var newPids []int
 	resource.mutex.Lock()
@@ -58,12 +57,9 @@ func (resource *Resource) RemoveProcessFromAssigned(pid int) int {
 		}
 	}
 	resource.AssignedPids = newPids
-	if resource.instances < 0 {
-		qtyToUnblock = min(qtyFound, resource.instances*-1)
-	}
     resource.instances += qtyFound
 	resource.mutex.Unlock()
-	return qtyToUnblock
+	return qtyFound
 }
 
 func (resource *Resource) RemoveProcessFromBlocked(pid int) {
