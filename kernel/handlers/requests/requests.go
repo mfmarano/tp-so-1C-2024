@@ -39,6 +39,7 @@ func FinalizarProcesoMemoria(pid int) (*http.Response, error) {
 }
 
 func Dispatch(pcb queues.PCB) (*http.Response, error) {
+	pcb.Queue = nil
 	requestBody, err := commons.CodificarJSON(pcb)
 	if err != nil {
 		return nil, err

@@ -58,8 +58,23 @@ func FinalizeProcess(pcb queues.PCB, reason string) {
 	}
 
 	_, _ = requests.FinalizarProcesoMemoria(pcb.Pid)
+
+	ReleaseResourcesFromPid(pcb.Pid)
 	pcb.Queue.RemoveProcess(pcb.Pid)
 	log.Printf("Finaliza el proceso %d - Motivo: %s", pcb.Pid, reason)
+}
+
+func ReleaseResourcesFromPid(pid int) {
+	for _, resource := range resources.Resources {
+		resource.RemoveProcessFromBlocked(pid);
+
+		qtyToUnblock := resource.RemoveProcessFromAssigned(pid)
+		for (qtyToUnblock > 0) {
+			pcb := resource.BlockedProcesses.PopProcess()
+			go PrepareProcess(pcb)
+			qtyToUnblock--
+		}
+	}
 }
 
 func BlockProcessInIoQueue(pcb queues.PCB, ioRequest commons.IoInstructionRequest) {
@@ -77,7 +92,7 @@ func BlockProcessInIoQueue(pcb queues.PCB, ioRequest commons.IoInstructionReques
 }
 
 func BlockProcessInResourceQueue(pcb queues.PCB, resource string) {
-	ChangeState(&pcb, resources.Resources[resource].ProcessQueue, "BLOCKED")
+	ChangeState(&pcb, resources.Resources[resource].BlockedProcesses, "BLOCKED")
 
 	log.Printf("PID: %d - Bloqueado por: %s", pcb.Pid, resource)
 }

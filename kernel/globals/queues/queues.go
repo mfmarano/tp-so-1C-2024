@@ -27,8 +27,8 @@ var RunningProcesses *ProcessQueue
 
 func (q *ProcessQueue) AddProcess(pcb *PCB) {
 	q.mutex.Lock()
-	q.Processes = append(q.Processes, *pcb)
 	pcb.Queue = q
+	q.Processes = append(q.Processes, *pcb)
 	q.mutex.Unlock()
 }
 
@@ -73,6 +73,16 @@ func (q *ProcessQueue) RemoveProcess(pid int) PCB {
 	removedProcess.Queue = nil
 	q.mutex.Unlock()
 	return removedProcess
+}
+
+func (q *ProcessQueue) UpdateProcess(pcb PCB) {
+	q.mutex.Lock()
+	for index, process := range q.Processes {
+		if process.Pid == pcb.Pid {
+			q.Processes[index] = pcb
+		}
+	}
+	q.mutex.Unlock()
 }
 
 func (q *ProcessQueue) IsNotEmpty() bool {

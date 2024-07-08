@@ -151,22 +151,24 @@ func RecibirPcb(w http.ResponseWriter, r *http.Request) {
 		if resource, exists := resources.Resources[name]; exists {
 			switch recibirPcbRequest.Reason {
 			case "WAIT":
-				blockProcess := resource.Wait(recibirPcbRequest.Pcb)
+				blockProcess := resource.Wait(recibirPcbRequest.Pcb.Pid)
 				if blockProcess {
 					queues.RunningProcesses.PopProcess()
 					<-globals.CpuIsFree
 					processes.BlockProcessInResourceQueue(recibirPcbRequest.Pcb, name)
 				} else {
+					queues.RunningProcesses.UpdateProcess(recibirPcbRequest.Pcb)
 					<-globals.CpuIsFree
 					<-globals.Ready
 				}
 			case "SIGNAL":
-				unblockProcess := resource.Signal()
+				unblockProcess := resource.Signal(recibirPcbRequest.Pcb.Pid)
+				if unblockProcess {
+					go processes.PrepareProcess(resource.BlockedProcesses.PopProcess())
+				}
+				queues.RunningProcesses.UpdateProcess(recibirPcbRequest.Pcb)
 				<-globals.CpuIsFree
 				<-globals.Ready
-				if unblockProcess {
-					processes.PrepareProcess(resource.ProcessQueue.PopProcess())
-				}
 			}
 		} else {
 			recibirPcbRequest.Pcb.Queue = queues.RunningProcesses
