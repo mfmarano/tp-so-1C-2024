@@ -11,7 +11,21 @@ import (
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 )
 
+var PageSize *int
+
 var TLB *tlb.TLBType
+
+func GetPageSize() {
+	resp, err := requests.GetMemoryConfig()
+	if err != nil || resp.StatusCode != 200 {
+		log.Printf("Error al conectarse a memoria")
+		return
+	}
+	var pageSize commons.PageSizeResponse
+	commons.DecodificarJSON(resp.Body, &pageSize)
+	*PageSize = pageSize.Size
+	log.Printf("MEMORY - SIZE PAGE - SIZE: %d", *PageSize)
+}
 
 func WriteValues(addressRegister string, values []byte, isString bool) {
 	logicalAddress := utils.GetRegValue(addressRegister)
@@ -19,7 +33,7 @@ func WriteValues(addressRegister string, values []byte, isString bool) {
 	remainingValues := values
 
 	for len(remainingValues) > 0 {
-		availableSpace := *globals.PageSize - offset
+		availableSpace := *PageSize - offset
 		if availableSpace > len(remainingValues) {
 			availableSpace = len(remainingValues)
 		}
@@ -36,11 +50,11 @@ func ReadValues(addressRegister string, size int, isString bool) []byte {
 	var values []uint8
 	logicalAddress := utils.GetRegValue(addressRegister)
 	page, offset := getStartingPageAndOffset(logicalAddress)
-	numPages :=  calculateTotalPages(offset, size)
+	numPages := calculateTotalPages(offset, size)
 
 	for i := 0; i < numPages; i++ {
 		address := getPhysicalAddress(page, offset)
-		bytesToRead := *globals.PageSize - offset
+		bytesToRead := *PageSize - offset
 		if bytesToRead > size {
 			bytesToRead = size
 		}
@@ -59,10 +73,10 @@ func GetPhysicalAddresses(addressRegister string, sizeRegister string) []commons
 	logicalAddress := utils.GetRegValue(addressRegister)
 	size := int(utils.GetRegValue(sizeRegister))
 	page, offset := getStartingPageAndOffset(logicalAddress)
-	numPages :=  calculateTotalPages(offset, size)
+	numPages := calculateTotalPages(offset, size)
 
 	for i := 0; i < numPages; i++ {
-		pageBytes := *globals.PageSize - offset
+		pageBytes := *PageSize - offset
 		if pageBytes > size {
 			pageBytes = size
 		}
@@ -107,24 +121,24 @@ func getFrame(page int) int {
 func getPhysicalAddress(page int, offset int) int {
 	frame := getFrame(page)
 
-	return frame * *globals.PageSize + offset
+	return frame**PageSize + offset
 }
 
 func getStartingPageAndOffset(logicalAddress uint32) (int, int) {
-	page := int(math.Floor(float64(logicalAddress)/float64(*globals.PageSize)))
-	offset := int(logicalAddress) - page * (int(*globals.PageSize))
+	page := int(math.Floor(float64(logicalAddress) / float64(*PageSize)))
+	offset := int(logicalAddress) - page*(int(*PageSize))
 
 	return page, offset
 }
 
 func calculateTotalPages(offset int, size int) int {
 	var numPages int
-	remainingBytesInFirstPage := *globals.PageSize - offset
-    if size <= remainingBytesInFirstPage {
-        numPages = 1
-    } else {
-        sizeLeft := float64(size - remainingBytesInFirstPage)
-        numPages = 1 + int(math.Ceil(sizeLeft / float64(*globals.PageSize)))
-    }
+	remainingBytesInFirstPage := *PageSize - offset
+	if size <= remainingBytesInFirstPage {
+		numPages = 1
+	} else {
+		sizeLeft := float64(size - remainingBytesInFirstPage)
+		numPages = 1 + int(math.Ceil(sizeLeft/float64(*PageSize)))
+	}
 	return numPages
 }

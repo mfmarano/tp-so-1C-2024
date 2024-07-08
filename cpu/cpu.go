@@ -28,8 +28,8 @@ func main() {
 	globals.Registers = new(commons.Registers)
 	globals.Interruption = new(interruption.Interruption)
 	globals.ProcessContext = new(process.ProcessContext)
-	globals.PageSize = new(int)
-	
+	mmu.PageSize = new(int)
+
 	instructions.InitializeInstruction()
 
 	globals.LoadRegistersMap()
@@ -51,10 +51,10 @@ func main() {
 	if globals.Config == nil {
 		log.Fatalln("Error al cargar la configuración")
 	}
-	
+
 	mmu.TLB = &tlb.TLBType{Queue: list.New(), Entries: make(map[tlb.Key]*tlb.TLBEntry), Capacity: globals.Config.NumberFellingTlb}
 
-	handlers.GetPageSize()
+	mmu.GetPageSize()
 
 	// ========
 	// Interfaz

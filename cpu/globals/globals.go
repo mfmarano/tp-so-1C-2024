@@ -19,7 +19,6 @@ type ModuleConfig struct {
 var Config *ModuleConfig
 var Registers *commons.Registers
 var Interruption *interruption.Interruption
-var PageSize *int
 var ProcessContext *process.ProcessContext
 var RegMap map[string]interface{}
 
