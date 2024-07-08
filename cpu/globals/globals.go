@@ -1,7 +1,6 @@
 package globals
 
 import (
-	"github.com/sisoputnfrba/tp-golang/cpu/globals/interruption"
 	"github.com/sisoputnfrba/tp-golang/cpu/globals/process"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
 )
@@ -18,7 +17,6 @@ type ModuleConfig struct {
 
 var Config *ModuleConfig
 var Registers *commons.Registers
-var Interruption *interruption.Interruption
 var ProcessContext *process.ProcessContext
 var RegMap map[string]interface{}
 

@@ -1,10 +1,6 @@
 package interruption
 
-import (
-	"github.com/sisoputnfrba/tp-golang/cpu/globals"
-	"github.com/sisoputnfrba/tp-golang/cpu/requests"
-	"sync"
-)
+import "sync"
 
 type Interruption struct {
 	mutex  sync.Mutex
@@ -33,12 +29,4 @@ func (i *Interruption) GetAndReset() (bool, string, int) {
 	return status, reason, pid
 }
 
-func InterruptionReceived(request *requests.DispatchRequest) bool {
-	status, reason, pid := globals.Interruption.GetAndReset()
-
-	if status && pid == globals.ProcessContext.GetPid() {
-		request.Reason = reason
-	}
-
-	return status && pid == globals.ProcessContext.GetPid()
-}
+var CurrentInterruption *Interruption

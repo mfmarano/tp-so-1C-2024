@@ -26,7 +26,7 @@ func main() {
 	// Configuración
 	// =============
 	globals.Registers = new(commons.Registers)
-	globals.Interruption = new(interruption.Interruption)
+	interruption.CurrentInterruption = new(interruption.Interruption)
 	globals.ProcessContext = new(process.ProcessContext)
 	mmu.PageSize = new(int)
 
