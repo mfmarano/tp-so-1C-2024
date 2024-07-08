@@ -120,6 +120,9 @@ func SetProcessToReady() {
 	for {
 		globals.New <- 0
 		globals.Multiprogramming <- 0
+
+		globals.Plan()
+
 		PrepareProcess(queues.NewProcesses.PopProcess())
 	}
 }
@@ -128,6 +131,9 @@ func SetProcessToRunning() {
 	for {
 		globals.CpuIsFree <- 0
 		globals.Ready <- 0
+
+		globals.Plan()
+
 		pcb := GetNextProcess()
 		ChangeState(&pcb, queues.RunningProcesses, "EXEC")
 		go sendEndOfQuantum(pcb, globals.ExecutionId.Increment())

@@ -98,12 +98,12 @@ func EstadoProceso(w http.ResponseWriter, r *http.Request) {
 }
 
 func IniciarPlanificacion(w http.ResponseWriter, r *http.Request) {
-	// resumir planificacion de corto y largo plazo en caso de que se encuentre pausada
+	globals.Planning.Unlock()
 	commons.EscribirRespuesta(w, http.StatusOK, nil)
 }
 
 func DetenerPlanificacion(w http.ResponseWriter, r *http.Request) {
-	// pausar la planificación de corto y largo plazo
+	globals.Planning.Lock()
 	commons.EscribirRespuesta(w, http.StatusOK, nil)
 }
 
@@ -135,6 +135,8 @@ func RecibirPcb(w http.ResponseWriter, r *http.Request) {
 		commons.EscribirRespuesta(w, http.StatusBadRequest, []byte("Error al decodificar el PCB actualizado del CPU."))
 		return
 	}
+
+	globals.Plan()
 
 	switch recibirPcbRequest.Reason {
 	case "END_OF_QUANTUM":
@@ -213,6 +215,8 @@ func DesbloquearProceso(w http.ResponseWriter, r *http.Request) {
 		commons.EscribirRespuesta(w, http.StatusBadRequest, []byte("Error al decodificar la conexion de Io."))
 		return
 	}
+
+	globals.Plan()
 
 	log.Printf("PID: %d - Se desbloquea proceso", req.Pid)
 
