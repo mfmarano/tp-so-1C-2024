@@ -176,6 +176,12 @@ func RecibirPcb(w http.ResponseWriter, r *http.Request) {
 			<-globals.CpuIsFree
 			processes.FinalizeProcess(recibirPcbRequest.Pcb, "RESOURCE_ERROR")
 		}
+	case "OUT_OF_MEMORY":
+		recibirPcbRequest.Pcb.Queue = queues.RunningProcesses
+		queues.RunningProcesses.PopProcess()
+		<-globals.CpuIsFree
+		processes.FinalizeProcess(recibirPcbRequest.Pcb, "OUT_OF_MEMORY")
+		<-globals.Multiprogramming
 	case "FINISHED":
 		recibirPcbRequest.Pcb.Queue = queues.RunningProcesses
 		queues.RunningProcesses.PopProcess()

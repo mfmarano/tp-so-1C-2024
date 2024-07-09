@@ -201,12 +201,7 @@ func jnz() bool {
 }
 
 func resize(response *requests.DispatchRequest) bool {
-	resp, err := requests.Resize(instruction.Operands.Size)
-	if (err != nil) {
-		response.Reason = "ERROR"
-		return false
-	}
-
+	resp, _ := requests.Resize(instruction.Operands.Size)
 	if (resp.StatusCode != 200) {
 		response.Reason = "OUT_OF_MEMORY"
 		return false

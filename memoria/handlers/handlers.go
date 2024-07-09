@@ -1,13 +1,14 @@
 package handlers
 
 import (
-	"github.com/sisoputnfrba/tp-golang/memoria/handlers/requests"
-	"github.com/sisoputnfrba/tp-golang/memoria/handlers/responses"
 	"log"
 	"math"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/sisoputnfrba/tp-golang/memoria/handlers/requests"
+	"github.com/sisoputnfrba/tp-golang/memoria/handlers/responses"
 
 	"github.com/sisoputnfrba/tp-golang/memoria/globals"
 	"github.com/sisoputnfrba/tp-golang/memoria/utils"
@@ -143,7 +144,7 @@ func Resize(w http.ResponseWriter, r *http.Request) {
 
 	globals.MutexFrame.Lock()
 	if pagesProcess < pagesResize && pagesResize-pagesProcess > utils.CountFramesFree() {
-		commons.EscribirRespuesta(w, http.StatusNotFound, []byte("OUT_OF_MEMORY"))
+		commons.EscribirRespuesta(w, http.StatusInternalServerError, []byte("OUT_OF_MEMORY"))
 		log.Printf("Ampliación PID: %d - Tamaño actual: %d - Tamaño a ampliar: %d - OUT_OF_MEMORY", resize.Pid, pagesProcess, resize.Size)
 	} else if pagesProcess < pagesResize {
 		utils.ResizeFrames(pagesResize, globals.PageTables[resize.Pid])

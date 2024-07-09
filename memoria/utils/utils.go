@@ -112,8 +112,8 @@ func ResizeFrames(size int, data []globals.Page) {
 		}
 	} else {
 		for pages > size {
-			data[pages].IsValid = false
-			globals.BitMapMemory[data[pages].Frame] = 0
+			data[pages-1].IsValid = false
+			globals.BitMapMemory[data[pages-1].Frame] = 0
 			pages--
 		}
 	}
