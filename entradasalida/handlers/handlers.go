@@ -36,14 +36,24 @@ func RecibirInstruccion(w http.ResponseWriter, r *http.Request) {
 
 func canExecuteTypeInstruction(req commons.IoInstructionRequest) bool {
 	switch globals.Config.Type {
-		case globals.GENERIC_TYPE:
-			return canExecuteInstruction(globals.GENERIC_INSTRUCTIONS, req)
-		case globals.STDIN:
-			return canExecuteInstruction(globals.STDIN_INSTRUCTIONS, req)
-		case globals.STDOUT:
-			return canExecuteInstruction(globals.STDOUT_INSTRUCTIONS, req)
-		default:
-			return false
+	case globals.GENERIC_TYPE:
+		return canExecuteInstruction(globals.GENERIC_INSTRUCTIONS, req)
+	case globals.STDIN:
+		return canExecuteInstruction(globals.STDIN_INSTRUCTIONS, req)
+	case globals.STDOUT:
+		return canExecuteInstruction(globals.STDOUT_INSTRUCTIONS, req)
+	case globals.FS_CREATE:
+		return canExecuteInstruction(globals.FS_CREATE_INSTRUCTIONS, req)
+	case globals.FS_DELETE:
+		return canExecuteInstruction(globals.FS_DELETE_INSTRUCTIONS, req)
+	case globals.FS_TRUNCATE:
+		return canExecuteInstruction(globals.FS_TRUNCATE_INSTRUCTIONS, req)
+	case globals.FS_WRITE:
+		return canExecuteInstruction(globals.FS_WRITE_INSTRUCTIONS, req)
+	case globals.FS_READ:
+		return canExecuteInstruction(globals.FS_READ_INSTRUCTIONS, req)
+	default:
+		return false
 	}
 }
 
@@ -53,7 +63,7 @@ func canExecuteInstruction(instructions []string, req commons.IoInstructionReque
 
 func addRequest(req commons.IoInstructionRequest) {
 	// Entramos en la sección critica
-	queues.InstructionRequests.AddRequest(req)	
+	queues.InstructionRequests.AddRequest(req)
 	// Informamos a consumidor que tiene una request pendiente
 	queues.InstructionRequests.Sem <- 1
 }
