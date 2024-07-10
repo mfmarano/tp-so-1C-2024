@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"path/filepath"
 
@@ -48,4 +49,39 @@ func AssignBlock(fileName *os.File) {
 		panic(err)
 	}
 
+}
+
+func UnAssignBlocks(fileName *os.File) {
+	var metaData globals.MetaData
+	content, err := io.ReadAll(fileName)
+	if err != nil {
+		panic(err)
+	}
+	err = json.Unmarshal(content, &metaData)
+	if err != nil {
+		panic(err)
+	}
+
+	bitmapFile, err := os.OpenFile(filepath.Join(globals.Config.DialFSPath, "bitmap.dat"), os.O_RDWR, 0666)
+	if err != nil {
+		fmt.Println("Error opening file:", err)
+		return
+	}
+	defer bitmapFile.Close()
+
+	var offset = int64(metaData.InitialBlock)
+	whence := io.SeekStart
+	pos, _ := bitmapFile.Seek(offset, whence)
+
+	qtyBlocks := int64(math.Ceil(float64(metaData.Size) / float64(globals.Config.DialFSBlockSize)))
+	qtyBlocks = qtyBlocks + pos
+	for pos < qtyBlocks {
+		_, err = bitmapFile.WriteAt([]byte{0}, pos)
+		if err != nil {
+			fmt.Println("Error writing file:", err)
+			return
+		}
+		pos++
+	}
+	defer fileName.Close()
 }

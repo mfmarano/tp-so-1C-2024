@@ -54,34 +54,28 @@ func RunExecution() {
 			requests.UnblockProcess(req.Pid)
 		case globals.IO_FS_CREATE:
 			time.Sleep(time.Duration(globals.Config.UnitWorkTime) * time.Millisecond)
-
-			/*  (CHEQUEAR SI YA EXISTE)
-			_, err := os.Stat(filepath.Join(globals.Config.DialFSPath, req.FileName))
-			if err == nil {
-				return fmt.Printf("file %s already exists", req.FileName)
-			}*/
-
 			fileName, err := os.OpenFile(filepath.Join(globals.Config.DialFSPath, req.FileName), os.O_CREATE|os.O_WRONLY, 0666)
 			if err != nil {
 				return
 			}
 			defer fileName.Close()
-			/* (lock exclusive file)
-			err = syscall.Flock(int(fileName.Fd()), syscall.LOCK_EX)
-			if err != nil {
-				fmt.Println("Error locking file:", err)
-				return
-			}*/
 			utils.AssignBlock(fileName)
-			/* (unlock exclusive file)
-			err = syscall.Flock(int(fileName.Fd()), syscall.LOCK_UN)
-			if err != nil {
-				fmt.Println("Error unlocking file:", err)
-			}*/
+			fileName.Close()
 			log.Printf("DialFS - Crear archivo PID: %d - Crear Archivo: %s", req.Pid, req.FileName)
 
 		case globals.IO_FS_DELETE:
 			time.Sleep(time.Duration(globals.Config.UnitWorkTime) * time.Millisecond)
+			fileName, err := os.OpenFile(filepath.Join(globals.Config.DialFSPath, req.FileName), os.O_RDWR, 0666)
+			if err != nil {
+				return
+			}
+			defer fileName.Close()
+			utils.UnAssignBlocks(fileName)
+			err = os.Remove(filepath.Join(globals.Config.DialFSPath, req.FileName))
+			if err != nil {
+				panic(err)
+			}
+			log.Printf("DialFS - Eliminar archivo PID: %d - Eliminar Archivo: %s", req.Pid, req.FileName)
 		case globals.IO_FS_TRUNCATE:
 			time.Sleep(time.Duration(globals.Config.UnitWorkTime) * time.Millisecond)
 		case globals.IO_FS_WRITE:

@@ -52,6 +52,6 @@ var FS_READ_INSTRUCTIONS = []string{IO_FS_READ}
 var Config *ModuleConfig
 
 type MetaData struct {
-	InitialBlock int64 `json:"initial_block "`
+	InitialBlock int64 `json:"initial_block"`
 	Size         int   `json:"size"`
 }
