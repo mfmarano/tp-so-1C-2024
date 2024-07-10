@@ -39,12 +39,12 @@ func PrepareProcess(pcb queues.PCB) {
 		ChangeState(&pcb, queues.PrioritizedReadyProcesses, "READY")
 
 		log.Printf("Cola Ready+: [%s]",
-		logs.IntArrayToString(queues.PrioritizedReadyProcesses.GetPids(), ", "))
+			logs.IntArrayToString(queues.PrioritizedReadyProcesses.GetPids(), ", "))
 	} else {
 		ChangeState(&pcb, queues.ReadyProcesses, "READY")
-		
+
 		log.Printf("Cola Ready: [%s]",
-		logs.IntArrayToString(queues.ReadyProcesses.GetPids(), ", "))
+			logs.IntArrayToString(queues.ReadyProcesses.GetPids(), ", "))
 	}
 
 	<-globals.Ready
@@ -134,10 +134,9 @@ func SetProcessToRunning() {
 
 		if _, err := requests.Dispatch(pcb); err != nil {
 			log.Printf("Error al enviar el PCB %d al CPU.", pcb.Pid)
-			queues.RunningProcesses.PopProcess()
+			PopProcessFromRunning()
 			FinalizeProcess(pcb, "ERROR_DISPATCH")
 			<-globals.Multiprogramming
-			<-globals.CpuIsFree
 		}
 	}
 }
@@ -170,4 +169,9 @@ func sendEndOfQuantum(pcb queues.PCB, executionId int) {
 	if executionId == globals.ExecutionId.GetValue() {
 		_, _ = requests.Interrupt("END_OF_QUANTUM", pcb.Pid)
 	}
+}
+
+func PopProcessFromRunning() {
+	queues.RunningProcesses.PopProcess()
+	<-globals.CpuIsFree
 }
