@@ -56,8 +56,12 @@ func InitializeGlobals() {
 	ExecutionId = &Counter{Value: 0}
 }
 
-func IsRoundRobinOrVirtualRoundRobin() bool {
-	return Config.PlanningAlgorithm == "RR" || Config.PlanningAlgorithm == "VRR"
+func IsVirtualRoundRobin() bool {
+	return Config.PlanningAlgorithm == "VRR"
+}
+
+func IsFIFO() bool {
+	return Config.PlanningAlgorithm == "FIFO"
 }
 
 func Plan() {
