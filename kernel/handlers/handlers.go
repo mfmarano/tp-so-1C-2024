@@ -9,8 +9,6 @@ import (
 	"github.com/sisoputnfrba/tp-golang/kernel/globals"
 	"github.com/sisoputnfrba/tp-golang/kernel/globals/interfaces"
 	"github.com/sisoputnfrba/tp-golang/kernel/globals/processes"
-	"github.com/sisoputnfrba/tp-golang/kernel/globals/queues"
-	"github.com/sisoputnfrba/tp-golang/kernel/globals/resources"
 	"github.com/sisoputnfrba/tp-golang/kernel/handlers/requests"
 	"github.com/sisoputnfrba/tp-golang/kernel/handlers/responses"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
@@ -138,57 +136,7 @@ func RecibirPcb(w http.ResponseWriter, r *http.Request) {
 
 	globals.Plan()
 
-	switch recibirPcbRequest.Reason {
-	case "END_OF_QUANTUM":
-		processes.PopProcessFromRunning()
-		log.Printf("PID: %d - Desalojado por fin de Quantum", recibirPcbRequest.Pcb.Pid)
-		processes.PrepareProcess(recibirPcbRequest.Pcb)
-	case "BLOCKED":
-		processes.PopProcessFromRunning()
-		processes.BlockProcessInIoQueue(recibirPcbRequest.Pcb, recibirPcbRequest.Io)
-	case "WAIT", "SIGNAL":
-		name := recibirPcbRequest.Resource
-		if resource, exists := resources.Resources[name]; exists {
-			switch recibirPcbRequest.Reason {
-			case "WAIT":
-				blockProcess := resource.Wait(recibirPcbRequest.Pcb.Pid)
-				if blockProcess {
-					processes.PopProcessFromRunning()
-					processes.BlockProcessInResourceQueue(recibirPcbRequest.Pcb, name)
-				} else {
-					queues.RunningProcesses.UpdateProcess(recibirPcbRequest.Pcb)
-					<-globals.CpuIsFree
-					<-globals.Ready
-				}
-			case "SIGNAL":
-				unblockProcess := resource.Signal(recibirPcbRequest.Pcb.Pid)
-				if unblockProcess {
-					go processes.PrepareProcess(resource.BlockedProcesses.PopProcess())
-				}
-				queues.RunningProcesses.UpdateProcess(recibirPcbRequest.Pcb)
-				<-globals.CpuIsFree
-				<-globals.Ready
-			}
-		} else {
-			recibirPcbRequest.Pcb.Queue = queues.RunningProcesses
-			processes.PopProcessFromRunning()
-			processes.FinalizeProcess(recibirPcbRequest.Pcb, "RESOURCE_ERROR")
-		}
-	case "OUT_OF_MEMORY":
-		recibirPcbRequest.Pcb.Queue = queues.RunningProcesses
-		processes.PopProcessFromRunning()
-		processes.FinalizeProcess(recibirPcbRequest.Pcb, "OUT_OF_MEMORY")
-		<-globals.Multiprogramming
-	case "FINISHED":
-		recibirPcbRequest.Pcb.Queue = queues.RunningProcesses
-		processes.PopProcessFromRunning()
-		processes.FinalizeProcess(recibirPcbRequest.Pcb, "SUCCESS")
-		<-globals.Multiprogramming
-	case "INTERRUPTED_BY_USER":
-		recibirPcbRequest.Pcb.Queue = queues.RunningProcesses
-		processes.PopProcessFromRunning()
-		globals.InterruptedByUser <- 0
-	}
+	go processes.TreatPcbReason(recibirPcbRequest)
 
 	commons.EscribirRespuesta(w, http.StatusOK, nil)
 }
