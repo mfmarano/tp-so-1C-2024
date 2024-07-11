@@ -42,16 +42,8 @@ func canExecuteTypeInstruction(req commons.IoInstructionRequest) bool {
 		return canExecuteInstruction(globals.STDIN_INSTRUCTIONS, req)
 	case globals.STDOUT:
 		return canExecuteInstruction(globals.STDOUT_INSTRUCTIONS, req)
-	case globals.FS_CREATE:
-		return canExecuteInstruction(globals.FS_CREATE_INSTRUCTIONS, req)
-	case globals.FS_DELETE:
-		return canExecuteInstruction(globals.FS_DELETE_INSTRUCTIONS, req)
-	case globals.FS_TRUNCATE:
-		return canExecuteInstruction(globals.FS_TRUNCATE_INSTRUCTIONS, req)
-	case globals.FS_WRITE:
-		return canExecuteInstruction(globals.FS_WRITE_INSTRUCTIONS, req)
-	case globals.FS_READ:
-		return canExecuteInstruction(globals.FS_READ_INSTRUCTIONS, req)
+	case globals.DIALFS:
+		return canExecuteInstruction(globals.DIALFS_INSTRUCTIONS, req)
 	default:
 		return false
 	}

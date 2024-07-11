@@ -48,8 +48,6 @@ func main() {
 
 	queues.InstructionRequests = &queues.RequestQueue{Requests: make([]commons.IoInstructionRequest, 0), Sem: make(chan int, 10)} //cantidad maxima de requests en queue, adaptable
 
-	///**********************************EN DESARROLLO******************************//
-
 	bloquesFile, err := os.OpenFile(filepath.Join(globals.Config.DialFSPath, "bloques.dat"), os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
 		fmt.Println("Error creating bloques.dat:", err)
@@ -75,8 +73,6 @@ func main() {
 	}
 
 	bitmapFile.Close()
-
-	///************************************EN DESARROLLO******************************//
 
 	// Conectarse al Kernel cuando levanta modulo i/o, le tiene que hacer request a kernel para "conectarse" (le manda nombre de i/o y en qué puerto e ip escucha)
 	_, err = requests.Connect()

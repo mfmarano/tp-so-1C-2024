@@ -1,7 +1,7 @@
 {
   "ip": "localhost",
   "port": 8006,
-  "type": "CREATE",
+  "type": "DialFS",
   "unit_work_time": 100,
   "ip_kernel": "localhost",
   "port_kernel": 8001,
