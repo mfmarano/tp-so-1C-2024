@@ -33,7 +33,7 @@ func readFile(filePath string) ([]string, error) {
 }
 
 func AddFileToContents(PID int, filePath string) error {
-	lines, err := readFile(filePath)
+	lines, err := readFile(globals.Config.InstructionPath + filePath)
 
 	if err != nil {
 		return err

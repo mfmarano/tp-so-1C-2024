@@ -1,6 +1,8 @@
 package globals
 
-import "sync"
+import (
+	"sync"
+)
 
 type ModuleConfig struct {
 	Port            int    `json:"port"`
