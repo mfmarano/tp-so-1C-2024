@@ -30,6 +30,7 @@ var CpuIsFree chan int
 var New chan int
 var Ready chan int
 var InterruptedByUser chan int
+var Planning sync.Mutex
 
 func (c *Counter) Increment() int {
 	c.mutex.Lock()
@@ -57,4 +58,9 @@ func InitializeGlobals() {
 
 func IsRoundRobinOrVirtualRoundRobin() bool {
 	return Config.PlanningAlgorithm == "RR" || Config.PlanningAlgorithm == "VRR"
+}
+
+func Plan() {
+	Planning.Lock()
+	Planning.Unlock()
 }

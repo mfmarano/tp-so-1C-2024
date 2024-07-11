@@ -9,8 +9,6 @@ import (
 	"github.com/sisoputnfrba/tp-golang/kernel/globals"
 	"github.com/sisoputnfrba/tp-golang/kernel/globals/interfaces"
 	"github.com/sisoputnfrba/tp-golang/kernel/globals/processes"
-	"github.com/sisoputnfrba/tp-golang/kernel/globals/queues"
-	"github.com/sisoputnfrba/tp-golang/kernel/globals/resources"
 	"github.com/sisoputnfrba/tp-golang/kernel/handlers/requests"
 	"github.com/sisoputnfrba/tp-golang/kernel/handlers/responses"
 	"github.com/sisoputnfrba/tp-golang/utils/commons"
@@ -32,7 +30,7 @@ func IniciarProceso(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	processes.CreateProcess(pid)
+	go processes.CreateProcess(pid)
 
 	var iniciarProcesoResponse = responses.IniciarProcesoResponse{
 		Pid: pid,
@@ -98,12 +96,12 @@ func EstadoProceso(w http.ResponseWriter, r *http.Request) {
 }
 
 func IniciarPlanificacion(w http.ResponseWriter, r *http.Request) {
-	// resumir planificacion de corto y largo plazo en caso de que se encuentre pausada
+	globals.Planning.Unlock()
 	commons.EscribirRespuesta(w, http.StatusOK, nil)
 }
 
 func DetenerPlanificacion(w http.ResponseWriter, r *http.Request) {
-	// pausar la planificación de corto y largo plazo
+	globals.Planning.Lock()
 	commons.EscribirRespuesta(w, http.StatusOK, nil)
 }
 
@@ -136,57 +134,9 @@ func RecibirPcb(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	switch recibirPcbRequest.Reason {
-	case "END_OF_QUANTUM":
-		processes.PopProcessFromRunning()
-		log.Printf("PID: %d - Desalojado por fin de Quantum", recibirPcbRequest.Pcb.Pid)
-		processes.PrepareProcess(recibirPcbRequest.Pcb)
-	case "BLOCKED":
-		processes.PopProcessFromRunning()
-		processes.BlockProcessInIoQueue(recibirPcbRequest.Pcb, recibirPcbRequest.Io)
-	case "WAIT", "SIGNAL":
-		name := recibirPcbRequest.Resource
-		if resource, exists := resources.Resources[name]; exists {
-			switch recibirPcbRequest.Reason {
-			case "WAIT":
-				blockProcess := resource.Wait(recibirPcbRequest.Pcb.Pid)
-				if blockProcess {
-					processes.PopProcessFromRunning()
-					processes.BlockProcessInResourceQueue(recibirPcbRequest.Pcb, name)
-				} else {
-					queues.RunningProcesses.UpdateProcess(recibirPcbRequest.Pcb)
-					<-globals.CpuIsFree
-					<-globals.Ready
-				}
-			case "SIGNAL":
-				unblockProcess := resource.Signal(recibirPcbRequest.Pcb.Pid)
-				if unblockProcess {
-					go processes.PrepareProcess(resource.BlockedProcesses.PopProcess())
-				}
-				queues.RunningProcesses.UpdateProcess(recibirPcbRequest.Pcb)
-				<-globals.CpuIsFree
-				<-globals.Ready
-			}
-		} else {
-			recibirPcbRequest.Pcb.Queue = queues.RunningProcesses
-			processes.PopProcessFromRunning()
-			processes.FinalizeProcess(recibirPcbRequest.Pcb, "RESOURCE_ERROR")
-		}
-	case "OUT_OF_MEMORY":
-		recibirPcbRequest.Pcb.Queue = queues.RunningProcesses
-		processes.PopProcessFromRunning()
-		processes.FinalizeProcess(recibirPcbRequest.Pcb, "OUT_OF_MEMORY")
-		<-globals.Multiprogramming
-	case "FINISHED":
-		recibirPcbRequest.Pcb.Queue = queues.RunningProcesses
-		processes.PopProcessFromRunning()
-		processes.FinalizeProcess(recibirPcbRequest.Pcb, "SUCCESS")
-		<-globals.Multiprogramming
-	case "INTERRUPTED_BY_USER":
-		recibirPcbRequest.Pcb.Queue = queues.RunningProcesses
-		processes.PopProcessFromRunning()
-		globals.InterruptedByUser <- 0
-	}
+	globals.Plan()
+
+	go processes.TreatPcbReason(recibirPcbRequest)
 
 	commons.EscribirRespuesta(w, http.StatusOK, nil)
 }
@@ -213,6 +163,8 @@ func DesbloquearProceso(w http.ResponseWriter, r *http.Request) {
 		commons.EscribirRespuesta(w, http.StatusBadRequest, []byte("Error al decodificar la conexion de Io."))
 		return
 	}
+
+	globals.Plan()
 
 	log.Printf("PID: %d - Se desbloquea proceso", req.Pid)
 
