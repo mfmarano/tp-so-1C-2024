@@ -66,10 +66,10 @@ func FinalizeProcess(pcb queues.PCB, reason string) {
 
 func ReleaseResourcesFromPid(pid int) {
 	for _, resource := range resources.Resources {
-		resource.RemoveProcessFromBlocked(pid);
+		resource.RemoveProcessFromBlocked(pid)
 
 		qtyToUnblock := resource.RemoveProcessFromAssigned(pid)
-		for (qtyToUnblock > 0) {
+		for qtyToUnblock > 0 {
 			go PrepareProcess(resource.BlockedProcesses.PopProcess())
 			qtyToUnblock--
 		}
