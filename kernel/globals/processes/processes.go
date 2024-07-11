@@ -34,12 +34,13 @@ func CreateProcess(pid int) {
 }
 
 func PrepareProcess(pcb queues.PCB) {
-	if pcb.Quantum > 0 && pcb.Quantum < globals.Config.Quantum && globals.Config.PlanningAlgorithm == "VRR" {
+	if pcb.Quantum > 0 && pcb.Quantum < globals.Config.Quantum && globals.IsVirtualRoundRobin() {
 		ChangeState(&pcb, queues.PrioritizedReadyProcesses, "READY")
 
 		log.Printf("Cola Ready+: [%s]",
 			logs.IntArrayToString(queues.PrioritizedReadyProcesses.GetPids(), ", "))
 	} else {
+		pcb.Quantum = globals.Config.Quantum
 		ChangeState(&pcb, queues.ReadyProcesses, "READY")
 
 		log.Printf("Cola Ready: [%s]",
@@ -151,7 +152,7 @@ func GetNextProcess() queues.PCB {
 
 	if queues.RunningProcesses.IsNotEmpty() {
 		pcb = queues.RunningProcesses.PopProcess()
-	} else if globals.Config.PlanningAlgorithm == "VRR" && queues.PrioritizedReadyProcesses.IsNotEmpty() {
+	} else if globals.IsVirtualRoundRobin() && queues.PrioritizedReadyProcesses.IsNotEmpty() {
 		pcb = queues.PrioritizedReadyProcesses.PopProcess()
 	} else {
 		pcb = queues.ReadyProcesses.PopProcess()
@@ -161,12 +162,12 @@ func GetNextProcess() queues.PCB {
 }
 
 func sendEndOfQuantum(pcb queues.PCB, executionId int) {
-	if !globals.IsRoundRobinOrVirtualRoundRobin() {
+	if globals.IsFIFO() {
 		return
 	}
 
 	quantum := globals.Config.Quantum
-	if globals.Config.PlanningAlgorithm == "VRR" {
+	if globals.IsVirtualRoundRobin() {
 		quantum = pcb.Quantum
 	}
 
