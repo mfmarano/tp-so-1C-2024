@@ -32,7 +32,7 @@ func IniciarProceso(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	processes.CreateProcess(pid)
+	go processes.CreateProcess(pid)
 
 	var iniciarProcesoResponse = responses.IniciarProcesoResponse{
 		Pid: pid,

@@ -22,7 +22,7 @@ func ChangeState(pcb *queues.PCB, newStateProcesses *queues.ProcessQueue, state 
 	log.Printf("PID: %d - Estado Anterior: %s - Estado Actual: %s", pcb.Pid, previousState, state)
 }
 
-func CreateProcess(pid int) queues.PCB {
+func CreateProcess(pid int) {
 	pcb := queues.PCB{
 		Pid:     pid,
 		State:   "NEW",
@@ -31,7 +31,6 @@ func CreateProcess(pid int) queues.PCB {
 	queues.NewProcesses.AddProcess(&pcb)
 	log.Printf("Se crea el proceso %d en NEW", pcb.Pid)
 	<-globals.New
-	return pcb
 }
 
 func PrepareProcess(pcb queues.PCB) {
