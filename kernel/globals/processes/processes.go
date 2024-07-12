@@ -140,9 +140,7 @@ func SetProcessToRunning() {
 
 		if _, err := requests.Dispatch(pcb); err != nil {
 			log.Printf("Error al enviar el PCB %d al CPU.", pcb.Pid)
-			PopProcessFromRunning()
-			FinalizeProcess(pcb, "ERROR_DISPATCH")
-			<-globals.Multiprogramming
+			sendToExit(pcb, "DISPATCH_ERROR")
 		}
 	}
 }
@@ -183,55 +181,54 @@ func PopProcessFromRunning() {
 }
 
 func TreatPcbReason(recibirPcbRequest requests.DispatchRequest) {
+	var pcb = recibirPcbRequest.Pcb
 	switch recibirPcbRequest.Reason {
 	case "END_OF_QUANTUM":
 		PopProcessFromRunning()
-		log.Printf("PID: %d - Desalojado por fin de Quantum", recibirPcbRequest.Pcb.Pid)
-		PrepareProcess(recibirPcbRequest.Pcb)
+		log.Printf("PID: %d - Desalojado por fin de Quantum", pcb.Pid)
+		PrepareProcess(pcb)
 	case "BLOCKED":
 		PopProcessFromRunning()
-		BlockProcessInIoQueue(recibirPcbRequest.Pcb, recibirPcbRequest.Io)
+		BlockProcessInIoQueue(pcb, recibirPcbRequest.Io)
 	case "WAIT", "SIGNAL":
 		name := recibirPcbRequest.Resource
 		if resource, exists := resources.Resources[name]; exists {
 			switch recibirPcbRequest.Reason {
 			case "WAIT":
-				blockProcess := resource.Wait(recibirPcbRequest.Pcb.Pid)
+				blockProcess := resource.Wait(pcb.Pid)
 				if blockProcess {
 					PopProcessFromRunning()
-					BlockProcessInResourceQueue(recibirPcbRequest.Pcb, name)
+					BlockProcessInResourceQueue(pcb, name)
 				} else {
-					queues.RunningProcesses.UpdateProcess(recibirPcbRequest.Pcb)
+					queues.RunningProcesses.UpdateProcess(pcb)
 					<-globals.CpuIsFree
 					<-globals.Ready
 				}
 			case "SIGNAL":
-				unblockProcess := resource.Signal(recibirPcbRequest.Pcb.Pid)
+				unblockProcess := resource.Signal(pcb.Pid)
 				if unblockProcess {
 					go PrepareProcess(resource.BlockedProcesses.PopProcess())
 				}
-				queues.RunningProcesses.UpdateProcess(recibirPcbRequest.Pcb)
+				queues.RunningProcesses.UpdateProcess(pcb)
 				<-globals.CpuIsFree
 				<-globals.Ready
 			}
 		} else {
-			recibirPcbRequest.Pcb.Queue = queues.RunningProcesses
-			PopProcessFromRunning()
-			FinalizeProcess(recibirPcbRequest.Pcb, "RESOURCE_ERROR")
+			sendToExit(pcb, "RESOURCE_ERROR")
 		}
 	case "OUT_OF_MEMORY":
-		recibirPcbRequest.Pcb.Queue = queues.RunningProcesses
-		PopProcessFromRunning()
-		FinalizeProcess(recibirPcbRequest.Pcb, "OUT_OF_MEMORY")
-		<-globals.Multiprogramming
+		sendToExit(pcb, "OUT_OF_MEMORY")
 	case "FINISHED":
-		recibirPcbRequest.Pcb.Queue = queues.RunningProcesses
-		PopProcessFromRunning()
-		FinalizeProcess(recibirPcbRequest.Pcb, "SUCCESS")
-		<-globals.Multiprogramming
+		sendToExit(pcb, "SUCCESS")
 	case "INTERRUPTED_BY_USER":
-		recibirPcbRequest.Pcb.Queue = queues.RunningProcesses
 		PopProcessFromRunning()
 		globals.InterruptedByUser <- 0
 	}
+}
+
+func sendToExit(pcb queues.PCB, reason string) {
+	pcb.Queue = queues.RunningProcesses
+	PopProcessFromRunning()
+	FinalizeProcess(pcb, reason)
+	<-globals.Multiprogramming
 }
