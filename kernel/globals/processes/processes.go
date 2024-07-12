@@ -77,16 +77,15 @@ func ReleaseResourcesFromPid(pid int) {
 }
 
 func BlockProcessInIoQueue(pcb queues.PCB, ioRequest commons.IoInstructionRequest) {
-	ChangeState(&pcb, interfaces.Interfaces.GetQueue(ioRequest.Name), "BLOCKED")
-
 	resp, err := requests.IoRequest(pcb.Pid, ioRequest)
 
 	if err != nil || resp == nil || resp.StatusCode != 200 {
-		log.Printf("Error al enviar instruccion %s del PCB %d a la IO %s.", ioRequest.Instruction, pcb.Pid, ioRequest.Name)
-		FinalizeProcess(pcb, "INVALID_INTERFACE")
+		sendToExit(pcb, "INTERFACE_ERROR_INVALID_INSTRUCTION")
 		return
 	}
 
+	PopProcessFromRunning()
+	ChangeState(&pcb, interfaces.Interfaces.GetQueue(ioRequest.Name), "BLOCKED")
 	log.Printf("PID: %d - Bloqueado por: %s", pcb.Pid, ioRequest.Name)
 }
 
@@ -188,8 +187,12 @@ func TreatPcbReason(recibirPcbRequest requests.DispatchRequest) {
 		log.Printf("PID: %d - Desalojado por fin de Quantum", pcb.Pid)
 		PrepareProcess(pcb)
 	case "BLOCKED":
-		PopProcessFromRunning()
-		BlockProcessInIoQueue(pcb, recibirPcbRequest.Io)
+		io := recibirPcbRequest.Io
+		if _, exists := interfaces.Interfaces.GetInterface(io.Name); exists {
+			BlockProcessInIoQueue(pcb, io)
+		} else {
+			sendToExit(pcb, "INTERFACE_ERROR_NOT_FOUND")
+		}
 	case "WAIT", "SIGNAL":
 		name := recibirPcbRequest.Resource
 		if resource, exists := resources.Resources[name]; exists {
