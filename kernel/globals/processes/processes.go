@@ -70,7 +70,9 @@ func ReleaseResourcesFromPid(pid int) {
 
 		qtyToUnblock := resource.RemoveProcessFromAssigned(pid)
 		for qtyToUnblock > 0 {
-			go PrepareProcess(resource.BlockedProcesses.PopProcess())
+			pcb := resource.BlockedProcesses.PopProcess()
+			resource.AddAssignedPid(pcb.Pid)
+			go PrepareProcess(pcb)
 			qtyToUnblock--
 		}
 	}
@@ -210,7 +212,9 @@ func TreatPcbReason(recibirPcbRequest requests.DispatchRequest) {
 			case "SIGNAL":
 				unblockProcess := resource.Signal(pcb.Pid)
 				if unblockProcess {
-					go PrepareProcess(resource.BlockedProcesses.PopProcess())
+					pcbToUnblock := resource.BlockedProcesses.PopProcess()
+					resource.AddAssignedPid(pcbToUnblock.Pid)
+					go PrepareProcess(pcbToUnblock)
 				}
 				queues.RunningProcesses.UpdateProcess(pcb)
 				<-globals.CpuIsFree

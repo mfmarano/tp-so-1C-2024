@@ -45,6 +45,12 @@ func (r *Resource) Signal(pid int) bool {
 	return unblockProcess
 }
 
+func (r *Resource) AddAssignedPid(pid int) {
+	r.mutex.Lock()
+	r.AssignedPids = append(r.AssignedPids, pid)
+	r.mutex.Unlock()
+}
+
 func (r *Resource) RemoveProcessFromAssigned(pid int) int {
 	qtyFound := 0
 	var newPids []int
