@@ -1,8 +1,8 @@
 {
   "ip": "localhost",
-  "port": 8006,
+  "port": 8007,
   "type": "GENERICA",
-  "unit_work_time": 250,
+  "unit_work_time": 50,
   "ip_kernel": "localhost",
   "port_kernel": 8001,
   "ip_memory": "localhost",

@@ -1,0 +1,7 @@
+{
+	"port": 8002,				
+	"memory_size": 4096,
+	"page_size": 32,
+	"instruction_path": "/home/utnso/algo-pruebas",	
+	"delay_response": 100
+}
