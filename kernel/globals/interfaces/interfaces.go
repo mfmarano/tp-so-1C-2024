@@ -13,44 +13,44 @@ type InterfaceMap struct {
 }
 
 type InterfaceConfig struct {
-	Ip   string
-	Port int
+	Ip           string
+	Port         int
 	ProcessQueue *queues.ProcessQueue
 }
 
 var Interfaces *InterfaceMap
 
-func (interfaces *InterfaceMap) AddInterface(request commons.IoConnectRequest) {
+func (i *InterfaceMap) AddInterface(request commons.IoConnectRequest) {
 	config := InterfaceConfig{Ip: request.Ip, Port: request.Port, ProcessQueue: &queues.ProcessQueue{Processes: make([]queues.PCB, 0)}}
-	interfaces.mutex.Lock()
-	interfaces.Interfaces[request.Name] = config
-	interfaces.mutex.Unlock()
+	i.mutex.Lock()
+	i.Interfaces[request.Name] = config
+	i.mutex.Unlock()
 }
 
-func (interfaces *InterfaceMap) GetInterface(name string) (InterfaceConfig, bool) {
-	interfaces.mutex.Lock()
-	config, ok := interfaces.Interfaces[name]
-	interfaces.mutex.Unlock()
+func (i *InterfaceMap) GetInterface(name string) (InterfaceConfig, bool) {
+	i.mutex.Lock()
+	config, ok := i.Interfaces[name]
+	i.mutex.Unlock()
 	return config, ok
 }
 
-func (interfaces *InterfaceMap) AddProcess(name string, pcb queues.PCB) {
-	interfaces.mutex.Lock()
-	Interfaces.Interfaces[name].ProcessQueue.AddProcess(&pcb)
-	Interfaces.mutex.Unlock()
+func (i *InterfaceMap) AddProcess(name string, pcb queues.PCB) {
+	i.mutex.Lock()
+	i.Interfaces[name].ProcessQueue.AddProcess(&pcb)
+	i.mutex.Unlock()
 }
 
-func (interfaces *InterfaceMap) PopProcess(name string) queues.PCB {
-	interfaces.mutex.Lock()
-	pcb := Interfaces.Interfaces[name].ProcessQueue.PopProcess()
-	Interfaces.mutex.Unlock()
+func (i *InterfaceMap) PopProcess(name string) queues.PCB {
+	i.mutex.Lock()
+	pcb := i.Interfaces[name].ProcessQueue.PopProcess()
+	i.mutex.Unlock()
 	return pcb
 }
 
-func (interfaces *InterfaceMap) GetQueue(name string) *queues.ProcessQueue {
-	interfaces.mutex.Lock()
-	queue := interfaces.Interfaces[name].ProcessQueue
-	interfaces.mutex.Unlock()
+func (i *InterfaceMap) GetQueue(name string) *queues.ProcessQueue {
+	i.mutex.Lock()
+	queue := i.Interfaces[name].ProcessQueue
+	i.mutex.Unlock()
 	return queue
 }
 
