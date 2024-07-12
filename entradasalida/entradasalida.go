@@ -29,7 +29,7 @@ func main() {
 
 	logs.ConfigurarLogger(filepath.Join(path, "entradasalida.log"))
 
-	configFile := "config.json"
+	configFile := "configs/IO_GEN_SLEEP.json"
 
 	if len(os.Args) > 1 {
 		configFile = os.Args[1]
@@ -40,40 +40,38 @@ func main() {
 		log.Fatalln("Error al cargar la configuración")
 	}
 
-	if configFile == "config.json" {
-		globals.Config.Name = "IO1"
-	} else {
-		globals.Config.Name = strings.Split(strings.Split(os.Args[1], "/")[1], ".")[0]
-	}
+	globals.Config.Name = strings.Split(strings.Split(os.Args[1], "/")[1], ".")[0]
 
 	queues.InstructionRequests = &queues.RequestQueue{Requests: make([]commons.IoInstructionRequest, 0), Sem: make(chan int, 10)} //cantidad maxima de requests en queue, adaptable
 
-	bloquesFile, err := os.OpenFile(filepath.Join(globals.Config.DialFSPath, "bloques.dat"), os.O_RDWR|os.O_CREATE, 0666)
-	if err != nil {
-		fmt.Println("Error creating bloques.dat:", err)
-		return
+	if globals.Config.Type == globals.DIALFS {
+		bloquesFile, err := os.OpenFile(filepath.Join(globals.Config.DialFSPath, "bloques.dat"), os.O_RDWR|os.O_CREATE, 0666)
+		if err != nil {
+			fmt.Println("Error creating bloques.dat:", err)
+			return
+		}
+
+		if err := bloquesFile.Truncate(int64(globals.Config.DialFSBlockCount * globals.Config.DialFSBlockSize)); err != nil {
+			fmt.Println("Error truncating bloques.dat:", err)
+			return
+		}
+
+		bloquesFile.Close()
+
+		bitmapFile, err := os.OpenFile(filepath.Join(globals.Config.DialFSPath, "bitmap.dat"), os.O_RDWR|os.O_CREATE, 0666)
+		if err != nil {
+			fmt.Println("Error creating bitmap.dat:", err)
+			return
+		}
+
+		if err := bitmapFile.Truncate(int64(globals.Config.DialFSBlockCount)); err != nil {
+			fmt.Println("Error truncating bitmap.dat:", err)
+			return
+		}
+
+		bitmapFile.Close()
 	}
-
-	if err := bloquesFile.Truncate(int64(globals.Config.DialFSBlockCount * globals.Config.DialFSBlockSize)); err != nil {
-		fmt.Println("Error truncating bloques.dat:", err)
-		return
-	}
-
-	bloquesFile.Close()
-
-	bitmapFile, err := os.OpenFile(filepath.Join(globals.Config.DialFSPath, "bitmap.dat"), os.O_RDWR|os.O_CREATE, 0666)
-	if err != nil {
-		fmt.Println("Error creating bitmap.dat:", err)
-		return
-	}
-
-	if err := bitmapFile.Truncate(int64(globals.Config.DialFSBlockCount)); err != nil {
-		fmt.Println("Error truncating bitmap.dat:", err)
-		return
-	}
-
-	bitmapFile.Close()
-
+	
 	// Conectarse al Kernel cuando levanta modulo i/o, le tiene que hacer request a kernel para "conectarse" (le manda nombre de i/o y en qué puerto e ip escucha)
 	_, err = requests.Connect()
 	if err != nil {

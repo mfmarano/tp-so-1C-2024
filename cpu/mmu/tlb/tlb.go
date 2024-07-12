@@ -28,6 +28,10 @@ const (
 )
 
 func (l *TLBType) Put(page int, frame int) {
+	if l.Capacity == 0 {
+		return
+	}
+
 	key := Key{Pid: globals.ProcessContext.GetPid(), Page: page}
 	if l.Capacity == len(l.Entries) {
 		back := l.Queue.Back()
@@ -38,6 +42,10 @@ func (l *TLBType) Put(page int, frame int) {
 }
 
 func (l *TLBType) Get(page int) (int, bool) {
+	if l.Capacity == 0 {
+		return -1, false
+	}
+
 	key := Key{Pid: globals.ProcessContext.GetPid(), Page: page}
 	if item, ok := l.Entries[key]; ok {
 		if globals.Config.AlgorithmTlb == LRU {

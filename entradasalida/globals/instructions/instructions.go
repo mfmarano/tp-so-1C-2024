@@ -74,15 +74,11 @@ func RunExecution() {
 			}
 			defer fileName.Close()
 			metaData := utils.ReadAndUnmarshalJSONFile(fileName)
-			fmt.Printf("hola")
 			currentBlocks := int64(math.Ceil(float64(metaData.Size) / float64(globals.Config.DialFSBlockSize)))
 			utils.UnAssignBlocks(currentBlocks, metaData.InitialBlock+currentBlocks-1)
-			fmt.Printf("hola1")
 			fileName.Close()
 			err = os.Remove(filepath.Join(globals.Config.DialFSPath, req.FileName))
-			fmt.Printf("hola2")
 			if err != nil {
-				fmt.Printf("hola3")
 				panic(err)
 			}
 			log.Printf("DialFS - Eliminar archivo PID: %d - Eliminar Archivo: %s", req.Pid, req.FileName)

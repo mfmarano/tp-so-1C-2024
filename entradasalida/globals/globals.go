@@ -32,7 +32,7 @@ const (
 	GENERIC_TYPE = "GENERICA"
 	STDIN        = "STDIN"
 	STDOUT       = "STDOUT"
-	DIALFS       = "DialFS"
+	DIALFS       = "DIALFS"
 )
 
 var GENERIC_INSTRUCTIONS = []string{IO_GEN_SLEEP}

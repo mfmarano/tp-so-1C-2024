@@ -1,0 +1,13 @@
+{
+  "ip": "localhost",
+  "port": 8006,
+  "type": "DIALFS",
+  "unit_work_time": 2000,
+  "ip_kernel": "localhost",
+  "port_kernel": 8001,
+  "ip_memory": "localhost",
+  "port_memory": 8002,
+  "dialfs_path": "/Projects/dialfs",
+  "dialfs_block_size": 16,
+  "dialfs_block_count": 32
+}
