@@ -143,7 +143,7 @@ func Execute(request *requests.DispatchRequest) (bool, bool) {
 
 	switch instruction.OpCode {
 	case SET, MOV_IN, SUM, SUB:
-		setRegister()
+		jump = setRegister()
 		keepRunning = true
 	case MOV_OUT:
 		writeValuesToMemory()
@@ -179,7 +179,7 @@ func getParams() string {
 	return strings.Join(instruction.Params, " ")
 }
 
-func setRegister() {
+func setRegister() bool {
 	regPtr := globals.RegMap[instruction.Operands.DataRegister]
 	switch typedPtr := regPtr.(type) {
 	case *uint8:
@@ -187,6 +187,7 @@ func setRegister() {
 	case *uint32:
 		*typedPtr = instruction.Operands.Value
 	}
+	return instruction.Operands.DataRegister == "PC"
 }
 
 func writeValuesToMemory() {

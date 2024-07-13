@@ -1,6 +1,6 @@
 {
   "ip": "localhost",
-  "port": 8006,
+  "port": 8011,
   "type": "GENERICA",
   "unit_work_time": 500,
   "ip_kernel": "localhost",

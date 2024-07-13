@@ -27,20 +27,22 @@ func main() {
 		panic(err)
 	}
 
-	logs.ConfigurarLogger(filepath.Join(path, "entradasalida.log"))
-
 	configFile := "configs/IO_GEN_SLEEP.json"
 
 	if len(os.Args) > 1 {
 		configFile = os.Args[1]
 	}
 
+	name := strings.Split(strings.Split(os.Args[1], "/")[1], ".")[0]
+
+	logs.ConfigurarLogger(filepath.Join(path, name + ".log"))
+
 	globals.Config = configs.IniciarConfiguracion(filepath.Join(path, configFile), &globals.ModuleConfig{}).(*globals.ModuleConfig)
 	if globals.Config == nil {
 		log.Fatalln("Error al cargar la configuración")
 	}
 
-	globals.Config.Name = strings.Split(strings.Split(os.Args[1], "/")[1], ".")[0]
+	globals.Config.Name = name
 
 	queues.InstructionRequests = &queues.RequestQueue{Requests: make([]commons.IoInstructionRequest, 0), Sem: make(chan int, 10)} //cantidad maxima de requests en queue, adaptable
 
