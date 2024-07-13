@@ -12,42 +12,42 @@ import (
 )
 
 const (
-	SET    			= "SET"
-	MOV_IN     		= "MOV_IN"
-	MOV_OUT      	= "MOV_OUT"
-	SUM   			= "SUM"
-	SUB 			= "SUB"
-	JNZ    			= "JNZ"	
-	RESIZE      	= "RESIZE"
+	SET             = "SET"
+	MOV_IN          = "MOV_IN"
+	MOV_OUT         = "MOV_OUT"
+	SUM             = "SUM"
+	SUB             = "SUB"
+	JNZ             = "JNZ"
+	RESIZE          = "RESIZE"
 	COPY_STRING     = "COPY_STRING"
-	WAIT 			= "WAIT"
-	SIGNAL 			= "SIGNAL"
+	WAIT            = "WAIT"
+	SIGNAL          = "SIGNAL"
 	IO_GEN_SLEEP    = "IO_GEN_SLEEP"
 	IO_STDIN_READ   = "IO_STDIN_READ"
 	IO_STDOUT_WRITE = "IO_STDOUT_WRITE"
-	IO_FS_CREATE	= "IO_FS_CREATE"
-	IO_FS_DELETE	= "IO_FS_DELETE"
-	IO_FS_TRUNCATE	= "IO_FS_TRUNCATE"
-	IO_FS_WRITE		= "IO_FS_WRITE"
-	IO_FS_READ		= "IO_FS_READ"
-	EXIT  			= "EXIT"
+	IO_FS_CREATE    = "IO_FS_CREATE"
+	IO_FS_DELETE    = "IO_FS_DELETE"
+	IO_FS_TRUNCATE  = "IO_FS_TRUNCATE"
+	IO_FS_WRITE     = "IO_FS_WRITE"
+	IO_FS_READ      = "IO_FS_READ"
+	EXIT            = "EXIT"
 )
 
 type Instruction struct {
-	OpCode            string
-	Params            []string
-	Operands          Operands
-	Resource          string
-	Io                commons.IoInstructionRequest
+	OpCode   string
+	Params   []string
+	Operands Operands
+	Resource string
+	Io       commons.IoInstructionRequest
 }
 
 type Operands struct {
-	Value             uint32
-	RegisterValue     uint32
-	DataRegister      string
-	AddressRegister   string
-	Values            []byte
-	Size              int
+	Value           uint32
+	RegisterValue   uint32
+	DataRegister    string
+	AddressRegister string
+	Values          []byte
+	Size            int
 }
 
 var instruction *Instruction
@@ -60,7 +60,7 @@ func Fetch() string {
 	resp, err := requests.GetInstruction()
 
 	if err != nil || resp == nil {
-		log.Fatal("Error al buscar instrucción en memoria")
+		log.Fatal("Error al buscar instruccion en memoria")
 		return "MEMORY_ERROR"
 	}
 
@@ -72,11 +72,11 @@ func Fetch() string {
 	return instResp.Instruction
 }
 
-func Decode(instructionLine string) {	
+func Decode(instructionLine string) {
 	instruction = new(Instruction)
 
 	parts := strings.Split(instructionLine, " ")
-	
+
 	opCode := parts[0]
 	params := parts[1:]
 
@@ -203,7 +203,7 @@ func jnz() bool {
 
 func resize(response *requests.DispatchRequest) bool {
 	resp, _ := requests.Resize(instruction.Operands.Size)
-	if (resp.StatusCode != 200) {
+	if resp.StatusCode != 200 {
 		response.Reason = "OUT_OF_MEMORY"
 		return false
 	}
@@ -244,7 +244,7 @@ func setIoFsTruncateRequest(response *requests.DispatchRequest) {
 func setIoFsReadWriteRequest(request *requests.DispatchRequest) {
 	setIoBaseParams(request)
 	request.Io.PhysicalAddresses = instruction.Io.PhysicalAddresses
-	request.Io.FileName =  instruction.Io.FileName
+	request.Io.FileName = instruction.Io.FileName
 	request.Io.FilePointer = instruction.Io.FilePointer
 }
 
