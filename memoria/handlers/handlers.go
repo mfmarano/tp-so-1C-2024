@@ -34,7 +34,7 @@ func NewProcess(w http.ResponseWriter, r *http.Request) {
 
 	globals.PageTables[nuevoProceso.Pid] = make([]globals.Page, len(globals.BitMapMemory))
 
-	log.Printf("Creacion Tabla de Páginas: PID: %d - Tamaño: %d", nuevoProceso.Pid, utils.CountPages(globals.PageTables[nuevoProceso.Pid]))
+	log.Printf("PID: %d - Creacion Tabla de Páginas - Tamaño: %d", nuevoProceso.Pid, utils.CountPages(globals.PageTables[nuevoProceso.Pid]))
 
 	commons.EscribirRespuesta(w, http.StatusOK, []byte("proceso creado sin espacio reservado"))
 }
@@ -54,7 +54,7 @@ func EndProcess(w http.ResponseWriter, r *http.Request) {
 	utils.FinalizeProcess(pid)
 	globals.MutexFrame.Unlock()
 
-	log.Printf("Destrucción Tabla de Páginas: PID: %d - Tamaño: %d", pid, size)
+	log.Printf("PID: %d - Destrucción Tabla de Páginas - Tamaño: %d", pid, size)
 
 	commons.EscribirRespuesta(w, http.StatusOK, []byte("proceso finalizado"))
 }
@@ -75,8 +75,6 @@ func GetInstruction(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error al leer archivo", http.StatusInternalServerError)
 		return
 	}
-
-	log.Printf("File with PID %d, Line %d: %s\n", instruccion.Pid, instruccion.PC, line)
 
 	response, err := commons.CodificarJSON(commons.GetInstructionResponse{Instruction: line})
 	if err != nil {
@@ -123,7 +121,7 @@ func GetFrame(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Acceso a tabla de páginas PID: %d - Página: %d - Marco: %d", frame.Pid, frame.Page, globals.PageTables[frame.Pid][frame.Page].Frame)
+	log.Printf("PID: %d - Acceso a tabla de páginas - Página: %d - Marco: %d", frame.Pid, frame.Page, globals.PageTables[frame.Pid][frame.Page].Frame)
 
 	commons.EscribirRespuesta(w, http.StatusOK, response)
 }
@@ -145,18 +143,18 @@ func Resize(w http.ResponseWriter, r *http.Request) {
 	globals.MutexFrame.Lock()
 	if pagesProcess < pagesResize && pagesResize-pagesProcess > utils.CountFramesFree() {
 		commons.EscribirRespuesta(w, http.StatusInternalServerError, []byte("OUT_OF_MEMORY"))
-		log.Printf("Ampliación PID: %d - Tamaño actual: %d - Tamaño a ampliar: %d - OUT_OF_MEMORY", resize.Pid, pagesProcess, resize.Size)
+		log.Printf("PID: %d - Ampliación de proceso - Tamaño actual: %d - Tamaño a ampliar: %d - OUT_OF_MEMORY", resize.Pid, pagesProcess, resize.Size)
 	} else if pagesProcess < pagesResize {
 		utils.ResizeFrames(pagesResize, globals.PageTables[resize.Pid])
 		commons.EscribirRespuesta(w, http.StatusOK, []byte("resize ejecutado"))
-		log.Printf("Ampliación PID: %d - Tamaño actual: %d - Tamaño a ampliar: %d", resize.Pid, pagesProcess, pagesResize)
+		log.Printf("PID: %d - Ampliación de proceso - Tamaño actual: %d - Tamaño a ampliar: %d", resize.Pid, pagesProcess, pagesResize)
 	} else if pagesProcess > pagesResize {
 		utils.ResizeFrames(pagesResize, globals.PageTables[resize.Pid])
 		commons.EscribirRespuesta(w, http.StatusOK, []byte("resize ejecutado"))
-		log.Printf("Reducción PID: %d - Tamaño actual: %d - Tamaño a reducir: %d", resize.Pid, pagesProcess, pagesResize)
+		log.Printf("PID: %d - Reducción de proceso - Tamaño actual: %d - Tamaño a reducir: %d", resize.Pid, pagesProcess, pagesResize)
 	} else {
 		commons.EscribirRespuesta(w, http.StatusOK, []byte("resize ejecutado"))
-		log.Printf("Resize PID: %d - Tamaño actual: %d - Sin modificacion en cantidad de frames", resize.Pid, pagesProcess)
+		log.Printf("PID: %d - Ampliación/Reducción de proceso - Tamaño actual: %d - Sin modificacion en cantidad de frames", resize.Pid, pagesProcess)
 	}
 	globals.MutexFrame.Unlock()
 
@@ -184,7 +182,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Acceso a espacio de usuario PID: %d - Acción: Leer - DF: %d - Tamaño: %d", read.Pid, read.DF, read.Size)
+	log.Printf("PID: %d - Acceso a espacio de usuario - Acción: Leer - DF: %d - Tamaño: %d", read.Pid, read.DF, read.Size)
 
 	commons.EscribirRespuesta(w, http.StatusOK, response)
 }
@@ -204,7 +202,7 @@ func Write(w http.ResponseWriter, r *http.Request) {
 	utils.PutContent(write.DF, write.Values)
 	globals.MutexMemory.Unlock()
 
-	log.Printf("Acceso a espacio de usuario PID: %d - Acción: Escibir - DF: %d - Tamaño: %d", write.Pid, write.DF, len(write.Values))
+	log.Printf("PID: %d - Acceso a espacio de usuario - Acción: Escibir - DF: %d - Tamaño: %d", write.Pid, write.DF, len(write.Values))
 
 	commons.EscribirRespuesta(w, http.StatusOK, []byte("OK"))
 

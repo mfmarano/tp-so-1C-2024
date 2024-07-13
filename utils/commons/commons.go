@@ -104,8 +104,6 @@ func RecibirMensaje(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error al decodificar JSON", http.StatusBadRequest)
 		return
 	}
-
-	log.Printf("Mensaje recibido %+v\n", mensaje)
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte("Mensaje recibido"))
 }

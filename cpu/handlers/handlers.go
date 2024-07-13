@@ -1,10 +1,10 @@
 package handlers
 
 import (
-	"github.com/sisoputnfrba/tp-golang/cpu/globals/interruption"
-	"log"
 	"net/http"
 	"time"
+
+	"github.com/sisoputnfrba/tp-golang/cpu/globals/interruption"
 
 	"github.com/sisoputnfrba/tp-golang/cpu/globals"
 	"github.com/sisoputnfrba/tp-golang/cpu/instructions"
@@ -22,7 +22,6 @@ func ReceiveInterruption(w http.ResponseWriter, r *http.Request) {
 
 	if req.Pid == globals.ProcessContext.GetPid() {
 		interruption.CurrentInterruption.Set(true, req.Reason, req.Pid)
-		log.Printf("PID: %d - Interrupcion Kernel - %s", globals.ProcessContext.GetPid(), req.Reason)
 	}
 
 	commons.EscribirRespuesta(w, http.StatusOK, []byte("Interrupcion recibida"))
@@ -64,7 +63,6 @@ func ExecuteProcess(request requests.PCBRequest) {
 		}
 
 		if !keepRunning || InterruptionReceived(&dispatchRequest) {
-			log.Printf("PID: %d - Se devuelve PCB - Motivo: %s - PC: %d", globals.ProcessContext.GetPid(), dispatchRequest.Reason, globals.Registers.PC)
 			break
 		}
 	}

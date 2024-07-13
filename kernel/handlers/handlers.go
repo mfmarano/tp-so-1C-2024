@@ -151,8 +151,6 @@ func RecibirConexion(w http.ResponseWriter, r *http.Request) {
 	}
 
 	interfaces.Interfaces.AddInterface(req)
-
-	log.Printf("IO %s - Conexion aceptada: ip %s, port %d", req.Name, req.Ip, req.Port)
 }
 
 func DesbloquearProceso(w http.ResponseWriter, r *http.Request) {
@@ -165,8 +163,6 @@ func DesbloquearProceso(w http.ResponseWriter, r *http.Request) {
 	}
 
 	globals.Plan()
-
-	log.Printf("PID: %d - Se desbloquea proceso", req.Pid)
 
 	go processes.PrepareProcess(interfaces.Interfaces.PopProcess(req.Io))
 

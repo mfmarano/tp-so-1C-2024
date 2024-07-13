@@ -24,7 +24,6 @@ func GetPageSize() {
 	var pageSize commons.PageSizeResponse
 	commons.DecodificarJSON(resp.Body, &pageSize)
 	*PageSize = pageSize.Size
-	log.Printf("MEMORY - SIZE PAGE - SIZE: %d", *PageSize)
 }
 
 func WriteValues(addressRegister string, values []byte, isString bool) {

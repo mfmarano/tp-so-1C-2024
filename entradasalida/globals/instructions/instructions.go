@@ -48,7 +48,7 @@ func RunExecution() {
 			time.Sleep(time.Duration(globals.Config.UnitWorkTime) * time.Millisecond)
 			var values []byte
 			for _, addressAndSize := range req.PhysicalAddresses {
-				bytesRead := read(req.Pid, addressAndSize.Df, addressAndSize.Size, true)
+				bytesRead := read(req.Pid, addressAndSize.Df, addressAndSize.Size)
 				values = append(values, bytesRead...)
 			}
 			log.Printf("Valor leido: %s\n", commons.GetValueFromBytes(values, true))
@@ -64,7 +64,7 @@ func RunExecution() {
 			utils.AssignBlocks(initialBlock, 0)
 			utils.WriteTxt(fileName, initialBlock, 0)
 			fileName.Close()
-			log.Printf("DialFS - Crear archivo PID: %d - Crear Archivo: %s", req.Pid, req.FileName)
+			log.Printf("PID: %d - Crear archivo - Crear Archivo: %s", req.Pid, req.FileName)
 			requests.UnblockProcess(req.Pid)
 		case globals.IO_FS_DELETE:
 			time.Sleep(time.Duration(globals.Config.UnitWorkTime) * time.Millisecond)
@@ -81,7 +81,7 @@ func RunExecution() {
 			if err != nil {
 				panic(err)
 			}
-			log.Printf("DialFS - Eliminar archivo PID: %d - Eliminar Archivo: %s", req.Pid, req.FileName)
+			log.Printf("PID: %d - Eliminar archivo: %s", req.Pid, req.FileName)
 			requests.UnblockProcess(req.Pid)
 		case globals.IO_FS_TRUNCATE:
 			time.Sleep(time.Duration(globals.Config.UnitWorkTime) * time.Millisecond)
@@ -104,7 +104,7 @@ func RunExecution() {
 					utils.Compaction(req.FileName, req.FileSize)
 				}
 			}
-			log.Printf("DialFS - Truncar archivo PID: %d - Truncar Archivo: %s - Tamaño: %d", req.Pid, req.FileName, req.FileSize)
+			log.Printf("PID: %d - Truncar archivo: %s - Tamaño: %d", req.Pid, req.FileName, req.FileSize)
 			requests.UnblockProcess(req.Pid)
 		case globals.IO_FS_WRITE:
 			time.Sleep(time.Duration(globals.Config.UnitWorkTime) * time.Millisecond)
@@ -116,11 +116,11 @@ func RunExecution() {
 			metaData := utils.ReadAndUnmarshalJSONFile(fileName)
 			var values []byte
 			for _, addressAndSize := range req.PhysicalAddresses {
-				bytesRead := read(req.Pid, addressAndSize.Df, addressAndSize.Size, true)
+				bytesRead := read(req.Pid, addressAndSize.Df, addressAndSize.Size)
 				values = append(values, bytesRead...)
 			}
 			utils.WriteBlocks(metaData.InitialBlock, req.FilePointer, values)
-			log.Printf("DialFS - Escribir archivo PID: %d - Escribir archivo: %s - Tamaño a Escribir %d - Puntero Archivo: %d ", req.Pid, req.FileName, len(values), req.FilePointer)
+			log.Printf("PID: %d - Escribir archivo: %s - Tamaño a Escribir %d - Puntero Archivo: %d ", req.Pid, req.FileName, len(values), req.FilePointer)
 			requests.UnblockProcess(req.Pid)
 		case globals.IO_FS_READ:
 			time.Sleep(time.Duration(globals.Config.UnitWorkTime) * time.Millisecond)
@@ -141,19 +141,16 @@ func RunExecution() {
 				requests.Write(req.Pid, addressAndSize.Df, valuesToWrite)
 				writtenBytes += addressAndSize.Size
 			}
-			log.Printf("DialFS - Leer archivo PID: %d - Leer archivo: %s - Tamaño a Leer %d - Puntero Archivo: %d ", req.Pid, req.FileName, req.Value, req.FilePointer)
+			log.Printf("PID: %d - Leer archivo: %s - Tamaño a Leer %d - Puntero Archivo: %d ", req.Pid, req.FileName, sizeToRead, req.FilePointer)
 			requests.UnblockProcess(req.Pid)
 		default:
 		}
-
-		log.Printf("PID: %d - Termine Operacion: %s", req.Pid, req.Instruction)
 	}
 }
 
-func read(pid int, address int, size int, isString bool) []byte {
+func read(pid int, address int, size int) []byte {
 	response, _ := requests.Read(pid, address, size)
 	var resp commons.MemoryReadResponse
 	commons.DecodificarJSON(response.Body, &resp)
-	log.Printf("PID: %d - Acción: LEER - Dirección Física: %d - Valor: %s", pid, address, commons.GetValueFromBytes(resp.Values, isString))
 	return resp.Values
 }

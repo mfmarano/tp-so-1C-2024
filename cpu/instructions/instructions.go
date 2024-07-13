@@ -60,7 +60,7 @@ func Fetch() string {
 	resp, err := requests.GetInstruction()
 
 	if err != nil || resp == nil {
-		log.Fatal("Error al buscar instrucciÃ³n en memoria")
+		log.Fatal("Error al buscar instrucción en memoria")
 		return "MEMORY_ERROR"
 	}
 
