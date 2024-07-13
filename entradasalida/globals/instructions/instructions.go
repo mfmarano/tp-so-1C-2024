@@ -39,9 +39,14 @@ func RunExecution() {
 			bytes := []byte(text)
 			writtenBytes := 0
 			for _, addressAndSize := range req.PhysicalAddresses {
-				valuesToWrite := bytes[writtenBytes : writtenBytes+addressAndSize.Size]
-				requests.Write(req.Pid, addressAndSize.Df, valuesToWrite)
-				writtenBytes += addressAndSize.Size
+				if writtenBytes+addressAndSize.Size > len(bytes) {
+					addressAndSize.Size = len(bytes) - writtenBytes
+				}
+				if addressAndSize.Size > 0 {
+					valuesToWrite := bytes[writtenBytes : writtenBytes+addressAndSize.Size]
+					requests.Write(req.Pid, addressAndSize.Df, valuesToWrite)
+					writtenBytes += addressAndSize.Size
+				}
 			}
 			requests.UnblockProcess(req.Pid)
 		case globals.IO_STDOUT_WRITE:
